@@ -1,0 +1,5 @@
+build/
+samples_processed/
+songs_processed/
+*.pnproj
+*.pnps
