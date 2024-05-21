@@ -44,15 +44,13 @@ __attribute__ ((noreturn)) void gameLoop(){
 gameLoopState = WAITING_FOR_VBLANK;
 
 	while(1){
-		while(gameState == 1){
-			Halt();
-		}
-		/*while(gameLoopState == WAITING_FOR_VBLANK){
+		while(gameLoopState == WAITING_FOR_VBLANK){
 			//bios halt functiion
 			Halt();
-		}*/
+		}
+		//increment the background color. (Just for testing the vblank interrupts
 		(*(vu16 *)0x05000000)++;
-		gameState = 1;
+		gameLoopState = WAITING_FOR_VBLANK;
 	}
 }
 
