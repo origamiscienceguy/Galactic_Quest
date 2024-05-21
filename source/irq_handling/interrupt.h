@@ -1,12 +1,22 @@
 #ifndef interrupth
 #define interrupth
 
-#include "GBA_map.h"
+#include "tonc.h"
 
-//global variables
+//constants
+
+//enums
+
+//structs
+
+
+//globals
+//this is defined inside the interrupt master service routine assembly function
 extern u32 irqPriorityTable[21];
 
-//global function declerations
+//local functions
+
+//external functions
 extern void irqMasterServiceRoutine();
 extern void setInterruptHandlers(u16 *, u32 *);
 extern void vblankISR();

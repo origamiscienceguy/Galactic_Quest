@@ -64,10 +64,10 @@ SOURCE_EXTS	:= c := s := S
 INCLUDES	:= include := source/irq_handling := source := source/audio
 
 # Library directories, with /include and /lib
-LIBDIRS		:= $(DEVKITPRO)/libgba $(DEVKITPRO)/libtonc
+LIBDIRS		:= $(DEVKITPRO)/libtonc
 
 # Libraries to link
-LIBS		:= 
+LIBS		:= tonc
 
 # All build output goes here
 BUILDDIR	:= build
@@ -79,7 +79,7 @@ ALLFLAGS	:= -Wall -Wextra -g3 -gdwarf-4 -O2 \
 		
 
 # C compiler flags
-CFLAGS		:= -std=c99 -Wstack-usage=16384
+CFLAGS		:= -std=c99
 
 # C++ compiler flags
 CXXFLAGS	:= -std=c++20 -fno-rtti -fno-exceptions

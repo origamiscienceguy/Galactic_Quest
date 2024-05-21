@@ -2,7 +2,7 @@
 #define audio_engineh
 
 //includes
-#include "GBA_map.h"
+#include "tonc.h"
 #include "math.h"
 #include "main.h"
 #include "audio_engine_external.h"

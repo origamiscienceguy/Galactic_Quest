@@ -1,4 +1,4 @@
-#include "GBA_map.h"
+#include "tonc.h"
 #include "interrupt.h"
 
 void setInterruptHandlers(u16 *priorityList, u32 *functionList){

@@ -1,4 +1,4 @@
-#include "GBA_map.h"
+#include "tonc.h"
 
 void cartridgeISR(){
 

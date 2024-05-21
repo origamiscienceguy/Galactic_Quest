@@ -1,4 +1,4 @@
-#include "GBA_map.h"
+#include "tonc.h"
 #include "audio_engine_internal.h"
 extern void timer2ISR();
 
@@ -46,76 +46,4 @@ void timer1ISR(){
 		samplesThisFrame = MAX_SAMPLES_IN_ONE_FRAME - 16;
 	}
 	REG_TM1D = 0x10000 - samplesThisFrame;
-	
-	//sync the PSG channels
-	/*REG_TM2CNT = 0; //stop the timer
-	if(leftoverSamples2 == 0){
-		timer2ISR();
-	}
-	else if(leftoverSamples2 >= samplesLastFrame){
-		REG_TM2D = 0x0;
-	}
-	else{
-	REG_TM2D = 0x10000 - (leftoverSamples2 << 3); //set the new timer value
-	}
-	REG_TM2CNT = REG_TM2CNT = TM_FREQ_64 | TM_IRQ | TM_ENABLE; //restart the timer with the new value
-	psgBufferReadIndex = psgBufferPreviousWriteIndex;
-	
-	samplesLastFrame = samplesThisFrame;
-	
-	vu16 *vramPtr = ((vu16 *)0x06000000);
-	switch(psgBufferWriteIndex){
-	case 0:
-		vramPtr[0] = 0x7fff;
-		vramPtr[1] = 0;
-		vramPtr[2] = 0;
-		vramPtr[3] = 0;
-		break;
-	case 1:
-		vramPtr[0] = 0;
-		vramPtr[1] = 0x7fff;
-		vramPtr[2] = 0;
-		vramPtr[3] = 0;
-		break;
-	case 2:
-		vramPtr[0] = 0;
-		vramPtr[1] = 0;
-		vramPtr[2] = 0x7fff;
-		vramPtr[3] = 0;
-		break;
-	case 3:
-		vramPtr[0] = 0;
-		vramPtr[1] = 0;
-		vramPtr[2] = 0;
-		vramPtr[3] = 0x7fff;
-		break;
-	}
-	
-	vramPtr = ((vu16 *)0x060001E0);
-	switch(psgBufferReadIndex){
-	case 0:
-		vramPtr[0] = 0x7fff;
-		vramPtr[1] = 0;
-		vramPtr[2] = 0;
-		vramPtr[3] = 0;
-		break;
-	case 1:
-		vramPtr[0] = 0;
-		vramPtr[1] = 0x7fff;
-		vramPtr[2] = 0;
-		vramPtr[3] = 0;
-		break;
-	case 2:
-		vramPtr[0] = 0;
-		vramPtr[1] = 0;
-		vramPtr[2] = 0x7fff;
-		vramPtr[3] = 0;
-		break;
-	case 3:
-		vramPtr[0] = 0;
-		vramPtr[1] = 0;
-		vramPtr[2] = 0;
-		vramPtr[3] = 0x7fff;
-		break;
-	}*/
 }
