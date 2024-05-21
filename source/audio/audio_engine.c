@@ -8,8 +8,6 @@ u8 audioTimer;
 ChannelData channelsMixData[MAX_DMA_CHANNELS] EWRAM_DATA;
 CurrentSongSettings currentSongs[MAX_SONGS_IN_QUEUE] EWRAM_DATA;
 u8 audioProgress;
-u8 graphXPos = 0;
-
 
 void audioInitialize(){
 	//reset the timer registers
@@ -54,9 +52,6 @@ void audioInitialize(){
 		((u32 *)soundBuffer1)[i] = 0;
 		((u32 *)soundBuffer2)[i] = 0;
 	}
-	
-	//memorySet(soundBuffer1R, (MAX_SAMPLES_IN_ONE_FRAME >> 4), 0);
-	//memorySet(soundBuffer1L, (MAX_SAMPLES_IN_ONE_FRAME >> 4), 0);
 	
 	//initialize all channels
 	for(u32 i = 0; i < MAX_DMA_CHANNELS; i++){
@@ -129,27 +124,10 @@ u8 playNewSong(u16 songID){
 
 void processAudio(){
 	//mark the audio as started
-	audioProgress = 1;
-	
-	//enable interrupts
-	REG_IME = 1;
-	
-	
-	REG_TM3D = 0;
-	REG_TM3CNT = TM_FREQ_256 | TM_ENABLE;
+	audioProgress = 1;	
 	
 	s8 *audioBufferPtr;
 	u32 samplesNeeded;
-	
-	//start recording for the performance graph
-	u32 timerLength;
-	vu16 *VramPtr = ((vu16 *)0x06000000) + (240 * 159) + graphXPos;
-	if(graphXPos < 239){
-		graphXPos++;
-	}
-	else{
-		graphXPos = 0;
-	}
 	
 	//set the audio pointers based on the parity of the current frame
 	if (audioTimer & 1) {
@@ -182,6 +160,10 @@ void processAudio(){
 			//check which channel has the fewest leftoverSamples
 			u32 samplesThisBatch = 0x10000;
 			for(u32 songIndex = 0; songIndex < MAX_SONGS_IN_QUEUE; songIndex++){
+				//ignore songs that aren't playing
+				if(currentSongs[songIndex].enabled != 1){
+					continue;
+				}
 				//if this song has no leftover samples, process a tick
 				if(currentSongs[songIndex].leftoverSamples == 0){
 					processSongTick(&currentSongs[songIndex]);
@@ -201,6 +183,7 @@ void processAudio(){
 			}
 			//mix this many samples using the current settings
 			mixAudio(channelsMixData, audioBufferPtr, samplesThisBatch, MAX_DMA_CHANNELS);
+			audioBufferPtr += samplesThisBatch;
 			
 			samplesNeeded -= samplesThisBatch;
 			//update the leftover samples of every channel
@@ -209,23 +192,7 @@ void processAudio(){
 			}
 		}
 	}
-	
-	//draw the performance graph
-	REG_TM3CNT = 0;
-	timerLength = REG_TM3D;
-	timerLength = (timerLength * 160 * 60) >> 16;
-	
-	
-	for(u32 i = 0; i < 160; i++){
-		VramPtr[-i * 240] = 0x0;	//clear the column
-	}
-	for(u32 i = 0; i < timerLength; i++){
-		VramPtr[-i * 240] = 0x7fff; //plot white bars 
-	}
-	
-	//disable interrupts
-	REG_IME = 0;
-	
+
 	//mark the audio as finished
 	audioProgress = 2;
 }

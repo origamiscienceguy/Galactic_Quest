@@ -13,6 +13,9 @@ int main(){
 
 //things that only run once at hard reset should go here.
 void globalInitialize(){
+	//disable interrupts
+	REG_IME = 0;
+
 	//set the interrupt service routine functions and priority order (first is highest priority)
 	u16 priorityList[14] = {IRQ_GAMEPAK, IRQ_HBLANK, IRQ_VCOUNT, IRQ_TIMER2, IRQ_TIMER1, IRQ_SERIAL, IRQ_VBLANK,
 						   IRQ_TIMER0, IRQ_TIMER3, IRQ_DMA0, IRQ_DMA1, IRQ_DMA2, IRQ_KEYPAD, IRQ_DMA3};
@@ -23,8 +26,6 @@ void globalInitialize(){
 	//set the master service routine
 	*(u32 *)0x03007FFC = (u32)&irqMasterServiceRoutine;
 	
-	//disable interrupts
-	REG_IME = 0;
 	//interupt master service routine expects every bit in REG_IE to be set when not in an interrupt state
 	REG_IE = 0x3FFF; 
 	REG_DISPCNT = DCNT_MODE0 | DCNT_BG2 | DCNT_OBJ;
@@ -48,8 +49,6 @@ gameLoopState = WAITING_FOR_VBLANK;
 			//bios halt functiion
 			Halt();
 		}
-		//increment the background color. (Just for testing the vblank interrupts
-		(*(vu16 *)0x05000000)++;
 		gameLoopState = WAITING_FOR_VBLANK;
 	}
 }
@@ -65,6 +64,11 @@ void criticalUpdates(){
 	inputs.held = inputs.current & lastInputs;
 	inputs.released = ~inputs.current & lastInputs;
 	
+	//increment the background color. (Just for testing the vblank interrupts)
+	(*(vu16 *)0x05000000)++;
+	
+	//process this frame's audio (this will take a majority of a frame.)
+	processAudio();
 }
 
 //anything that needs to happen during a soft reset.
