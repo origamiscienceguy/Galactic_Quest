@@ -267,6 +267,7 @@ extern cu8 rampUpWaveform[];
 extern cu16 vibratoTable[];
 extern cu16 arpeggioTable[];
 
+
 //external functions
 extern void mixAudio(ChannelData *, s8 *, u32, u32);
 

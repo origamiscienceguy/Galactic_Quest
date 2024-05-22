@@ -71,7 +71,7 @@ void audioInitialize(){
 	//enable vcount interrupts so that the audio iterrupt can be synced to this point
 	REG_DISPSTAT = DSTAT_VBL_IRQ | DSTAT_VCT_IRQ | DSTAT_VCT(158);
 	
-	playNewSong(0);
+	playNewSong(_sfx_test);
 }
 
 //starts a new song playing, based on the id into the audio_list song list.

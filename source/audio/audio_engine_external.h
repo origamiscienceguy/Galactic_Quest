@@ -1,4 +1,5 @@
 #include "audio_engine_settings.h"
+#include "audio_assets_enum.h"
 
 //processAudio must be ran once per frame, and must finish before the timer 1 interrupt fires.
 extern void processAudio();
