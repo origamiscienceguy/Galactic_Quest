@@ -1,6 +1,0 @@
-build/
-samples_processed/
-!samples_processed/_kik.s
-songs_processed/
-*.pnproj
-*.pnps
