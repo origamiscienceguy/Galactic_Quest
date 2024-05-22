@@ -1,5 +1,7 @@
 build/
-samples_processed/
-songs_processed/
+data/audio/samples_processed/*
+!data/audio/samples_processed/.gitkeep
+data/audio/songs_processed/*
+!data/audio/songs_processed/.gitkeep
 *.pnproj
 *.pnps
