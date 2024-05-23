@@ -6,7 +6,7 @@ s8 soundBuffer2[MAX_SAMPLES_IN_ONE_FRAME * 2] ALIGN(4) EWRAM_DATA;
 s8 audioError;
 u8 audioTimer;
 ChannelData channelsMixData[MAX_DMA_CHANNELS] EWRAM_DATA;
-CurrentSongSettings currentSongs[MAX_SONGS_IN_QUEUE] EWRAM_DATA;
+CurrentAssetSettings currentAssets[MAX_ASSETS_IN_QUEUE] EWRAM_DATA;
 u8 audioProgress;
 
 void audioInitialize(){
@@ -63,63 +63,127 @@ void audioInitialize(){
 		channelsMixData[i].pitch = 0x0;
 	}
 	
-	//initialize all songs
-	for(u32 i = 0; i < MAX_SONGS_IN_QUEUE; i++){
-		currentSongs[i].enabled = 0;
+	//initialize all assets
+	for(u32 i = 0; i < MAX_ASSETS_IN_QUEUE; i++){
+		currentAssets[i].enabled = 0;
 	}
 	
 	//enable vcount interrupts so that the audio iterrupt can be synced to this point
 	REG_DISPSTAT = DSTAT_VBL_IRQ | DSTAT_VCT_IRQ | DSTAT_VCT(158);
-	
-	playNewSong(_sfx_test);
 }
 
-//starts a new song playing, based on the id into the audio_list song list.
-u8 playNewSong(u16 songID){
+//starts a new asset playing, based on the id into the audio_list asset list.
+u8 playNewAsset(u16 assetID){
 	
-	u8 songIndex = 0;
-	//find an open songID slot
-	while(currentSongs[songIndex].enabled != 0){
-		songIndex++;
-		//if there are no available song slots, return error
-		if(songID == MAX_SONGS_IN_QUEUE){
-			return 0xff;
+	u8 lowestPriority = 0xff;
+	u8 lowestIndex = 0;
+	u32 assetIndex = 0;
+	
+	//find an open assetID slot, or the one with the lowest priority.
+	for(;assetIndex < MAX_ASSETS_IN_QUEUE; assetIndex++){
+		//if we find an open asset slot, select it.
+		if(currentAssets[assetIndex].enabled == 0){
+			lowestPriority = 0;
+			lowestIndex = assetIndex;
+			break;
+		}
+		//otherwise, record the lowest priority slot.
+		if(currentAssets[assetIndex].priority <= lowestPriority){
+			lowestIndex = assetIndex;
+			lowestPriority = currentAssets[assetIndex].priority;
 		}
 	}
 	
-	CurrentSongSettings *songPointer = &currentSongs[songIndex];
+	//check if this asset has a higher priority than the lowest-priority asset currently playing, exit
+	if(*assetsList[assetID]->assetPriority < lowestPriority){
+		return 0xff;
+	}
 	
-	songPointer->song = songList[songID];
-	songPointer->songIndex = songID;
-	songPointer->rowNum = 0;
-	songPointer->patternOffset = 0;
-	songPointer->orderIndex = 0;
-	songPointer->enabled = 1;
-	songPointer->currentTickSpeed = songList[songID]->initTickSpeed;
-	songPointer->tickCounter = 0;
-	songPointer->currentTempo = songList[songID]->initTempo;
-	songPointer->leftoverSamples = 0;
-	songPointer->globalVolume = songList[songID]->initGlobalVol;
-	songPointer->globalEffects.A = 0xff;
-	songPointer->globalEffects.B = 0xff;
-	songPointer->globalEffects.C = 0xff;
-	songPointer->globalEffects.SE = 0xff;
-	//psgBufferPreviousWriteIndex = 0;
+	assetIndex = lowestIndex;
+	
+	CurrentAssetSettings *assetPointer = &currentAssets[assetIndex];
+	
+	assetPointer->asset = assetsList[assetID];
+	assetPointer->assetID = assetID;
+	assetPointer->rowNum = 0;
+	assetPointer->patternOffset = 0;
+	assetPointer->orderIndex = 0;
+	assetPointer->enabled = 1;
+	assetPointer->currentTickSpeed = assetsList[assetID]->initTickSpeed;
+	assetPointer->tickCounter = 0;
+	assetPointer->currentTempo = assetsList[assetID]->initTempo;
+	assetPointer->leftoverSamples = 0;
+	assetPointer->globalVolume = assetsList[assetID]->initGlobalVol;
+	assetPointer->globalEffects.A = 0xff;
+	assetPointer->globalEffects.B = 0xff;
+	assetPointer->globalEffects.C = 0xff;
+	assetPointer->globalEffects.SE = 0xff;
 	
 	for(u32 channel = 0; channel < MAX_DMA_CHANNELS; channel++){
-		songPointer->channelSettings[channel].noteState = NO_NOTE;
-		songPointer->channelSettings[channel].effectMemory.SBx = 0xff;
-		songPointer->channelSettings[channel].channelVolume = songList[songID]->initChannelVol[channel];
-		songPointer->channelSettings[channel].instrumentPointer = &songList[0]->instruments[0]; //pointer to the instrument struct that is currently playing
-		songPointer->channelSettings[channel].samplePointer = sampleList[0]; //pointer to the sample that is currently playing
-		songPointer->channelSettings[channel].pitchModifier = 0x1000;
-		songPointer->channelSettings[channel].channelPan = songList[songID]->initChannelPan[channel];
-		songPointer->channelSettings[channel].vibrato.waveformType = 0;
-		songPointer->channelSettings[channel].tremolo.waveformType = 0;
-		songPointer->channelSettings[channel].panbrello.waveformType = 0;
-		songPointer->channelSettings[channel].autoVibrato.waveformType = 0;
+		assetPointer->channelSettings[channel].noteState = NO_NOTE;
+		assetPointer->channelSettings[channel].effectMemory.SBx = 0xff;
+		assetPointer->channelSettings[channel].channelVolume = assetsList[assetID]->initChannelVol[channel];
+		assetPointer->channelSettings[channel].instrumentPointer = &assetsList[0]->instruments[0]; //pointer to the instrument struct that is currently playing
+		assetPointer->channelSettings[channel].samplePointer = sampleList[0]; //pointer to the sample that is currently playing
+		assetPointer->channelSettings[channel].pitchModifier = 0x1000;
+		assetPointer->channelSettings[channel].channelPan = assetsList[assetID]->initChannelPan[channel];
+		assetPointer->channelSettings[channel].vibrato.waveformType = 0;
+		assetPointer->channelSettings[channel].tremolo.waveformType = 0;
+		assetPointer->channelSettings[channel].panbrello.waveformType = 0;
+		assetPointer->channelSettings[channel].autoVibrato.waveformType = 0;
+		assetPointer->channelSettings[channel].priority = assetsList[assetID]->assetChannelPriority[channel];
+		assetPointer->channelSettings[channel].channelIndex = 0xff;
 	}
-	return songIndex;
+	
+	//allocate this asset's channels among the available mixing channels
+	allocateChannels();
+	
+	return assetIndex;
+}
+
+void endAsset(u16 assetIndex){
+	currentAssets[assetIndex].enabled = 0;
+	allocateChannels();
+}
+
+void allocateChannels(){
+	u8 channelIndex;
+	u8 assetIndex;
+	u8 lowestPriorityAllocated = 0xff;
+	u8 lowestMixChannel = 0;
+	CurrentChannelSettings *lowestChannel = 0;
+	u8 highestPriorityUnallocated = 0x0;
+	CurrentChannelSettings *highestChannel = 0;
+	
+	do{
+		//find the lowest priority channel that is currently allocated a mix channel
+		//and find the highest priority channel that is not allocated a mix channel
+		for(assetIndex = 0; assetIndex < MAX_ASSETS_IN_QUEUE; assetIndex++){
+			if(currentAssets[assetIndex].enabled == 0){
+				continue;
+			}
+			for(channelIndex = 0; channelIndex < MAX_DMA_CHANNELS; channelIndex++){
+				//if this is allocated, and lower
+				if((currentAssets[assetIndex].channelSettings[channelIndex].priority < lowestPriorityAllocated) && 
+				(currentAssets[assetIndex].channelSettings[channelIndex].channelIndex != 0xff)){
+					lowestPriorityAllocated = currentAssets[assetIndex].channelSettings[channelIndex].priority;
+					lowestMixChannel = currentAssets[assetIndex].channelSettings[channelIndex].channelIndex;
+					lowestChannel = &currentAssets[assetIndex].channelSettings[channelIndex];
+				}
+				//if this is unallocated, and higher
+				else if((currentAssets[assetIndex].channelSettings[channelIndex].priority >= highestPriorityUnallocated) &&
+				(currentAssets[assetIndex].channelSettings[channelIndex].channelIndex == 0xff)){
+					highestPriorityUnallocated = currentAssets[assetIndex].channelSettings[channelIndex].priority;
+					highestChannel = &currentAssets[assetIndex].channelSettings[channelIndex];
+				}
+			}
+		}
+		//check if the unallocated channel is higher priority than the allocated channel
+		if(highestPriorityUnallocated > lowestPriorityAllocated){
+			lowestChannel->channelIndex = 0xff;
+			highestChannel->channelIndex = lowestMixChannel;
+		}
+	}while(highestPriorityUnallocated >= lowestPriorityAllocated);
 }
 
 void processAudio(){
@@ -145,32 +209,32 @@ void processAudio(){
 		samplesNeeded = MAX_SAMPLES_IN_ONE_FRAME - 16;
 	}
 	
-	u32 areSongsPlaying = 0;
-	//check if there is at least one song playing right now
-	for(u32 songIndex = 0; songIndex < MAX_SONGS_IN_QUEUE; songIndex++){
-		if(currentSongs[songIndex].enabled == 1){
-			areSongsPlaying = 1;
+	u32 areAssetsPlaying = 0;
+	//check if there is at least one asset playing right now
+	for(u32 assetIndex = 0; assetIndex < MAX_ASSETS_IN_QUEUE; assetIndex++){
+		if(currentAssets[assetIndex].enabled == 1){
+			areAssetsPlaying = 1;
 		}
 	}
 	
-	//if at least one song is playing
-	if(areSongsPlaying){
+	//if at least one asset is playing
+	if(areAssetsPlaying){
 		//repeat until all samples needed this frame are processed
 		while(samplesNeeded != 0){
 			//check which channel has the fewest leftoverSamples
 			u32 samplesThisBatch = 0x10000;
-			for(u32 songIndex = 0; songIndex < MAX_SONGS_IN_QUEUE; songIndex++){
-				//ignore songs that aren't playing
-				if(currentSongs[songIndex].enabled != 1){
+			for(u32 assetIndex = 0; assetIndex < MAX_ASSETS_IN_QUEUE; assetIndex++){
+				//ignore assets that aren't playing
+				if(currentAssets[assetIndex].enabled != 1){
 					continue;
 				}
-				//if this song has no leftover samples, process a tick
-				if(currentSongs[songIndex].leftoverSamples == 0){
-					processSongTick(&currentSongs[songIndex]);
-					currentSongs[songIndex].leftoverSamples = tempoTable[currentSongs[songIndex].currentTempo - 32];
+				//if this asset has no leftover samples, process a tick
+				if(currentAssets[assetIndex].leftoverSamples == 0){
+					processAssetTick(&currentAssets[assetIndex], assetIndex);
+					currentAssets[assetIndex].leftoverSamples = tempoTable[currentAssets[assetIndex].currentTempo - 32];
 				}
-				if(currentSongs[songIndex].leftoverSamples < samplesThisBatch){
-					samplesThisBatch = currentSongs[songIndex].leftoverSamples;
+				if(currentAssets[assetIndex].leftoverSamples < samplesThisBatch){
+					samplesThisBatch = currentAssets[assetIndex].leftoverSamples;
 				}
 			}
 			//check if the value is bigger than the maximum batch size
@@ -187,8 +251,8 @@ void processAudio(){
 			
 			samplesNeeded -= samplesThisBatch;
 			//update the leftover samples of every channel
-			for(u32 songIndex = 0; songIndex < MAX_SONGS_IN_QUEUE; songIndex++){
-				currentSongs[songIndex].leftoverSamples -= samplesThisBatch;
+			for(u32 assetIndex = 0; assetIndex < MAX_ASSETS_IN_QUEUE; assetIndex++){
+				currentAssets[assetIndex].leftoverSamples -= samplesThisBatch;
 			}
 		}
 	}
@@ -197,27 +261,27 @@ void processAudio(){
 	audioProgress = 2;
 }
 
-void processSongTick(CurrentSongSettings *songPointer){	
-	//if the song just started
-	if(songPointer->rowNum == 0){
-		nextRow(&songPointer->song->patterns[songPointer->song->orders[0]], &songPointer->patternOffset, songPointer);
-		songPointer->rowNum = 1;
+void processAssetTick(CurrentAssetSettings *assetPointer, u8 assetIndex){	
+	//if the asset just started
+	if(assetPointer->rowNum == 0){
+		nextRow(&assetPointer->asset->patterns[assetPointer->asset->orders[0]], &assetPointer->patternOffset, assetPointer);
+		assetPointer->rowNum = 1;
 	}
 	//if there is a delay
-	else if(songPointer->delayTicks > 0){
-		songPointer->delayTicks--;
+	else if(assetPointer->delayTicks > 0){
+		assetPointer->delayTicks--;
 	}
 	//if we are moving on to a new row
-	else if(songPointer->tickCounter == (songPointer->currentTickSpeed - 1)){
+	else if(assetPointer->tickCounter == (assetPointer->currentTickSpeed - 1)){
 		PatternData *patternPtr;
 		u16 numRows;
 		
 		//reset the tick counter
-		songPointer->tickCounter = 0;
+		assetPointer->tickCounter = 0;
 		
 		//store the last used settings
 		for(u8 channel = 0; channel < MAX_DMA_CHANNELS; channel++){
-			CurrentChannelSettings *channelPointer = &songPointer->channelSettings[channel];
+			CurrentChannelSettings *channelPointer = &assetPointer->channelSettings[channel];
 			channelPointer->previousBasicSettings.volume = channelPointer->currentBasicSettings.volume;
 			channelPointer->previousBasicSettings.note = channelPointer->currentBasicSettings.note;
 			channelPointer->previousBasicSettings.instrument = channelPointer->currentBasicSettings.instrument;
@@ -245,71 +309,67 @@ void processSongTick(CurrentSongSettings *songPointer){
 		}
 		
 		//load the pattern data we are currently working through
-		patternPtr = &songPointer->song->patterns[songPointer->song->orders[songPointer->orderIndex]];
+		patternPtr = &assetPointer->asset->patterns[assetPointer->asset->orders[assetPointer->orderIndex]];
 		numRows = patternPtr->rowsNum;
 		
 		//check if there is a position jump command
-		if((songPointer->globalEffects.B != 0xff) || (songPointer->globalEffects.C != 0xff)){
-			positionJump(songPointer);
-			patternPtr = &songPointer->song->patterns[songPointer->song->orders[songPointer->orderIndex]];
-			songPointer->patternOffset = 0;
-			for(u32 i = 1; i < songPointer->rowNum; i++){
-				nextRow(patternPtr, &songPointer->patternOffset, songPointer);
+		if((assetPointer->globalEffects.B != 0xff) || (assetPointer->globalEffects.C != 0xff)){
+			positionJump(assetPointer);
+			patternPtr = &assetPointer->asset->patterns[assetPointer->asset->orders[assetPointer->orderIndex]];
+			assetPointer->patternOffset = 0;
+			for(u32 i = 1; i < assetPointer->rowNum; i++){
+				nextRow(patternPtr, &assetPointer->patternOffset, assetPointer);
 			}
 		}
 		
 		//check if we have reached the last row number of this pattern
-		else if(songPointer->rowNum == numRows){
+		else if(assetPointer->rowNum == numRows){
 			//increment the order ID
-			songPointer->orderIndex++;
-			//check if the song is over
-			if((songPointer->orderIndex >= (songPointer->song->ordersNum)) || (songPointer->song->orders[songPointer->orderIndex] == 0xff)){
-				//play the next song
-				u16 songIndex = songPointer->songIndex;
-				if(songIndex == (numSongs - 1)){
-					playNewSong(0);
-				}
-				else{
-					playNewSong(songIndex + 1);
-				}
-				return;
+			assetPointer->orderIndex++;
+			//check if the asset is over
+			if((assetPointer->orderIndex >= (assetPointer->asset->ordersNum)) || (assetPointer->asset->orders[assetPointer->orderIndex] == 0xff)){
+				//end this asset and free it's slot for others
+				endAsset(assetIndex);
 			}
-			songPointer->rowNum = 1;
-			songPointer->patternOffset = 0;
+			assetPointer->rowNum = 1;
+			assetPointer->patternOffset = 0;
 			//load the pattern data for the next pattern
-			patternPtr = &songPointer->song->patterns[songPointer->song->orders[songPointer->orderIndex]];
+			patternPtr = &assetPointer->asset->patterns[assetPointer->asset->orders[assetPointer->orderIndex]];
 		}
 		//if we have not yet reached the last row of this pattern
 		else{
 			//increment the row Number
-			songPointer->rowNum++;
+			assetPointer->rowNum++;
 		}
 		//reset the global settings
-		songPointer->globalEffects.SE = 0xff;
-		songPointer->globalEffects.A = 0xff;
+		assetPointer->globalEffects.SE = 0xff;
+		assetPointer->globalEffects.A = 0xff;
 		//get the data for this row from the pattern table
-		nextRow(patternPtr, &songPointer->patternOffset, songPointer);
+		nextRow(patternPtr, &assetPointer->patternOffset, assetPointer);
 		
 	}
 	//if we are not yet moving on to a new row
 	else{
 		//decrement the tick counter
-		songPointer->tickCounter++;
+		assetPointer->tickCounter++;
 	}
 	
 	for(u8 channel = 0; channel < MAX_DMA_CHANNELS; channel++){
-		CurrentChannelSettings *channelPointer = &songPointer->channelSettings[channel];
+		CurrentChannelSettings *channelPointer = &assetPointer->channelSettings[channel];
 		//process any effects
-		processEffects(channelPointer, songPointer);
+		processEffects(channelPointer, assetPointer);
 	}
 	
 	//now we go through each of the 8 sampled channels, and process all of their data.
 	for(u8 channel = 0; channel < MAX_DMA_CHANNELS; channel++){
-		processSampledChannel(&songPointer->channelSettings[channel], &channelsMixData[channel], songPointer);
+		u8 channelIndex = assetPointer->channelSettings[channel].channelIndex;
+		if(channelIndex != 0xff){
+			processSampledChannel(&assetPointer->channelSettings[channel], &channelsMixData[channelIndex], assetPointer);
+		}
 	}
 }
 
-void processSampledChannel(CurrentChannelSettings *channelPointer, ChannelData *channelMixBuffer, CurrentSongSettings *songPointer){
+void processSampledChannel(CurrentChannelSettings *channelPointer, ChannelData *channelMixBuffer, CurrentAssetSettings *assetPointer){
 	//setup some local variables, and set them to default values
 	u8 finalVolume = 128;
 	u16 finalPitch = 0;
@@ -328,11 +388,11 @@ void processSampledChannel(CurrentChannelSettings *channelPointer, ChannelData *
 	
 	//process any new note data in the pattern
 	if((channelPointer->pitchState == NEW_PITCH) && (channelPointer->triggerState != DELAY_TRIGGER)){
-		processNote(channelPointer, songPointer);
+		processNote(channelPointer, assetPointer);
 	}
 	
 	if(channelPointer->triggerState != NO_TRIGGER){
-		processTrigger(channelPointer, songPointer);
+		processTrigger(channelPointer, assetPointer);
 	}
 
 	//if the note is currently fading out
@@ -375,7 +435,7 @@ void processSampledChannel(CurrentChannelSettings *channelPointer, ChannelData *
 	autoVibrato = processVibrato(&channelPointer->autoVibrato);
 	
 	//calculate the final volume
-	finalVolume = (((envalopeVolume * channelPointer->noteFadeComponent * channelPointer->currentVolume * songPointer->globalVolume >> 6) *
+	finalVolume = (((envalopeVolume * channelPointer->noteFadeComponent * channelPointer->currentVolume * assetPointer->globalVolume >> 6) *
 				channelPointer->channelVolume >> 6) * channelPointer->samplePointer->globalVolume >> 6) * channelPointer->instrumentPointer->globalVolume >> 23;
 	//if the tremor has turned off the note right now
 	if(finalVolume + tremolo > 0x80){
@@ -429,7 +489,7 @@ void processSampledChannel(CurrentChannelSettings *channelPointer, ChannelData *
 //volume from 0 to 128
 //panning from -32 to 32
 
-//take the settings dictated by the IT song, and translate them into settings for the mixer
+//take the settings dictated by the IT asset, and translate them into settings for the mixer
 void applySettings(ChannelData *channelMixData, AudioSample *samplePtr, u32 pitch, u8 volume, s8 panning, enum NoteState *state, u16 offset){
 	s32 temp;
 	//set the new pitch
@@ -539,7 +599,7 @@ void applySettings(ChannelData *channelMixData, AudioSample *samplePtr, u32 pitc
 	}
 }
 
-void nextRow(PatternData *patternPtr, u16 *patternOffsetPtr, CurrentSongSettings *songPointer){
+void nextRow(PatternData *patternPtr, u16 *patternOffsetPtr, CurrentAssetSettings *assetPointer){
 	u8 channelMask;
 	ChannelBasicSettings *previousSettings;
 	ChannelBasicSettings *currentSettings;
@@ -557,19 +617,19 @@ void nextRow(PatternData *patternPtr, u16 *patternOffsetPtr, CurrentSongSettings
 		
 		//determine the channel being modified
 		channel = (channelMask & 0x3f) - 1;
-		previousSettings = &songPointer->channelSettings[channel].previousBasicSettings;
-		currentSettings = &songPointer->channelSettings[channel].currentBasicSettings;
+		previousSettings = &assetPointer->channelSettings[channel].previousBasicSettings;
+		currentSettings = &assetPointer->channelSettings[channel].currentBasicSettings;
 		isChannelModified[channel] = 1;
 		
 		//load a new maskVariable if channelMask says to
 		if(channelMask & 0x80){
 			maskVariable = patternPtr->packedPatternData[patternOffset];
 			patternOffset++;
-			songPointer->channelSettings[channel].maskVariable = maskVariable;
+			assetPointer->channelSettings[channel].maskVariable = maskVariable;
 		}
 		//otherwise reuse the last maskVariable
 		else{
-			maskVariable = songPointer->channelSettings[channel].maskVariable;
+			maskVariable = assetPointer->channelSettings[channel].maskVariable;
 		}
 		
 		//check if a new note needs to be loaded
@@ -577,40 +637,40 @@ void nextRow(PatternData *patternPtr, u16 *patternOffsetPtr, CurrentSongSettings
 			//load the new note
 			currentSettings->note = patternPtr->packedPatternData[patternOffset];
 			patternOffset++;
-			songPointer->channelSettings[channel].pitchState = NEW_PITCH;
+			assetPointer->channelSettings[channel].pitchState = NEW_PITCH;
 		}
 		//if the last note gets reused
 		else if(maskVariable & 0x10){
 			//load the last note used
 			currentSettings->note = previousSettings->note;
-			songPointer->channelSettings[channel].pitchState = NEW_PITCH;
+			assetPointer->channelSettings[channel].pitchState = NEW_PITCH;
 		}
 		
 		//check if a new instrument needs to be loaded
 		if(maskVariable & 0x2){
 			currentSettings->instrument = patternPtr->packedPatternData[patternOffset];
 			patternOffset++;
-			songPointer->channelSettings[channel].triggerState = TRIGGER;
+			assetPointer->channelSettings[channel].triggerState = TRIGGER;
 		}
 		//if the last instrument gets reused
 		else if(maskVariable & 0x20){
 			currentSettings->instrument = previousSettings->instrument;
-			songPointer->channelSettings[channel].triggerState = TRIGGER;
+			assetPointer->channelSettings[channel].triggerState = TRIGGER;
 		}
 		
 		//check if a new volume needs to be loaded
 		if(maskVariable & 0x4){
 			currentSettings->volume = patternPtr->packedPatternData[patternOffset];
 			patternOffset++;
-			songPointer->channelSettings[channel].volumeState = TRIGGER_TICK_VOLUME;
+			assetPointer->channelSettings[channel].volumeState = TRIGGER_TICK_VOLUME;
 		}
 		//if the last volume gets reused
 		else if(maskVariable & 0x40){
 			currentSettings->volume = previousSettings->volume;
-			songPointer->channelSettings[channel].volumeState = TRIGGER_TICK_VOLUME;
+			assetPointer->channelSettings[channel].volumeState = TRIGGER_TICK_VOLUME;
 		}
 		else{
-			songPointer->channelSettings[channel].volumeState = NO_VOLUME;
+			assetPointer->channelSettings[channel].volumeState = NO_VOLUME;
 		}
 		
 		//check if a new effect needs to be loaded
@@ -621,16 +681,16 @@ void nextRow(PatternData *patternPtr, u16 *patternOffsetPtr, CurrentSongSettings
 			patternOffset++;
 			previousSettings->effectValue = currentSettings->effectValue;
 			previousSettings->effect = currentSettings->effect;
-			songPointer->channelSettings[channel].effectState = TRIGGER_TICK_EFFECT;
+			assetPointer->channelSettings[channel].effectState = TRIGGER_TICK_EFFECT;
 		}
 		//if the last effect gets reused
 		else if(maskVariable & 0x80){
 			currentSettings->effect = previousSettings->effect;
 			currentSettings->effectValue = previousSettings->effectValue;
-			songPointer->channelSettings[channel].effectState = TRIGGER_TICK_EFFECT;
+			assetPointer->channelSettings[channel].effectState = TRIGGER_TICK_EFFECT;
 		}
 		else{
-			songPointer->channelSettings[channel].effectState = NO_EFFECT;
+			assetPointer->channelSettings[channel].effectState = NO_EFFECT;
 		}
 		
 		//load the next channelmask
@@ -644,14 +704,14 @@ void nextRow(PatternData *patternPtr, u16 *patternOffsetPtr, CurrentSongSettings
 			continue;
 		}
 		else{
-			songPointer->channelSettings[channel].effectState = NO_EFFECT;
-			songPointer->channelSettings[channel].volumeState = NO_VOLUME;
+			assetPointer->channelSettings[channel].effectState = NO_EFFECT;
+			assetPointer->channelSettings[channel].volumeState = NO_VOLUME;
 		}
 	}
 	*patternOffsetPtr = patternOffset;
 }
 
-void processEffects(CurrentChannelSettings *channelPointer, CurrentSongSettings *songPointer){
+void processEffects(CurrentChannelSettings *channelPointer, CurrentAssetSettings *assetPointer){
 	u8 command = channelPointer->currentBasicSettings.effect;
 	u8 commandAmount = channelPointer->currentBasicSettings.effectValue;
 	//if there was no effect command to process
@@ -663,22 +723,22 @@ void processEffects(CurrentChannelSettings *channelPointer, CurrentSongSettings 
 		switch(command){
 		//if it is an Axx "set speed" command
 		case 1:
-			if((commandAmount != 0) && (songPointer->globalEffects.A == 0xff)){
-				songPointer->currentTickSpeed = commandAmount;
+			if((commandAmount != 0) && (assetPointer->globalEffects.A == 0xff)){
+				assetPointer->currentTickSpeed = commandAmount;
 			}
 			channelPointer->effectState = NO_EFFECT;
 			return;
 		//if it is a Bxx "position jump" command
 		case 2:
-			if(songPointer->globalEffects.B == 0xff){
-				songPointer->globalEffects.B = commandAmount;
+			if(assetPointer->globalEffects.B == 0xff){
+				assetPointer->globalEffects.B = commandAmount;
 			}
 			channelPointer->effectState = NO_EFFECT;
 			return;
 		//if it is a Cxx "pattern break" command
 		case 3:
-			if(songPointer->globalEffects.C == 0xff){
-				songPointer->globalEffects.C = commandAmount;
+			if(assetPointer->globalEffects.C == 0xff){
+				assetPointer->globalEffects.C = commandAmount;
 			}
 			channelPointer->effectState = NO_EFFECT;
 			return;
@@ -864,7 +924,7 @@ void processEffects(CurrentChannelSettings *channelPointer, CurrentSongSettings 
 				return;
 			//if it is a S6x "fine pattern delay" command
 			case 6:
-				songPointer->delayTicks += commandAmount & 0xf;
+				assetPointer->delayTicks += commandAmount & 0xf;
 				channelPointer->effectState = NO_EFFECT;
 				return;
 			//if it is one of the many S7x commands
@@ -927,7 +987,7 @@ void processEffects(CurrentChannelSettings *channelPointer, CurrentSongSettings 
 			case 11:;
 				//if we are setting a loop point and are not currently in a loop
 				if((commandAmount == 0) && (channelPointer->effectMemory.SBx == 0xff)){
-					channelPointer->effectMemory.SB0 = songPointer->rowNum;
+					channelPointer->effectMemory.SB0 = assetPointer->rowNum;
 				}
 				//if we are starting a new loop
 				else if((commandAmount != 0) && (channelPointer->effectMemory.SBx == 0xff)){
@@ -940,8 +1000,8 @@ void processEffects(CurrentChannelSettings *channelPointer, CurrentSongSettings 
 				//if we are performing one loop
 				else if(commandAmount != 0){
 					channelPointer->effectMemory.SBx--;
-					songPointer->globalEffects.B = songPointer->orderIndex;
-					songPointer->globalEffects.C = channelPointer->effectMemory.SB0;
+					assetPointer->globalEffects.B = assetPointer->orderIndex;
+					assetPointer->globalEffects.C = channelPointer->effectMemory.SB0;
 				}
 				channelPointer->effectState = NO_EFFECT;
 				return;
@@ -964,9 +1024,9 @@ void processEffects(CurrentChannelSettings *channelPointer, CurrentSongSettings 
 				return;
 			//if it is a SEx "pattern delay" command
 			case 14:
-				if(songPointer->globalEffects.SE == 0xff){
-					songPointer->globalEffects.SE = commandAmount;
-					songPointer->delayTicks += songPointer->currentTickSpeed * (commandAmount);
+				if(assetPointer->globalEffects.SE == 0xff){
+					assetPointer->globalEffects.SE = commandAmount;
+					assetPointer->delayTicks += assetPointer->currentTickSpeed * (commandAmount);
 					channelPointer->effectState = NO_EFFECT;
 				}
 				return;
@@ -985,7 +1045,7 @@ void processEffects(CurrentChannelSettings *channelPointer, CurrentSongSettings 
 			}
 			//if it is a "set tempo command"
 			if(commandAmount >= 0x20){
-				songPointer->currentTempo = commandAmount;
+				assetPointer->currentTempo = commandAmount;
 				channelPointer->effectState = NO_EFFECT;
 			}
 			//if it is a "increase tempo" or "decrease tempo" command
@@ -1004,14 +1064,14 @@ void processEffects(CurrentChannelSettings *channelPointer, CurrentSongSettings 
 			if(commandAmount > 0x80){
 				commandAmount = 0x80;
 			}
-			songPointer->globalVolume = commandAmount;
+			assetPointer->globalVolume = commandAmount;
 			channelPointer->effectState = NO_EFFECT;
 			return;
 		//if it is a Wxx "global volume slide" command
 		case 23:
 			//if it is a "fine global volume slide" command
 			if(slideCheck(&channelPointer->effectMemory.W, commandAmount)){
-				volumeSlide(&songPointer->globalVolume, &channelPointer->effectMemory.W, 128, commandAmount);
+				volumeSlide(&assetPointer->globalVolume, &channelPointer->effectMemory.W, 128, commandAmount);
 				channelPointer->effectState = NO_EFFECT;
 			}
 			//if it is a regular "global volume slide" command
@@ -1150,15 +1210,15 @@ void processEffects(CurrentChannelSettings *channelPointer, CurrentSongSettings 
 			}
 			//if it is a "increase tempo" command
 			if(commandAmount >= 0x10){
-				increaseTempo(commandAmount & 0xf, songPointer);
+				increaseTempo(commandAmount & 0xf, assetPointer);
 			}
 			else{
-				decreaseTempo(commandAmount & 0xf, songPointer);
+				decreaseTempo(commandAmount & 0xf, assetPointer);
 			}
 			return;
 		//if it is a Wxx "global volume slide" command
 		case 23:
-			volumeSlide(&songPointer->globalVolume, &channelPointer->effectMemory.W, 128, commandAmount);
+			volumeSlide(&assetPointer->globalVolume, &channelPointer->effectMemory.W, 128, commandAmount);
 			return;
 		default:
 			channelPointer->effectState = NO_EFFECT;
@@ -1312,11 +1372,11 @@ void processVolume(CurrentChannelSettings *channelPointer){
 	}
 }
 
-void processTrigger(CurrentChannelSettings *channelPointer, CurrentSongSettings *songPointer){
+void processTrigger(CurrentChannelSettings *channelPointer, CurrentAssetSettings *assetPointer){
 	//if a note just got triggered, record the new instrument and sample
 	if(channelPointer->triggerState == TRIGGER){
-		channelPointer->instrumentPointer = &songPointer->song->instruments[channelPointer->currentBasicSettings.instrument - 1];
-		channelPointer->samplePointer = sampleList[songPointer->song->samples[channelPointer->instrumentPointer->keyboardSample[channelPointer->currentBasicSettings.note]]];
+		channelPointer->instrumentPointer = &assetPointer->asset->instruments[channelPointer->currentBasicSettings.instrument - 1];
+		channelPointer->samplePointer = sampleList[assetPointer->asset->samples[channelPointer->instrumentPointer->keyboardSample[channelPointer->currentBasicSettings.note]]];
 		channelPointer->noteFadeComponent = 1024;
 		channelPointer->currentPitch = channelPointer->notePitch;
 		channelPointer->noteState = TRIGGER_TICK_NOTE;
@@ -1392,11 +1452,11 @@ void processTrigger(CurrentChannelSettings *channelPointer, CurrentSongSettings 
 	}
 }
 
-void processNote(CurrentChannelSettings *channelPointer, CurrentSongSettings *songPointer){
+void processNote(CurrentChannelSettings *channelPointer, CurrentAssetSettings *assetPointer){
 	//if it is a regular note
 	if(channelPointer->currentBasicSettings.note <= 119){
-		channelPointer->instrumentPointer = &songPointer->song->instruments[channelPointer->currentBasicSettings.instrument - 1];
-		channelPointer->samplePointer = sampleList[songPointer->song->samples[channelPointer->instrumentPointer->keyboardSample[channelPointer->currentBasicSettings.note]]];
+		channelPointer->instrumentPointer = &assetPointer->asset->instruments[channelPointer->currentBasicSettings.instrument - 1];
+		channelPointer->samplePointer = sampleList[assetPointer->asset->samples[channelPointer->instrumentPointer->keyboardSample[channelPointer->currentBasicSettings.note]]];
 		channelPointer->notePitch = (channelPointer->samplePointer->middleCPitch * pitchTable[channelPointer->currentBasicSettings.note]) >> 14;
 		if(channelPointer->triggerState != CANCEL_TRIGGER){
 			channelPointer->triggerState = TRIGGER;
@@ -1722,58 +1782,58 @@ void tonePortamento(CurrentChannelSettings *channelPointer, u8 commandAmount){
 	}
 }
 
-void positionJump(CurrentSongSettings *songPointer){
+void positionJump(CurrentAssetSettings *assetPointer){
 
 	u8 nextOrder;
 	u8 nextRow;
 	//first, figure out which order we are jumping to
-	if(songPointer->globalEffects.B == 0xff){
-		nextOrder = songPointer->orderIndex + 1;
+	if(assetPointer->globalEffects.B == 0xff){
+		nextOrder = assetPointer->orderIndex + 1;
 	}
 	else{
-		nextOrder = songPointer->globalEffects.B;
+		nextOrder = assetPointer->globalEffects.B;
 	}
 	//check if the jumped-to order is a valid one. If invalid, jump to 0
-	if(nextOrder >= songPointer->song->ordersNum){
+	if(nextOrder >= assetPointer->asset->ordersNum){
 		nextOrder = 0;
 	}
 	//then, figure out which row we are jumping to
-	if(songPointer->globalEffects.C == 0xff){
+	if(assetPointer->globalEffects.C == 0xff){
 		nextRow = 1;
 	}
 	//check if the new row number is bigger than the number of rows in the new order. If invalid, set to 0
-	else if(songPointer->globalEffects.C >= songPointer->song->patterns[songPointer->song->orders[nextOrder]].rowsNum){
+	else if(assetPointer->globalEffects.C >= assetPointer->asset->patterns[assetPointer->asset->orders[nextOrder]].rowsNum){
 		nextRow = 1;
 	}
 	else{
-		nextRow = songPointer->globalEffects.C + 1;
+		nextRow = assetPointer->globalEffects.C + 1;
 	}
 	//set the new values
-	songPointer->orderIndex = nextOrder;
-	songPointer->rowNum = nextRow;
+	assetPointer->orderIndex = nextOrder;
+	assetPointer->rowNum = nextRow;
 
 	//clear the global effects from the queue
-	songPointer->globalEffects.B = 0xff;
-	songPointer->globalEffects.C = 0xff;
+	assetPointer->globalEffects.B = 0xff;
+	assetPointer->globalEffects.C = 0xff;
 }
 
 
-void increaseTempo(u8 commandAmount, CurrentSongSettings *songPointer){
+void increaseTempo(u8 commandAmount, CurrentAssetSettings *assetPointer){
 	//do bounds checking
-	if((songPointer->currentTempo + commandAmount) > 0xff){
-		songPointer->currentTempo = 0xff;
+	if((assetPointer->currentTempo + commandAmount) > 0xff){
+		assetPointer->currentTempo = 0xff;
 	}
 	else{
-		songPointer->currentTempo = songPointer->currentTempo + commandAmount;
+		assetPointer->currentTempo = assetPointer->currentTempo + commandAmount;
 	}
 }
-void decreaseTempo(u8 commandAmount, CurrentSongSettings *songPointer){
+void decreaseTempo(u8 commandAmount, CurrentAssetSettings *assetPointer){
 	//do bounds checking
-	if(songPointer->currentTempo - commandAmount < 0x20){
-		songPointer->currentTempo = 0x20;
+	if(assetPointer->currentTempo - commandAmount < 0x20){
+		assetPointer->currentTempo = 0x20;
 	}
 	else{
-		songPointer->currentTempo = songPointer->currentTempo - commandAmount;
+		assetPointer->currentTempo = assetPointer->currentTempo - commandAmount;
 	}
 }
 void volumeSlide(u8 *currentVolume, u8 *effectMemory, u8 maxVolume, u8 commandAmount){

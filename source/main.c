@@ -7,6 +7,7 @@ vu8 gameState;
 
 int main(){
 	globalInitialize();
+	playNewAsset(_AreaA_DMA_Only);
 	//start of the game loop in main.s
 	gameLoop();
 }
@@ -49,6 +50,10 @@ gameLoopState = WAITING_FOR_VBLANK;
 			//bios halt functiion
 			Halt();
 		}
+		if(inputs.pressed & KEY_A){
+			playNewAsset(_sfx_test);
+		}
+		
 		gameLoopState = WAITING_FOR_VBLANK;
 	}
 }

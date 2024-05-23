@@ -10,4 +10,7 @@ extern void audioInitialize();
 
 //will add a new song to the queue if it's priority is higher than another songs in the queue.
 //Return value is the index into the current song array.
-extern u8 playNewSong(u16);
+extern u8 playNewAsset(u16);
+
+//will remove an asset from the queue. Can be called at any time by the programmer, or called automatically after an asset reaches the end.
+extern void endAsset(u16);

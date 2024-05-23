@@ -9,7 +9,7 @@
 //EWRAM usage will be slightly increased by increasing this value.
 //Performance will be slightly increased as this value increases.
 #ifndef MAX_SONGS_IN_QUEUE
-	#define MAX_SONGS_IN_QUEUE 6
+	#define MAX_ASSETS_IN_QUEUE 6
 #endif
 
 //the number of cycles between each DMA value being sent to the DAC.

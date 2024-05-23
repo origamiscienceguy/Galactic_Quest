@@ -57,7 +57,7 @@ GRAPHICS_EXTS	:=
 
 # Source files to compile
 SOURCE_FILES	:= source/main.c
-SOURCE_DIRS	:= source := include := source/irq_handling := source/audio := data/audio/samples_processed := data/audio/songs_processed
+SOURCE_DIRS	:= source := include := source/irq_handling := source/audio := data/audio/samples_processed := data/audio/assets_processed := data/audio/assets_priorities
 SOURCE_EXTS	:= c := s := S
 
 # Include directories

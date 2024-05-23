@@ -117,7 +117,7 @@ typedef const struct PatternData{
 	cu8 *packedPatternData; //the packed data of this pattern
 }PatternData;
 
-typedef const struct SongData{
+typedef const struct AssetData{
 	cu8 *orders;
 	InstrumentData *instruments;
 	cu16 *samples;
@@ -126,20 +126,22 @@ typedef const struct SongData{
 	cu16 instrumentsNum;
 	cu16 samplesNum;
 	cu16 patternsNum;
-	cu8 songName[27];
+	cu8 assetName[27];
 	cu8 initGlobalVol;
 	cu8 initTickSpeed;
 	cu8 initTempo;
+	cu8 *assetPriority;
+	cu8 *assetChannelPriority;
 	cu8 initChannelVol[MAX_DMA_CHANNELS];
 	cu8 initChannelPan[MAX_DMA_CHANNELS];
-}SongData;
+}AssetData;
 
-typedef struct SongGlobalEffects{
+typedef struct AssetGlobalEffects{
 	u8 A; //the command value of a speed change, if any
 	u8 B; //the command value of a position jump, if any
 	u8 C; //the command value of a pattern break, if any
 	u8 SE; //the counter for how many times to repeat row
-}SongGlobalEffects;
+}AssetGlobalEffects;
 
 typedef struct ChannelBasicSettings{
 	u8 instrument; //ID of an instrument
@@ -221,25 +223,27 @@ typedef struct CurrentChannelSettings{
 	enum EffectState effectState; //state of the effect command on this row
 	enum TriggerState triggerState; //weather a note is triggered this tick
 	enum PitchState pitchState; //weather a new pitch command was on this row
+	u8 priority; //the priority of this channel. Higher number means higher priority.
+	u8 channelIndex; //the index that this channel's results get sent to. 0xff means it is currently not allocated a channel
 }CurrentChannelSettings;
 
-typedef struct CurrentSongSettings{
-	SongData *song; //pointer to the song that is currently playing
-	SongGlobalEffects globalEffects; //memory for any global effects that need it
-	u8 globalVolume; //the current global volume of the song
-	u16 songIndex; //the index of the song that is currently playing
+typedef struct CurrentAssetSettings{
+	AssetData *asset; //pointer to the asset that is currently playing
+	AssetGlobalEffects globalEffects; //memory for any global effects that need it
+	u8 globalVolume; //the current global volume of the asset
+	u16 assetID; //the index of the asset that is currently playing
 	u8 rowNum; //the current row being processed
 	u16 patternOffset; //the current offset into the current pattern being played
 	u8 currentTickSpeed; //the number of ticks per row
 	u8 tickCounter; //the number of ticks we have completed in this row
 	u8 orderIndex; //the ID of the current order being processed
-	u8 enabled; //0 if no song is playing. 1 if a song should be playing, 2 if a song is paused
-	u8 currentTempo; //the tempo of the song
+	u8 enabled; //0 if no asset is playing. 1 if a asset should be playing, 2 if a asset is paused
+	u8 currentTempo; //the tempo of the asset
 	u16 delayTicks; //the number of extra ticks to play this row
 	u16 leftoverSamples; //the number of samples leftover in this tick after a frame is done processing
-	u8 channelDataIndecies[MAX_DMA_CHANNELS]; //these map the song's channels to the mixer's available channels
-	CurrentChannelSettings channelSettings[MAX_DMA_CHANNELS]; //the data for the channels of this song
-}CurrentSongSettings;
+	u8 priority; //the priority of this asset. higher number means higher priority.
+	CurrentChannelSettings channelSettings[MAX_DMA_CHANNELS]; //the data for the channels of this asset
+}CurrentAssetSettings;
 
 //global variables
 extern s8 soundBuffer1[MAX_SAMPLES_IN_ONE_FRAME * 2];
@@ -250,9 +254,9 @@ extern u8 audioProgress;
 
 //external data
 extern AudioSample *sampleList[];
-extern SongData *songList[];
+extern AssetData *assetsList[];
 extern cu16 numSamples;
-extern cu16 numSongs;
+extern cu16 numAssets;
 extern cu16 pitchTable[];
 extern cu16 envalopeInverseTable[];
 extern cu16 tempoTable[];
@@ -272,13 +276,13 @@ extern cu16 arpeggioTable[];
 extern void mixAudio(ChannelData *, s8 *, u32, u32);
 
 //internal functions
-void processSongTick(CurrentSongSettings *);
-void nextRow(PatternData *, u16 *, CurrentSongSettings *);
+void processAssetTick(CurrentAssetSettings *, u8);
+void nextRow(PatternData *, u16 *, CurrentAssetSettings *);
 void applySettings(ChannelData *, AudioSample *, u32, u8, s8, enum NoteState *, u16);
-void processEffects(CurrentChannelSettings *, CurrentSongSettings *);
-void processNote(CurrentChannelSettings *, CurrentSongSettings *);
+void processEffects(CurrentChannelSettings *, CurrentAssetSettings *);
+void processNote(CurrentChannelSettings *, CurrentAssetSettings *);
 void processVolume(CurrentChannelSettings *);
-void processTrigger(CurrentChannelSettings *, CurrentSongSettings *);
+void processTrigger(CurrentChannelSettings *, CurrentAssetSettings *);
 s8 processEnvalope(ChannelEnvalopeSettings *, EnvalopeData *, enum NoteState);
 void volumeSlideUp(CurrentChannelSettings *, u8);
 void volumeSlideDown(CurrentChannelSettings *, u8);
@@ -288,16 +292,17 @@ u8 portamentoCheck(u8);
 void initVibrato(VibratoSettings *, u8*, u8, u8, u8);
 s8 processVibrato(VibratoSettings *);
 void tonePortamento(CurrentChannelSettings *, u8);
-void positionJump(CurrentSongSettings *);
-void increaseTempo(u8, CurrentSongSettings *);
-void decreaseTempo(u8, CurrentSongSettings *);
+void positionJump(CurrentAssetSettings *);
+void increaseTempo(u8, CurrentAssetSettings *);
+void decreaseTempo(u8, CurrentAssetSettings *);
 void patternLoop(CurrentChannelSettings *, u8);
 void volumeSlide(u8 *, u8 *, u8, u8);
 u8 slideCheck(u8 *, u8);
 void tremor(CurrentChannelSettings *, u8);
-void processSampledChannel(CurrentChannelSettings *, ChannelData *, CurrentSongSettings *);
+void processSampledChannel(CurrentChannelSettings *, ChannelData *, CurrentAssetSettings *);
 void panningSlide(u8 *, u8 *, u8);
 void retrigger(CurrentChannelSettings *, u8);
 void arpeggio(CurrentChannelSettings *, u8);
+void allocateChannels();
 
 #endif
