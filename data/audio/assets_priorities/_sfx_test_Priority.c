@@ -5,4 +5,4 @@
 cu8 _sfx_test_Priority = 0xff;
 
 //type in the priority of each channel in this asset. Leave unused channels as blank, or set to 0
-cu8 _sfx_test_ChannelPriority[MAX_DMA_CHANNELS] = {0, };
+cu8 _sfx_test_ChannelPriority[MAX_DMA_CHANNELS] = {80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
