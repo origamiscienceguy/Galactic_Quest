@@ -13,4 +13,5 @@ extern void audioInitialize();
 extern u8 playNewAsset(u16);
 
 //will remove an asset from the queue. Can be called at any time by the programmer, or called automatically after an asset reaches the end.
-extern void endAsset(u16);
+//returns the number of assets still palying after this one is removed
+extern u8 endAsset(u16);

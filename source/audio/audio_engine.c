@@ -124,6 +124,7 @@ u8 playNewAsset(u16 assetID){
 	assetPointer->globalEffects.B = 0xff;
 	assetPointer->globalEffects.C = 0xff;
 	assetPointer->globalEffects.SE = 0xff;
+	assetPointer->priority = *assetsList[assetID]->assetPriority;
 	
 	for(u32 channel = 0; channel < MAX_DMA_CHANNELS; channel++){
 		assetPointer->channelSettings[channel].noteState = NO_NOTE;
@@ -147,7 +148,7 @@ u8 playNewAsset(u16 assetID){
 	return assetIndex;
 }
 
-void endAsset(u16 assetIndex){
+u8 endAsset(u16 assetIndex){
 	currentAssets[assetIndex].enabled = 0;
 	for(u32 i = 0; i < MAX_DMA_CHANNELS; i++){
 		if(currentAssets[assetIndex].channelSettings[i].channelIndex != 0xff){
@@ -159,6 +160,24 @@ void endAsset(u16 assetIndex){
 	
 	//reallocate channels now that this asset is no longer using them
 	allocateChannels();
+	
+	//check if there are still assets playing
+	u32 howManyAssetsPlaying = 0;
+	//check if there is at least one asset playing right now
+	for(u32 assetIndex = 0; assetIndex < MAX_ASSETS_IN_QUEUE; assetIndex++){
+		if(currentAssets[assetIndex].enabled == 1){
+			howManyAssetsPlaying++;
+		}
+	}
+	//if nothing is playing, fill the buffers with 0
+	if(howManyAssetsPlaying == 0){
+		for(u32 i = 0; i < (MAX_SAMPLES_IN_ONE_FRAME / 2); i++){
+			((u32 *)soundBuffer1)[i] = 0;
+			((u32 *)soundBuffer2)[i] = 0;
+		}
+	}
+	
+	return howManyAssetsPlaying;
 }
 
 void allocateChannels(){
@@ -400,6 +419,7 @@ void processAssetTick(CurrentAssetSettings *assetPointer, u8 assetIndex){
 			if((assetPointer->orderIndex >= (assetPointer->asset->ordersNum)) || (assetPointer->asset->orders[assetPointer->orderIndex] == 0xff)){
 				//end this asset and free it's slot for others
 				endAsset(assetIndex);
+				return;
 			}
 			assetPointer->rowNum = 1;
 			assetPointer->patternOffset = 0;
