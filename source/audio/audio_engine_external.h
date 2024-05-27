@@ -14,4 +14,10 @@ extern u8 playNewAsset(u16);
 
 //will remove an asset from the queue. Can be called at any time by the programmer, or called automatically after an asset reaches the end.
 //returns the number of assets still palying after this one is removed
-extern u8 endAsset(u16);
+extern u8 endAsset(u8);
+
+//will temporarilly stop playing a song in the queue. It will still maintain it's position in the queue.
+extern void pauseAsset(u8);
+
+//will resume a paused asset.
+extern void resumeAsset(u8);

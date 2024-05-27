@@ -7,7 +7,6 @@ vu8 gameState;
 
 int main(){
 	globalInitialize();
-	playNewAsset(_AreaA_DMA_Only);
 	//start of the game loop in main.s
 	gameLoop();
 }
@@ -43,8 +42,13 @@ void globalInitialize(){
 }
 
 __attribute__ ((noreturn)) void gameLoop(){
-gameLoopState = WAITING_FOR_VBLANK;
-
+	gameLoopState = WAITING_FOR_VBLANK;
+	static u8 bgmIndex;
+	static u8 bgmState;
+	
+	bgmIndex = playNewAsset(_AreaA_DMA_Only);
+	bgmState = 1;
+	
 	while(1){
 		while(gameLoopState == WAITING_FOR_VBLANK){
 			//bios halt functiion
@@ -52,6 +56,14 @@ gameLoopState = WAITING_FOR_VBLANK;
 		}
 		if(inputs.pressed & KEY_A){
 			playNewAsset(_sfx_test);
+		}
+		if((inputs.pressed & KEY_B) && (bgmState == 1)){
+			pauseAsset(bgmIndex);
+			bgmState = 2;
+		}
+		else if((inputs.pressed & KEY_B) && (bgmState == 2)){
+			resumeAsset(bgmIndex);
+			bgmState = 1;
 		}
 		
 		gameLoopState = WAITING_FOR_VBLANK;

@@ -148,7 +148,7 @@ u8 playNewAsset(u16 assetID){
 	return assetIndex;
 }
 
-u8 endAsset(u16 assetIndex){
+u8 endAsset(u8 assetIndex){
 	currentAssets[assetIndex].enabled = 0;
 	for(u32 i = 0; i < MAX_DMA_CHANNELS; i++){
 		if(currentAssets[assetIndex].channelSettings[i].channelIndex != 0xff){
@@ -178,6 +178,51 @@ u8 endAsset(u16 assetIndex){
 	}
 	
 	return howManyAssetsPlaying;
+}
+
+void pauseAsset(u8 assetIndex){
+	//pause the asset
+	if(currentAssets[assetIndex].enabled == 1){
+		currentAssets[assetIndex].enabled = 2;
+	}
+	
+	for(u32 i = 0; i < MAX_DMA_CHANNELS; i++){
+		if(currentAssets[assetIndex].channelSettings[i].channelIndex != 0xff){
+			ChannelData *mixDataPointer = &channelsMixData[currentAssets[assetIndex].channelSettings[i].channelIndex];
+			mixDataPointer->padding = mixDataPointer->state;
+			mixDataPointer->state = 0;
+		}
+	}
+	
+	u32 howManyAssetsPlaying = 0;
+	//check if there is at least one asset playing right now
+	for(u32 assetIndex = 0; assetIndex < MAX_ASSETS_IN_QUEUE; assetIndex++){
+		if(currentAssets[assetIndex].enabled == 1){
+			howManyAssetsPlaying++;
+		}
+	}
+	//if nothing is playing, fill the buffers with 0
+	if(howManyAssetsPlaying == 0){
+		for(u32 i = 0; i < (MAX_SAMPLES_IN_ONE_FRAME / 2); i++){
+			((u32 *)soundBuffer1)[i] = 0;
+			((u32 *)soundBuffer2)[i] = 0;
+		}
+	}
+}
+
+void resumeAsset(u8 assetIndex){
+	//resume the asset
+	if(currentAssets[assetIndex].enabled == 2){
+		currentAssets[assetIndex].enabled = 1;
+	}
+	
+	for(u32 i = 0; i < MAX_DMA_CHANNELS; i++){
+		if(currentAssets[assetIndex].channelSettings[i].channelIndex != 0xff){
+			ChannelData *mixDataPointer = &channelsMixData[currentAssets[assetIndex].channelSettings[i].channelIndex];
+			mixDataPointer->state = mixDataPointer->padding;
+			mixDataPointer->padding = 0;
+		}
+	}
 }
 
 void allocateChannels(){
@@ -263,7 +308,7 @@ void allocateChannels(){
 		}
 		
 		//check if the unallocated channel is higher priority than the allocated channel
-		if(highestUnallocatedPriority > lowestAllocatedPriority){
+		if(highestUnallocatedPriority >= lowestAllocatedPriority){
 			allocatedMixChannels[lowestAllocatedChannel]->channelIndex = 0xff;
 			allocatedMixChannels[lowestAllocatedChannel] = unallocatedAsset[highestUnallocatedChannel];
 			unallocatedAsset[highestUnallocatedChannel]->channelIndex = lowestAllocatedChannel;
