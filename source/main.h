@@ -3,7 +3,7 @@
 
 //includes
 #include "tonc.h"
-#include "math.h"
+#include "scenes.h"
 #include "interrupt.h"
 #include "audio_engine_external.h"
 
@@ -35,6 +35,8 @@ void softReset();
 void taskManager();
 __attribute__ ((noreturn)) void gameLoop();
 void criticalUpdates();
+void sceneManager();
+void updateGraphics();
 
 //external functions
 

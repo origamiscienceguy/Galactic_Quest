@@ -4,6 +4,10 @@
 Inputs inputs;
 volatile enum GameLoopState gameLoopState;
 vu8 gameState;
+SceneStatus currentScene;
+VideoData tilemapData[4] EWRAM_DATA;
+VideoData characterData[4] EWRAM_DATA;
+VideoData paletteData[16] EWRAM_DATA;
 
 int main(){
 	globalInitialize();
@@ -28,7 +32,6 @@ void globalInitialize(){
 	
 	//interupt master service routine expects every bit in REG_IE to be set when not in an interrupt state
 	REG_IE = 0x3FFF; 
-	REG_DISPCNT = DCNT_MODE0 | DCNT_BG2 | DCNT_OBJ;
 	//enable Vblank interrupts
 	REG_DISPSTAT = DSTAT_VBL_IRQ; 
 	REG_WAITCNT = WS_SRAM_8 | WS_ROM0_N3 | WS_ROM0_S1;
@@ -43,28 +46,15 @@ void globalInitialize(){
 
 __attribute__ ((noreturn)) void gameLoop(){
 	gameLoopState = WAITING_FOR_VBLANK;
-	static u8 bgmIndex;
-	static u8 bgmState;
-	
-	bgmIndex = playNewAsset(_AreaA_DMA_Only);
-	bgmState = 1;
+	currentScene.scenePointer = sceneList[GAMEPLAY];
+	currentScene.state = INITIALIZE;
 	
 	while(1){
 		while(gameLoopState == WAITING_FOR_VBLANK){
-			//bios halt functiion
+			//bios halt function
 			Halt();
 		}
-		if(inputs.pressed & KEY_A){
-			playNewAsset(_sfx_test);
-		}
-		if((inputs.pressed & KEY_B) && (bgmState == 1)){
-			pauseAsset(bgmIndex);
-			bgmState = 2;
-		}
-		else if((inputs.pressed & KEY_B) && (bgmState == 2)){
-			resumeAsset(bgmIndex);
-			bgmState = 1;
-		}
+		sceneManager();
 		
 		gameLoopState = WAITING_FOR_VBLANK;
 	}
@@ -81,9 +71,6 @@ void criticalUpdates(){
 	inputs.held = inputs.current & lastInputs;
 	inputs.released = ~inputs.current & lastInputs;
 	
-	//increment the background color. (Just for testing the vblank interrupts)
-	(*(vu16 *)0x05000000)++;
-	
 	//process this frame's audio (this will take a majority of a frame.)
 	processAudio();
 }
@@ -93,7 +80,79 @@ void softReset(){
 
 }
 
+void sceneManager(){
+	switch(currentScene.state){
+	case INITIALIZE:
+		(*currentScene.scenePointer->initialize)();
+		break;
+	case INTRO:
+		(*currentScene.scenePointer->intro)();
+		break;
+	case NORMAL:
+		(*currentScene.scenePointer->normal)();
+		break;
+	case PAUSE:
+		(*currentScene.scenePointer->pause)();
+		break;
+	case OUTRO:
+		(*currentScene.scenePointer->outro)();
+		break;
+	case END:
+		(*currentScene.scenePointer->end)();
+		break;
+	}
+	
+};
 
+void updateGraphics(){
+	//update the tilemaps
+	for(u32 layer = 0; layer < 4; layer++){
+		u16 size = tilemapData[layer].size;
+		void *dest = tilemapData[layer].position;
+		void *src = tilemapData[layer].buffer;
+		
+		if(size == 0){
+			continue;
+		}
+		else{
+			memcpy32(dest, src, size);
+		}
+		//mark this transfer as completed
+		tilemapData[layer].size = 0;
+	}
+	
+	//update the character data
+	for(u32 layer = 0; layer < 4; layer++){
+		u16 size = characterData[layer].size;
+		void *dest = characterData[layer].position;
+		void *src = characterData[layer].buffer;
+		
+		if(size == 0){
+			continue;
+		}
+		else{
+			memcpy32(dest, src, size);
+		}
+		//mark this transfer as completed
+		characterData[layer].size = 0;
+	}
+	
+	//update the palette data
+	for(u32 layer = 0; layer < 16; layer++){
+		u16 size = paletteData[layer].size;
+		void *dest = paletteData[layer].position;
+		void *src = paletteData[layer].buffer;
+		
+		if(size == 0){
+			continue;
+		}
+		else{
+			memcpy32(dest, src, size);
+		}
+		//mark this transfer as completed
+		paletteData[layer].size = 0;
+	}
+}
 
 
 
