@@ -44,6 +44,8 @@ typedef struct MapData{
 	u16 yPos; //the y position of the top left tile on screen
 	u16 xLastPos; //the x position of the top left tile on screen last frame
 	u16 yLastPos; //the y position of the top left tile on screen last frame
+	u8 xSize; //the number of tiles large the map is in the x direction
+	u8 ySize; //number of tiles in the y direction
 	u8 numShips; //the number of ships on the map.
 }MapData;
 

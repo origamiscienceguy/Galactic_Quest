@@ -5,6 +5,7 @@ u16 tilemapBuffer0[1024] EWRAM_DATA;
 u16 tilemapBuffer1[1024] EWRAM_DATA;
 u16 tilemapBuffer2[1024] EWRAM_DATA;
 u16 tilemapBuffer3[1024] EWRAM_DATA;
+u16 IOBuffer[30];
 MapData mapState EWRAM_DATA;
 
 
@@ -56,6 +57,8 @@ void gameplayInitialize(){
 	mapState.yPos = 0;
 	mapState.xLastPos = 0xffff;
 	mapState.yLastPos = 0xffff;
+	mapState.xSize = 255;
+	mapState.ySize = 255;
 	
 	initMap();
 	
@@ -67,6 +70,61 @@ void gameplayInitialize(){
 
 void gameplayNormal(){
 
+	u16 scrollSpeed = 20;
+
+	//check inputs and move the map if needed
+	if(inputs.current & KEY_RIGHT){
+		if((mapState.xPos + scrollSpeed) > ((mapState.xSize << 4) - 223)){
+			mapState.xPos = (mapState.xSize << 4) - 223;
+		}
+		else{
+			mapState.xPos += scrollSpeed;
+		}
+	}
+	
+	if(inputs.current & KEY_LEFT){
+		if((mapState.xPos - scrollSpeed) < 0){
+			mapState.xPos = 0;
+		}
+		else{
+			mapState.xPos -= scrollSpeed;
+		}
+	}
+	
+	if(inputs.current & KEY_DOWN){
+		if((mapState.yPos + scrollSpeed) > ((mapState.ySize << 4) - 143)){
+			mapState.yPos = (mapState.ySize << 4) - 143;
+		}
+		else{
+			mapState.yPos += scrollSpeed;
+		}
+	}
+	
+	if(inputs.current & KEY_UP){
+		if((mapState.yPos - scrollSpeed) < 0){
+			mapState.yPos = 0;
+		}
+		else{
+			mapState.yPos -= scrollSpeed;
+		}
+	}
+	
+	//queue the tilemap for layer 1 to be sent
+	tilemapData[1].size = 512;
+	tilemapData[1].buffer = tilemapBuffer1;
+	tilemapData[1].position = se_mem[BG_1_TILEMAP];
+	
+	//update the tilemap with the new position
+	createShipTilemap(shipList, tilemapBuffer1, &mapState);
+	
+	IOData[0].position = (void *)&REG_BG0HOFS;
+	IOData[0].buffer = IOBuffer;
+	IOData[0].size = 2;
+	
+	IOBuffer[0] = mapState.xPos % 512;
+	IOBuffer[1] = mapState.yPos % 512;
+	IOBuffer[2] = mapState.xPos % 512;
+	IOBuffer[3] = mapState.yPos % 512;
 }
 
 void gameplayEnd(){
@@ -74,10 +132,10 @@ void gameplayEnd(){
 }
 
 void createShipTilemap(ShipData *shipList, u16 *tilemapBuffer, MapData *mapState){
-	u8 xUpdateLow = 0; //lower bound of horizontal map cell that need to be updated
-	u8 xUpdateHigh = 0; //upper bound of horizontal map cell that need to be updated
-	u8 yUpdateLow = 0; //lower bound of vertical map cell that need to be updated
-	u8 yUpdateHigh = 0; //upper bound of vertical map cell that need to be updated
+	u16 xUpdateLow = 0; //lower bound of horizontal map cell that need to be updated
+	u16 xUpdateHigh = 0; //upper bound of horizontal map cell that need to be updated
+	u16 yUpdateLow = 0; //lower bound of vertical map cell that need to be updated
+	u16 yUpdateHigh = 0; //upper bound of vertical map cell that need to be updated
 	
 	//convert pixel coordinates to map cell coordinates
 	u8 mapXPos = mapState->xPos >> 4;
@@ -124,10 +182,20 @@ void createShipTilemap(ShipData *shipList, u16 *tilemapBuffer, MapData *mapState
 	//clear the vertical column of newly arrived spaces
 	for(int i = xUpdateLow; i < xUpdateHigh; i++){
 		for(int j = 0; j < 16; j++){
-			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64] = 3;
-			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64 + 1] = 3;
-			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64 + 32] = 3;
-			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64 + 33] = 3;
+			tilemapBuffer[(i % 16) * 2 + j * 64] = 3;
+			tilemapBuffer[(i % 16) * 2 + j * 64 + 1] = 3;
+			tilemapBuffer[(i % 16) * 2 + j * 64 + 32] = 3;
+			tilemapBuffer[(i % 16) * 2 + j * 64 + 33] = 3;
+		}
+	}
+	
+	//clear the horizontal column of newly arrived spaces
+	for(int i = yUpdateLow; i < yUpdateHigh; i++){
+		for(int j = 0; j < 16; j++){
+			tilemapBuffer[(i % 16) * 64 + j * 2] = 3;
+			tilemapBuffer[(i % 16) * 64 + j * 2 + 1] = 3;
+			tilemapBuffer[(i % 16) * 64 + j * 2 + 32] = 3;
+			tilemapBuffer[(i % 16) * 64 + j * 2 + 33] = 3;
 		}
 	}
 	
@@ -138,13 +206,14 @@ void createShipTilemap(ShipData *shipList, u16 *tilemapBuffer, MapData *mapState
 		
 		//if this particular ship is in one of the update regions
 		if(((shipXPos >= xUpdateLow) && (shipXPos < xUpdateHigh) && (shipYPos >= mapYPos) && (shipYPos <= mapYPos + 15))
-		|| ((shipYPos >= yUpdateLow) && (shipYPos < yUpdateHigh) && (shipXPos >= mapXPos) && (shipXPos <= mapYPos + 15))){
+		|| ((shipYPos >= yUpdateLow) && (shipYPos < yUpdateHigh) && (shipXPos >= mapXPos) && (shipXPos <= mapXPos + 15))){
 			u16 baseIndex = (shipXPos % 16) * 2 + (shipYPos % 16) * 64;
 			u8 tilemapBase = (shipList[shipIndex].type + 1) * 4;
 			tilemapBuffer[baseIndex] = tilemapBase;
 			tilemapBuffer[baseIndex + 1] = tilemapBase + 1;
 			tilemapBuffer[baseIndex + 32] = tilemapBase + 2;
 			tilemapBuffer[baseIndex + 33] = tilemapBase + 3;
+			
 		}
 	}
 	
@@ -155,7 +224,7 @@ void createShipTilemap(ShipData *shipList, u16 *tilemapBuffer, MapData *mapState
 
 //a temprary function to initialize a test map.
 void initMap(){
-	mapState.numShips = 5;
+	mapState.numShips = 6;
 	
 	shipList[0].type = RED_SCOUT;
 	shipList[0].state = READY;
@@ -168,22 +237,22 @@ void initMap(){
 	shipList[1].state = READY;
 	shipList[1].index = 1;
 	shipList[1].health = 100;
-	shipList[1].xPos = 5;
-	shipList[1].yPos = 5;
+	shipList[1].xPos = 16;
+	shipList[1].yPos = 16;
 	
 	shipList[2].type = RED_DESTROYER;
 	shipList[2].state = READY;
 	shipList[2].index = 2;
 	shipList[2].health = 100;
-	shipList[2].xPos = 10;
-	shipList[2].yPos = 10;
+	shipList[2].xPos = 17;
+	shipList[2].yPos = 5;
 	
 	shipList[3].type = RED_FIGHTER;
 	shipList[3].state = READY;
 	shipList[3].index = 3;
 	shipList[3].health = 100;
 	shipList[3].xPos = 5;
-	shipList[3].yPos = 10;
+	shipList[3].yPos = 17;
 	
 	shipList[4].type = RED_CRUISER;
 	shipList[4].state = READY;
@@ -191,4 +260,11 @@ void initMap(){
 	shipList[4].health = 100;
 	shipList[4].xPos = 10;
 	shipList[4].yPos = 5;
+	
+	shipList[5].type = RED_BATTLESHIP;
+	shipList[5].state = READY;
+	shipList[5].index = 5;
+	shipList[5].health = 100;
+	shipList[5].xPos = 255;
+	shipList[5].yPos = 255;
 }

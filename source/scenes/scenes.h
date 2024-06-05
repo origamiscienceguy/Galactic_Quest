@@ -3,6 +3,7 @@
 
 //includes
 #include "tonc.h"
+#include "main.h"
 
 //constants
 
@@ -42,6 +43,7 @@ extern SceneStatus currentScene;
 extern VideoData tilemapData[4] EWRAM_DATA;
 extern VideoData characterData[4] EWRAM_DATA;
 extern VideoData paletteData[16] EWRAM_DATA;
+extern VideoData IOData[16] EWRAM_DATA;
 
 //local functions
 

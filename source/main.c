@@ -8,6 +8,7 @@ SceneStatus currentScene;
 VideoData tilemapData[4] EWRAM_DATA;
 VideoData characterData[4] EWRAM_DATA;
 VideoData paletteData[16] EWRAM_DATA;
+VideoData IOData[16] EWRAM_DATA;
 
 int main(){
 	globalInitialize();
@@ -151,6 +152,22 @@ void updateGraphics(){
 		}
 		//mark this transfer as completed
 		paletteData[layer].size = 0;
+	}
+	
+	//update any video IO registers
+	for(u32 layer = 0; layer < 16; layer++){
+		u16 size = IOData[layer].size;
+		void *dest = IOData[layer].position;
+		void *src = IOData[layer].buffer;
+		
+		if(size == 0){
+			continue;
+		}
+		else{
+			memcpy32(dest, src, size);
+		}
+		//mark this transfer as completed
+		IOData[layer].size = 0;
 	}
 }
 
