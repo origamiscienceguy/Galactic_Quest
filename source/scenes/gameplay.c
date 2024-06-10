@@ -52,10 +52,10 @@ void gameplayInitialize(){
 		}
 	}
 	
-	mapData.xPos = 0;
-	mapData.yPos = 0;
-	mapData.xLastPos = 0xffff;
-	mapData.yLastPos = 0xffff;
+	mapData.camera.xPos = 0;
+	mapData.camera.yPos = 0;
+	mapData.camera.xLastPos = 0xffff00;
+	mapData.camera.yLastPos = 0xffff00;
 	mapData.xSize = 255;
 	mapData.ySize = 255;
 	mapData.state = TURN_START;
@@ -69,7 +69,7 @@ void gameplayInitialize(){
 	shipListInit();
 	
 	//generate the tilemap based on the camera position and the positions of all the ships
-	createShipTilemap(mapData.ships, tilemapBuffer1, &mapData);
+	createShipTilemap(tilemapBuffer1);
 	
 	playNewAsset(_AreaA_DMA_Only);
 	currentScene.state = NORMAL;
@@ -100,17 +100,17 @@ void gameplayEnd(){
 
 }
 
-void createShipTilemap(ShipData *shipList, u16 *tilemapBuffer, MapData *mapData){
+void createShipTilemap(u16 *tilemapBuffer){
 	u16 xUpdateLow = 0; //lower bound of horizontal map cell that need to be updated
 	u16 xUpdateHigh = 0; //upper bound of horizontal map cell that need to be updated
 	u16 yUpdateLow = 0; //lower bound of vertical map cell that need to be updated
 	u16 yUpdateHigh = 0; //upper bound of vertical map cell that need to be updated
 	
 	//convert pixel coordinates to map cell coordinates
-	u8 mapXPos = mapData->xPos >> 4;
-	u8 mapYPos = mapData->yPos >> 4; 
-	u8 mapXLastPos = mapData->xLastPos >> 4;
-	u8 mapYLastPos = mapData->yLastPos >> 4;
+	u8 mapXPos = mapData.camera.xPos >> 12;
+	u8 mapYPos = mapData.camera.yPos >> 12; 
+	u8 mapXLastPos = mapData.camera.xLastPos >> 12;
+	u8 mapYLastPos = mapData.camera.yLastPos >> 12;
 
 	//set the bound for x updates
 	if(mapXPos > mapXLastPos){
@@ -169,15 +169,15 @@ void createShipTilemap(ShipData *shipList, u16 *tilemapBuffer, MapData *mapData)
 	}
 	
 	//draw every ship that should be on screen
-	for(u32 shipIndex = 0; shipIndex < mapData->numShips; shipIndex++){
-		u8 shipXPos = shipList[shipIndex].xPos;
-		u8 shipYPos = shipList[shipIndex].yPos;
+	for(u32 shipIndex = 0; shipIndex < mapData.numShips; shipIndex++){
+		u8 shipXPos = mapData.ships[shipIndex].xPos;
+		u8 shipYPos = mapData.ships[shipIndex].yPos;
 		
 		//if this particular ship is in one of the update regions
 		if(((shipXPos >= xUpdateLow) && (shipXPos < xUpdateHigh) && (shipYPos >= mapYPos) && (shipYPos <= mapYPos + 15))
 		|| ((shipYPos >= yUpdateLow) && (shipYPos < yUpdateHigh) && (shipXPos >= mapXPos) && (shipXPos <= mapXPos + 15))){
 			u16 baseIndex = (shipXPos % 16) * 2 + (shipYPos % 16) * 64;
-			u8 tilemapBase = (shipList[shipIndex].type + 1) * 4;
+			u8 tilemapBase = (mapData.ships[shipIndex].type + 1) * 4;
 			tilemapBuffer[baseIndex] = tilemapBase;
 			tilemapBuffer[baseIndex + 1] = tilemapBase + 1;
 			tilemapBuffer[baseIndex + 32] = tilemapBase + 2;
@@ -187,8 +187,8 @@ void createShipTilemap(ShipData *shipList, u16 *tilemapBuffer, MapData *mapData)
 	}
 	
 	//update the map previous position
-	mapData->xLastPos = mapData->xPos;
-	mapData->yLastPos = mapData->yPos;
+	mapData.camera.xLastPos = mapData.camera.xPos;
+	mapData.camera.yLastPos = mapData.camera.yPos;
 }
 
 void turnStartState(){
@@ -240,39 +240,32 @@ void turnStartState(){
 }
 
 void openMapState(){
-	u16 scrollSpeed = 20;
-	//check inputs and move the map if needed
+	u16 scrollSpeed = 12;
+	
+	//the d pad scrolls the map
 	if(inputs.current & KEY_RIGHT){
-		if((mapData.xPos + scrollSpeed) > ((mapData.xSize << 4) - 223)){
-			mapData.xPos = (mapData.xSize << 4) - 223;
-		}
-		else{
-			mapData.xPos += scrollSpeed;
-		}
+		s16 xTarget = (mapData.camera.xPos >> 8) + scrollSpeed;
+		s16 yTarget = (mapData.camera.yPos >> 8);
+		
+		cameraPanTo(xTarget, yTarget, 0);
 	}
 	if(inputs.current & KEY_LEFT){
-		if((mapData.xPos - scrollSpeed) < 0){
-			mapData.xPos = 0;
-		}
-		else{
-			mapData.xPos -= scrollSpeed;
-		}
+		s16 xTarget = (mapData.camera.xPos >> 8) - scrollSpeed;
+		s16 yTarget = (mapData.camera.yPos >> 8);
+		
+		cameraPanTo(xTarget, yTarget, 0);
 	}
 	if(inputs.current & KEY_DOWN){
-		if((mapData.yPos + scrollSpeed) > ((mapData.ySize << 4) - 143)){
-			mapData.yPos = (mapData.ySize << 4) - 143;
-		}
-		else{
-			mapData.yPos += scrollSpeed;
-		}
+		s16 xTarget = (mapData.camera.xPos >> 8);
+		s16 yTarget = (mapData.camera.yPos >> 8) + scrollSpeed;
+		
+		cameraPanTo(xTarget, yTarget, 0);
 	}
 	if(inputs.current & KEY_UP){
-		if((mapData.yPos - scrollSpeed) < 0){
-			mapData.yPos = 0;
-		}
-		else{
-			mapData.yPos -= scrollSpeed;
-		}
+		s16 xTarget = mapData.camera.xPos >> 8;
+		s16 yTarget = (mapData.camera.yPos >> 8) - scrollSpeed;
+		
+		cameraPanTo(xTarget, yTarget, 0);
 	}
 	
 	//L and R cycle backwards or forwards through the active ships for this team, and center the camera on the next ship in the cycle
@@ -284,47 +277,21 @@ void openMapState(){
 		}
 		mapData.selectedShip = currentIndex;
 		
-		//check the bounds of the map
-		if(((mapData.ships[mapData.selectedShip].yPos << 4) - 72) < 0){
-			mapData.yPos = 0;
-		}
-		else if(((mapData.ships[mapData.selectedShip].yPos << 4) - 72) > ((mapData.ySize << 4) - 143)){
-			mapData.yPos = (mapData.ySize << 4) - 143;
-		}
-		else{
-			mapData.yPos = (mapData.ships[mapData.selectedShip].yPos << 4) - 72;
-		}
-		if(((mapData.ships[mapData.selectedShip].xPos << 4) - 112) < 0){
-			mapData.xPos = 0;
-		}
-		else if(((mapData.ships[mapData.selectedShip].xPos << 4) - 112) > ((mapData.xSize << 4) - 223)){
-			mapData.xPos = (mapData.xSize << 4) - 223;
-		}
-		else{
-			mapData.xPos = (mapData.ships[mapData.selectedShip].xPos << 4) - 112;
-		}
+		s16 xTarget = (mapData.ships[mapData.selectedShip].xPos << 4) - 112;
+		s16 yTarget = (mapData.ships[mapData.selectedShip].yPos << 4) - 72;
+		
+		//pan the camera to this ship
+		cameraPanTo(xTarget, yTarget, 5);
 	}
 	if(inputs.pressed & KEY_R){
+		//cycle to the next ship in the linked list of active ships
 		mapData.selectedShip = mapData.ships[mapData.selectedShip].activeLink;
-		//check the bounds of the map
-		if(((mapData.ships[mapData.selectedShip].yPos << 4) - 72) < 0){
-			mapData.yPos = 0;
-		}
-		else if(((mapData.ships[mapData.selectedShip].yPos << 4) - 72) > ((mapData.ySize << 4) - 143)){
-			mapData.yPos = (mapData.ySize << 4) - 143;
-		}
-		else{
-			mapData.yPos = (mapData.ships[mapData.selectedShip].yPos << 4) - 72;
-		}
-		if(((mapData.ships[mapData.selectedShip].xPos << 4) - 112) < 0){
-			mapData.xPos = 0;
-		}
-		else if(((mapData.ships[mapData.selectedShip].xPos << 4) - 112) > ((mapData.xSize << 4) - 223)){
-			mapData.xPos = (mapData.xSize << 4) - 223;
-		}
-		else{
-			mapData.xPos = (mapData.ships[mapData.selectedShip].xPos << 4) - 112;
-		}
+		
+		s16 xTarget = (mapData.ships[mapData.selectedShip].xPos << 4) - 112;
+		s16 yTarget = (mapData.ships[mapData.selectedShip].yPos << 4) - 72;
+		
+		//pan the camera to this ship
+		cameraPanTo(xTarget, yTarget, 5);
 	}
 	
 	//queue the tilemap for layer 1 to be sent
@@ -333,16 +300,16 @@ void openMapState(){
 	tilemapData[1].position = se_mem[BG_1_TILEMAP];
 	
 	//update the tilemap with the new position
-	createShipTilemap(mapData.ships, tilemapBuffer1, &mapData);
+	createShipTilemap(tilemapBuffer1);
 	
 	IOData[0].position = (void *)&REG_BG0HOFS;
 	IOData[0].buffer = IOBuffer;
 	IOData[0].size = 2;
 	
-	IOBuffer[0] = mapData.xPos % 512;
-	IOBuffer[1] = mapData.yPos % 512;
-	IOBuffer[2] = mapData.xPos % 512;
-	IOBuffer[3] = mapData.yPos % 512;
+	IOBuffer[0] = (mapData.camera.xPos >> 8) % 512;
+	IOBuffer[1] = (mapData.camera.yPos >> 8) % 512;
+	IOBuffer[2] = (mapData.camera.xPos >> 8) % 512;
+	IOBuffer[3] = (mapData.camera.yPos >> 8) % 512;
 }
 
 //after this player has selected "end turn"
@@ -429,6 +396,49 @@ void shipListInit(){
 			}
 			nextIndex = mapData.ships[nextIndex].sameTileLink;
 		}
+	}
+}
+
+//initialize a pan that sends the camera to a specific location
+void cameraPanTo(s16 xTarget, s16 yTarget, u16 acceleration){
+	
+	s32 xPos = 0;
+	s32 yPos = 0;
+	
+	//an acceleration of zero means teleport straight to the target location
+	if(acceleration == 0){
+		xPos = xTarget << 8;
+		yPos = yTarget << 8;
+		mapData.camera.state = STILL;
+	}
+	else{
+		mapData.camera.xInitialPos = (mapData.camera.xPos >> 8);
+		mapData.camera.yInitialPos = (mapData.camera.yPos >> 8);
+		mapData.camera.xTargetPos = xTarget;
+		mapData.camera.yTargetPos = yTarget;
+		mapData.camera.state = PANNING;
+		xPos = xTarget << 8;
+		yPos = yTarget << 8;
+	}
+	
+	//bounds check the final result
+	if(xPos < 0){
+		mapData.camera.xPos = 0;
+	}
+	else if(xPos > (mapData.xSize << 12) - 57088){
+		mapData.camera.xPos = (mapData.xSize << 12) - 57088;
+	}
+	else{
+		mapData.camera.xPos = xPos;
+	}
+	if(yPos < 0){
+		mapData.camera.yPos = 0;
+	}
+	else if(yPos > (mapData.ySize << 12) - 36608){
+		mapData.camera.yPos = (mapData.ySize << 12) - 36608;
+	}
+	else{
+		mapData.camera.yPos = yPos;
 	}
 }
 

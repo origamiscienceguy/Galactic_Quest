@@ -36,6 +36,10 @@ enum Team{
 	RED_TEAM, BLUE_TEAM, GREEN_TEAM, YELLOW_TEAM
 };
 
+enum CameraState{
+	STILL, PANNING, TRACKING, 
+};
+
 //structs
 typedef struct ShipData{
 	enum ShipType type; //the type of ship this one is
@@ -58,19 +62,32 @@ typedef struct TeamData{
 	u8 numActiveShips; //the number of ships each team has that is currently alive
 }TeamData;
 
+typedef struct CameraData{
+	enum CameraState state; //what the camera is currently doing
+	s32 xPos; //the current x pixel position of the top left pixel on screen. 24.8 fixed point
+	s32 yPos; //the current y pixel position of the top left pixel on screen. 24.8 fixed point
+	s32 xLastPos; //the x position of the top left tile on screen last frame. 24.8 fixed point
+	s32 yLastPos; //the y position of the top left tile on screen last frame. 24.8 fixed point
+	s16 xInitialPos; //the x position before a camera movement action started
+	s16 yInitialPos; //the y position before a camera movement action started
+	s16 xTargetPos; //the x position the camera is currently seeking towards
+	s16 yTargetPos; //the y position the camera is currently seeking towards
+	s32 xVel; //the current velocity of the camera in the x direction. pixels per frame
+	s32 yVel; //the current velocity of the camera in the y direction. pixels per frame
+	s32 xacc; //the current acceleration of the camera in x direction. pixels per frame per frame. 24.8 fixed point
+	s32 yacc; //the current acceleration of the camera in y direction. pixels per frame per frame. 24.8 fixed point
+}CameraData;
+
 typedef struct MapData{
 	enum MapState state; //what is the stage of the game are we in
 	enum Team teamTurn; //who's turn is it
-	u16 xPos; //the x position of the top left tile on screen
-	u16 yPos; //the y position of the top left tile on screen
-	u16 xLastPos; //the x position of the top left tile on screen last frame
-	u16 yLastPos; //the y position of the top left tile on screen last frame
 	u8 xSize; //the number of tiles large the map is in the x direction
 	u8 ySize; //number of tiles in the y direction
 	u8 numShips; //the number of ships on the map.
 	u8 selectedShip; //the index of the ship currently/last selected
 	ShipData ships[MAX_SHIPS]; //the array of information about every ship in this battle
 	TeamData teams[NUM_TEAMS]; //the array of information about each team in the battle
+	CameraData camera; //the struct containing data about the camera
 }MapData;
 
 //globals
@@ -85,10 +102,11 @@ void gameplayPause();
 void gameplayOutro();
 void gameplayEnd();
 void shipListInit();
-void createShipTilemap(ShipData *, u16 *, MapData *);
+void createShipTilemap(u16 *);
 void turnStartState();
 void openMapState();
 void turnEndState();
+void cameraPanTo(s16, s16, u16);
 
 //temp function
 void initMap();
