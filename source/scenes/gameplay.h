@@ -15,6 +15,8 @@
 
 #define BG_1_TILEMAP 30
 
+#define POS_PRECISION 32
+
 //enums
 enum ShipType{
 	SCOUT, FIGHTER, BOMBER, DESTROYER, CRUISER, BATTLESHIP, CARRIER,
@@ -64,18 +66,18 @@ typedef struct TeamData{
 
 typedef struct CameraData{
 	enum CameraState state; //what the camera is currently doing
-	s32 xPos; //the current x pixel position of the top left pixel on screen. 24.8 fixed point
-	s32 yPos; //the current y pixel position of the top left pixel on screen. 24.8 fixed point
-	s32 xLastPos; //the x position of the top left tile on screen last frame. 24.8 fixed point
-	s32 yLastPos; //the y position of the top left tile on screen last frame. 24.8 fixed point
-	s16 xInitialPos; //the x position before a camera movement action started
-	s16 yInitialPos; //the y position before a camera movement action started
+	u8 actionTimer; //how long the camera has been performing an action
+	u8 actionTarget; //how long the camera is supposed to be performing an action
+	s64 xPos; //the current x pixel position of the top left pixel on screen. 16.48 fixed point
+	s64 yPos; //the current y pixel position of the top left pixel on screen. 16.48 fixed point
+	s64 xLastPos; //the x position of the top left tile on screen last frame. 16.48 fixed point
+	s64 yLastPos; //the y position of the top left tile on screen last frame. 16.48 fixed point
 	s16 xTargetPos; //the x position the camera is currently seeking towards
 	s16 yTargetPos; //the y position the camera is currently seeking towards
-	s32 xVel; //the current velocity of the camera in the x direction. pixels per frame
-	s32 yVel; //the current velocity of the camera in the y direction. pixels per frame
-	s32 xacc; //the current acceleration of the camera in x direction. pixels per frame per frame. 24.8 fixed point
-	s32 yacc; //the current acceleration of the camera in y direction. pixels per frame per frame. 24.8 fixed point
+	s64 xVel; //the current velocity of the camera in the x direction. pixels per frame. 16.48 fixed point
+	s64 yVel; //the current velocity of the camera in the y direction. pixels per frame. 16.48 fixed point
+	s64 xAcc; //the current acceleration of the camera in x direction. pixels per frame per frame. 16.48 fixed point
+	s64 yAcc; //the current acceleration of the camera in y direction. pixels per frame per frame. 16.48 fixed point
 }CameraData;
 
 typedef struct MapData{
@@ -93,6 +95,7 @@ typedef struct MapData{
 //globals
 extern const unsigned int TestGfxPal[];
 extern const unsigned int TestGfxTiles[];
+extern const u32 inverseTimeSquared[];
 
 //local functions
 void gameplayInitialize();
@@ -106,7 +109,11 @@ void createShipTilemap(u16 *);
 void turnStartState();
 void openMapState();
 void turnEndState();
-void cameraPanTo(s16, s16, u16);
+void processCamera();
+void cameraPanInit(s16, s16, u8);
+void processCameraPan();
+void cameraBoundsCheck(s64 *, s64 *);
+
 
 //temp function
 void initMap();

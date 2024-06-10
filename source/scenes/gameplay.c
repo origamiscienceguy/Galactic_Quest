@@ -54,8 +54,9 @@ void gameplayInitialize(){
 	
 	mapData.camera.xPos = 0;
 	mapData.camera.yPos = 0;
-	mapData.camera.xLastPos = 0xffff00;
-	mapData.camera.yLastPos = 0xffff00;
+	mapData.camera.xLastPos = (s64)0xffff << POS_PRECISION;
+	mapData.camera.yLastPos = (s64)0xffff << POS_PRECISION;
+	mapData.camera.state = STILL;
 	mapData.xSize = 255;
 	mapData.ySize = 255;
 	mapData.state = TURN_START;
@@ -77,6 +78,7 @@ void gameplayInitialize(){
 
 void gameplayNormal(){
 	
+	//update the game for this tick
 	switch(mapData.state){
 	case TURN_START:
 		turnStartState();
@@ -107,10 +109,10 @@ void createShipTilemap(u16 *tilemapBuffer){
 	u16 yUpdateHigh = 0; //upper bound of vertical map cell that need to be updated
 	
 	//convert pixel coordinates to map cell coordinates
-	u8 mapXPos = mapData.camera.xPos >> 12;
-	u8 mapYPos = mapData.camera.yPos >> 12; 
-	u8 mapXLastPos = mapData.camera.xLastPos >> 12;
-	u8 mapYLastPos = mapData.camera.yLastPos >> 12;
+	u8 mapXPos = mapData.camera.xPos >> (4 + POS_PRECISION);
+	u8 mapYPos = mapData.camera.yPos >> (4 + POS_PRECISION); 
+	u8 mapXLastPos = mapData.camera.xLastPos >> (4 + POS_PRECISION);
+	u8 mapYLastPos = mapData.camera.yLastPos >> (4 + POS_PRECISION);
 
 	//set the bound for x updates
 	if(mapXPos > mapXLastPos){
@@ -244,28 +246,28 @@ void openMapState(){
 	
 	//the d pad scrolls the map
 	if(inputs.current & KEY_RIGHT){
-		s16 xTarget = (mapData.camera.xPos >> 8) + scrollSpeed;
-		s16 yTarget = (mapData.camera.yPos >> 8);
+		s16 xTarget = (mapData.camera.xPos >> POS_PRECISION) + scrollSpeed;
+		s16 yTarget = (mapData.camera.yPos >> POS_PRECISION);
 		
-		cameraPanTo(xTarget, yTarget, 0);
+		cameraPanInit(xTarget, yTarget, 0);
 	}
 	if(inputs.current & KEY_LEFT){
-		s16 xTarget = (mapData.camera.xPos >> 8) - scrollSpeed;
-		s16 yTarget = (mapData.camera.yPos >> 8);
+		s16 xTarget = (mapData.camera.xPos >> POS_PRECISION) - scrollSpeed;
+		s16 yTarget = (mapData.camera.yPos >> POS_PRECISION);
 		
-		cameraPanTo(xTarget, yTarget, 0);
+		cameraPanInit(xTarget, yTarget, 0);
 	}
 	if(inputs.current & KEY_DOWN){
-		s16 xTarget = (mapData.camera.xPos >> 8);
-		s16 yTarget = (mapData.camera.yPos >> 8) + scrollSpeed;
+		s16 xTarget = (mapData.camera.xPos >> POS_PRECISION);
+		s16 yTarget = (mapData.camera.yPos >> POS_PRECISION) + scrollSpeed;
 		
-		cameraPanTo(xTarget, yTarget, 0);
+		cameraPanInit(xTarget, yTarget, 0);
 	}
 	if(inputs.current & KEY_UP){
-		s16 xTarget = mapData.camera.xPos >> 8;
-		s16 yTarget = (mapData.camera.yPos >> 8) - scrollSpeed;
+		s16 xTarget = (mapData.camera.xPos >> POS_PRECISION);
+		s16 yTarget = (mapData.camera.yPos >> POS_PRECISION) - scrollSpeed;
 		
-		cameraPanTo(xTarget, yTarget, 0);
+		cameraPanInit(xTarget, yTarget, 0);
 	}
 	
 	//L and R cycle backwards or forwards through the active ships for this team, and center the camera on the next ship in the cycle
@@ -277,22 +279,25 @@ void openMapState(){
 		}
 		mapData.selectedShip = currentIndex;
 		
-		s16 xTarget = (mapData.ships[mapData.selectedShip].xPos << 4) - 112;
-		s16 yTarget = (mapData.ships[mapData.selectedShip].yPos << 4) - 72;
+		s64 xTarget = (s64)((mapData.ships[mapData.selectedShip].xPos << 4) - 112);
+		s64 yTarget = (s64)((mapData.ships[mapData.selectedShip].yPos << 4) - 72);
 		
 		//pan the camera to this ship
-		cameraPanTo(xTarget, yTarget, 5);
+		cameraPanInit(xTarget, yTarget, 50);
 	}
 	if(inputs.pressed & KEY_R){
 		//cycle to the next ship in the linked list of active ships
 		mapData.selectedShip = mapData.ships[mapData.selectedShip].activeLink;
 		
-		s16 xTarget = (mapData.ships[mapData.selectedShip].xPos << 4) - 112;
-		s16 yTarget = (mapData.ships[mapData.selectedShip].yPos << 4) - 72;
+		s64 xTarget = (s64)((mapData.ships[mapData.selectedShip].xPos << 4) - 112);
+		s64 yTarget = (s64)((mapData.ships[mapData.selectedShip].yPos << 4) - 72);
 		
 		//pan the camera to this ship
-		cameraPanTo(xTarget, yTarget, 5);
+		cameraPanInit(xTarget, yTarget, 50);
 	}
+	
+	//handle any changes to the camera that occured this frame
+	processCamera();
 	
 	//queue the tilemap for layer 1 to be sent
 	tilemapData[1].size = 512;
@@ -306,10 +311,10 @@ void openMapState(){
 	IOData[0].buffer = IOBuffer;
 	IOData[0].size = 2;
 	
-	IOBuffer[0] = (mapData.camera.xPos >> 8) % 512;
-	IOBuffer[1] = (mapData.camera.yPos >> 8) % 512;
-	IOBuffer[2] = (mapData.camera.xPos >> 8) % 512;
-	IOBuffer[3] = (mapData.camera.yPos >> 8) % 512;
+	IOBuffer[0] = (mapData.camera.xPos >> POS_PRECISION) % 512;
+	IOBuffer[1] = (mapData.camera.yPos >> POS_PRECISION) % 512;
+	IOBuffer[2] = (mapData.camera.xPos >> POS_PRECISION) % 512;
+	IOBuffer[3] = (mapData.camera.yPos >> POS_PRECISION) % 512;
 }
 
 //after this player has selected "end turn"
@@ -399,47 +404,97 @@ void shipListInit(){
 	}
 }
 
-//initialize a pan that sends the camera to a specific location
-void cameraPanTo(s16 xTarget, s16 yTarget, u16 acceleration){
+
+
+void processCamera(){
 	
-	s32 xPos = 0;
-	s32 yPos = 0;
+	//handle the camera based on its state
+	switch(mapData.camera.state){
+	case STILL:
+		break;
+	case PANNING:
+		processCameraPan();
+		break;
+	case TRACKING:
+		break;
+	}
 	
-	//an acceleration of zero means teleport straight to the target location
-	if(acceleration == 0){
-		xPos = xTarget << 8;
-		yPos = yTarget << 8;
+	cameraBoundsCheck(&mapData.camera.xPos, &mapData.camera.yPos);
+}
+
+void processCameraPan(){
+	
+	mapData.camera.xVel += mapData.camera.xAcc;
+	mapData.camera.yVel += mapData.camera.yAcc;
+	
+	mapData.camera.xPos += mapData.camera.xVel;
+	mapData.camera.yPos += mapData.camera.yVel;
+	
+	//if we are at the halfway point in this pan
+	if(mapData.camera.actionTimer * 2 == mapData.camera.actionTarget){
+		mapData.camera.xAcc = -mapData.camera.xAcc;
+		mapData.camera.yAcc = -mapData.camera.yAcc;
+	}
+	//if we have finished this pan
+	else if(mapData.camera.actionTimer == mapData.camera.actionTarget){
 		mapData.camera.state = STILL;
+		mapData.camera.xPos = (s64)mapData.camera.xTargetPos << POS_PRECISION;
+		mapData.camera.yPos = (s64)mapData.camera.yTargetPos << POS_PRECISION;
+	}
+	mapData.camera.actionTimer++;
+}
+
+//initialize a pan that sends the camera to a specific location
+void cameraPanInit(s16 xTarget, s16 yTarget, u8 panTime){
+	
+	//only initialize a pan if the camera is not performing another action
+	if(mapData.camera.state != STILL){
+		return;
+	}
+	
+	//pan time must be an even number
+	panTime >>= 1;
+	
+	//a pan time of zero means to teleport straight to the target.
+	if(panTime == 0){
+		mapData.camera.xPos = (s64)xTarget << POS_PRECISION;
+		mapData.camera.yPos = (s64)yTarget << POS_PRECISION;
 	}
 	else{
-		mapData.camera.xInitialPos = (mapData.camera.xPos >> 8);
-		mapData.camera.yInitialPos = (mapData.camera.yPos >> 8);
 		mapData.camera.xTargetPos = xTarget;
 		mapData.camera.yTargetPos = yTarget;
 		mapData.camera.state = PANNING;
-		xPos = xTarget << 8;
-		yPos = yTarget << 8;
+		mapData.camera.actionTarget = panTime << 1;
+		mapData.camera.actionTimer = 0;
+		mapData.camera.xVel = 0;
+		mapData.camera.yVel = 0;
+		
+		//figure out the acceleration 
+		mapData.camera.xAcc = 2 * (inverseTimeSquared[panTime]) * (xTarget - (mapData.camera.xPos >> POS_PRECISION));
+		mapData.camera.yAcc = 2 * (inverseTimeSquared[panTime]) * (yTarget - (mapData.camera.yPos >> POS_PRECISION));
 	}
+}
+
+void cameraBoundsCheck(s64 *xPosPointer, s64 *yPosPointer){
+	s64 xPos = *xPosPointer;
+	s64 yPos = *yPosPointer;
 	
 	//bounds check the final result
 	if(xPos < 0){
-		mapData.camera.xPos = 0;
+		xPos = 0;
 	}
-	else if(xPos > (mapData.xSize << 12) - 57088){
-		mapData.camera.xPos = (mapData.xSize << 12) - 57088;
-	}
-	else{
-		mapData.camera.xPos = xPos;
+	else if(xPos > (s64)((mapData.xSize << 4) - 223) << POS_PRECISION){
+		xPos = (s64)((mapData.xSize << 4) - 223) << POS_PRECISION;
 	}
 	if(yPos < 0){
-		mapData.camera.yPos = 0;
+		yPos = 0;
 	}
-	else if(yPos > (mapData.ySize << 12) - 36608){
-		mapData.camera.yPos = (mapData.ySize << 12) - 36608;
+	else if(yPos > (s64)((mapData.ySize << 4) - 143) << POS_PRECISION){
+		yPos = (s64)((mapData.ySize << 4) - 143) << POS_PRECISION;
 	}
-	else{
-		mapData.camera.yPos = yPos;
-	}
+	
+	*xPosPointer = xPos;
+	*yPosPointer = yPos;
 }
 
 //a temprary function to initialize a test map.
