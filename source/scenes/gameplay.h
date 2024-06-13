@@ -15,7 +15,7 @@
 
 #define BG_1_TILEMAP 30
 
-#define POS_PRECISION 32
+#define CYCLE_PAN_SPEED 20
 
 //enums
 enum ShipType{
@@ -27,7 +27,7 @@ enum ShipState{
 };
 
 enum MapState{
-	TURN_START, OPEN_MAP, SHIP_SELECTED, BATTLE, TURN_END, TURN_REPLAY
+	TURN_START, OPEN_MAP, SHIP_SELECTED, SHIP_MOVING, BATTLE, TURN_END, TURN_END_MOVEMENT, TURN_REPLAY
 };
 
 enum TeamState{
@@ -68,16 +68,14 @@ typedef struct CameraData{
 	enum CameraState state; //what the camera is currently doing
 	u8 actionTimer; //how long the camera has been performing an action
 	u8 actionTarget; //how long the camera is supposed to be performing an action
-	s64 xPos; //the current x pixel position of the top left pixel on screen. 16.48 fixed point
-	s64 yPos; //the current y pixel position of the top left pixel on screen. 16.48 fixed point
-	s64 xLastPos; //the x position of the top left tile on screen last frame. 16.48 fixed point
-	s64 yLastPos; //the y position of the top left tile on screen last frame. 16.48 fixed point
+	s16 xPos; //the current x pixel position of the top left pixel on screen. 16.48 fixed point
+	s16 yPos; //the current y pixel position of the top left pixel on screen. 16.48 fixed point
+	s16 xLastPos; //the x position of the top left tile on screen last frame. 16.48 fixed point
+	s16 yLastPos; //the y position of the top left tile on screen last frame. 16.48 fixed point
+	s16 xStartingPos; //the initial x position of the camera for this movement
+	s16 yStartingPos; //the initial y position of the camera for this movement
 	s16 xTargetPos; //the x position the camera is currently seeking towards
 	s16 yTargetPos; //the y position the camera is currently seeking towards
-	s64 xVel; //the current velocity of the camera in the x direction. pixels per frame. 16.48 fixed point
-	s64 yVel; //the current velocity of the camera in the y direction. pixels per frame. 16.48 fixed point
-	s64 xAcc; //the current acceleration of the camera in x direction. pixels per frame per frame. 16.48 fixed point
-	s64 yAcc; //the current acceleration of the camera in y direction. pixels per frame per frame. 16.48 fixed point
 }CameraData;
 
 typedef struct MapData{
@@ -106,13 +104,16 @@ void gameplayOutro();
 void gameplayEnd();
 void shipListInit();
 void createShipTilemap(u16 *);
+void nextPlayer();
+void nextTurn();
 void turnStartState();
 void openMapState();
 void turnEndState();
+void turnEndMovementState();
 void processCamera();
 void cameraPanInit(s16, s16, u8);
 void processCameraPan();
-void cameraBoundsCheck(s64 *, s64 *);
+void cameraBoundsCheck(s16 *, s16 *);
 
 
 //temp function
