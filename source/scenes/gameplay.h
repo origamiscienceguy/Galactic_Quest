@@ -16,6 +16,7 @@
 #define BG_1_TILEMAP 30
 
 #define CYCLE_PAN_SPEED 20
+#define SHIP_MOVE_SPEED 32
 
 //enums
 enum ShipType{
@@ -85,6 +86,8 @@ typedef struct MapData{
 	u8 ySize; //number of tiles in the y direction
 	u8 numShips; //the number of ships on the map.
 	u8 selectedShip; //the index of the ship currently/last selected
+	u8 actionTimer; //how many frames have elapsed in a state action
+	u8 actionTarget; //how many frames a state action should take
 	ShipData ships[MAX_SHIPS]; //the array of information about every ship in this battle
 	TeamData teams[NUM_TEAMS]; //the array of information about each team in the battle
 	CameraData camera; //the struct containing data about the camera

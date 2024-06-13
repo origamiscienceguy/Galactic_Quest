@@ -304,6 +304,7 @@ void openMapState(){
 	//if start is pressed, transition to the end turn sequence
 	if(inputs.pressed & KEY_START){
 		mapData.state = TURN_END;
+		mapData.actionTimer = 0;
 	}
 	
 	//handle any changes to the camera that occured this frame
@@ -311,30 +312,62 @@ void openMapState(){
 }
 
 //after this player has selected "end turn"
-void turnEndState(){
-	//starting with the first ship on this team
-	u8 firstIndex = mapData.teams[mapData.teamTurn].firstShip;
-	u8 shipIndex = firstIndex;
-	//cycle through every ship on this team until we find one that has not moved yet.
-	while(mapData.ships[shipIndex].state != READY){
-		//if we have cycled through every ship on this team, then all ships are done moving
-		if(mapData.ships[shipIndex].teamLink == firstIndex){
-			nextPlayer();
-			//handle any changes to the camera that occured this frame
-			processCamera();
-			return;
+void turnEndState(){	
+	//if we are just beginning a new movement
+	if(mapData.actionTimer == 0){
+		//starting with the first ship on this team
+		u8 firstIndex = mapData.teams[mapData.teamTurn].firstShip;
+		u8 shipIndex = firstIndex;
+		//cycle through every ship on this team until we find one that has not moved yet.
+		while(mapData.ships[shipIndex].state != READY){
+			//if we have cycled through every ship on this team, then all ships are done moving
+			if(mapData.ships[shipIndex].activeLink == firstIndex){
+				nextPlayer();
+				break;
+			}
+			shipIndex = mapData.ships[shipIndex].activeLink;
 		}
-	}	
-	//set this ship to move
-	mapData.selectedShip = shipIndex;
-	mapData.state = TURN_END_MOVEMENT;
+		//select this ship
+		mapData.selectedShip = shipIndex;
+		
+		//start a camera pan to this ship
+		cameraPanInit(mapData.ships[shipIndex].xPos << 4, mapData.ships[shipIndex].yPos << 4, CYCLE_PAN_SPEED);
+		
+		//tell the function to wait until the camera pan is finished
+		mapData.actionTimer = 1;
+	}
+	//if we have completed the camera pan to the ship in question
+	else if((mapData.actionTimer == 1) && (mapData.camera.state == STILL)){
+		//initialize a ship movement
+		mapData.state = TURN_END_MOVEMENT;
+		mapData.actionTimer = 0;
+	}
 	
 	//handle any changes to the camera that occured this frame
 	processCamera();
 }
 
 void turnEndMovementState(){
+	s16 xStart = mapData.ships[mapData.selectedShip].xPos;
+	s16 yStart = mapData.ships[mapData.selectedShip].yPos;
+	s16 xEnd = xStart + mapData.ships[mapData.selectedShip].xVel;
+	s16 yEnd = yStart + mapData.ships[mapData.selectedShip].yVel;
 	
+	//if we are starting a new movement
+	if(mapData.actionTimer == 0){
+		mapData.actionTarget = SHIP_MOVE_SPEED;
+	}
+	//if the movement has concluded
+	else if(mapData.actionTimer == mapData.actionTarget){
+		mapData.ships[mapData.selectedShip].state = FINISHED;
+		mapData.state = TURN_END;
+		mapData.actionTimer = 0;
+	}
+	
+	mapData.actionTimer++;
+	
+	//handle any changes to the camera that occured this frame
+	processCamera();
 }
 
 //initialize all of the linked lists of the ships in this scenario
@@ -420,7 +453,7 @@ void shipListInit(){
 }
 
 void nextPlayer(){
-
+	mapData.state = TURN_START;
 }
 
 void nextTurn(){
