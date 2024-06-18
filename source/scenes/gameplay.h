@@ -18,6 +18,9 @@
 #define CYCLE_PAN_SPEED 20
 #define SHIP_MOVE_SPEED 32
 
+#define IDLE_CYCLE_OFFSET 112
+#define DIRECTION_OFFSET 28
+
 //enums
 enum ShipType{
 	SCOUT, FIGHTER, BOMBER, DESTROYER, CRUISER, BATTLESHIP, CARRIER,
@@ -51,8 +54,8 @@ typedef struct ShipData{
 	u8 health; //the health of this ship, 100 is max, 0 is dead
 	u8 xPos; //the x position of this ship on the map
 	u8 yPos; //the y position of this ship on the map
-	u8 xVel; //the x velocity of this ship
-	u8 yVel; //the y velocity of this ship
+	s8 xVel; //the x velocity of this ship
+	s8 yVel; //the y velocity of this ship
 	u8 teamLink; //the index of the next ship of the same team, forming a linked list.
 	u8 activeLink; //the index of the next ship that has not yet moved, forming a linked list.
 	u8 sameTileLink; //the index of the next ship in the same tile as this one, forming a linked list. If this points to itself, there are no others
@@ -97,6 +100,9 @@ typedef struct MapData{
 extern const unsigned int TestGfxPal[];
 extern const unsigned int TestGfxTiles[];
 extern const u32 inverseTimeSquared[];
+extern const unsigned short shipsTiles[3520];
+extern const unsigned short shipsMap[336];
+extern const unsigned short shipsPal[16];
 
 //local functions
 void gameplayInitialize();

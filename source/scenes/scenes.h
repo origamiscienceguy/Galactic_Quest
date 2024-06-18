@@ -29,6 +29,7 @@ typedef const struct Scene{
 typedef struct SceneStatus{
 	enum SceneState state;
 	Scene *scenePointer;
+	u32 sceneCounter; //how long this scene has been going for
 }SceneStatus;
 
 typedef struct VideoData{

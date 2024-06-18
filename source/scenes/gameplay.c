@@ -19,17 +19,17 @@ Scene gameplayScene = {
 
 void gameplayInitialize(){
 	REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_OBJ;
-	REG_BG0CNT = BG_8BPP | BG_SBB(BG_0_TILEMAP) | BG_CBB(BG_0_CHARDATA);
-	REG_BG1CNT = BG_8BPP | BG_SBB(BG_1_TILEMAP) | BG_CBB(BG_0_CHARDATA);
+	REG_BG0CNT = BG_4BPP | BG_SBB(BG_0_TILEMAP) | BG_CBB(BG_0_CHARDATA);
+	REG_BG1CNT = BG_4BPP | BG_SBB(BG_1_TILEMAP) | BG_CBB(BG_0_CHARDATA);
 	
 	//queue the palette to be sent
-	paletteData[0].size = 128;
-	paletteData[0].buffer = (void *)TestGfxPal;
+	paletteData[0].size = 8;
+	paletteData[0].buffer = (void *)shipsPal;
 	paletteData[0].position = pal_bg_mem;
 	
 	//queue the tiles to be sent
-	characterData[0].size = 512;
-	characterData[0].buffer = (void *)TestGfxTiles;
+	characterData[0].size = 1760;
+	characterData[0].buffer = (void *)shipsTiles;
 	characterData[0].position = tile8_mem[BG_0_CHARDATA];
 	
 	//queue the tilemap for layer 0 to be sent
@@ -45,10 +45,10 @@ void gameplayInitialize(){
 	//fill the tilemap buffer for layer 0
 	for(u32 i = 0; i < 16; i++){
 		for(u32 j = 0; j < 16; j++){
-			tilemapBuffer0[i * 64 + j * 2] = 0;
-			tilemapBuffer0[i * 64 + j * 2 + 1] = 1;
-			tilemapBuffer0[i * 64 + j * 2 + 32] = 2;
-			tilemapBuffer0[i * 64 + j * 2 + 33] = 3;
+			tilemapBuffer0[i * 64 + j * 2] = shipsMap[0];
+			tilemapBuffer0[i * 64 + j * 2 + 1] = shipsMap[1];
+			tilemapBuffer0[i * 64 + j * 2 + 32] = shipsMap[2];
+			tilemapBuffer0[i * 64 + j * 2 + 33] = shipsMap[3];
 		}
 	}
 	
@@ -158,38 +158,66 @@ void createShipTilemap(u16 *tilemapBuffer){
 	//clear the vertical column of newly arrived spaces
 	for(int i = xUpdateLow; i < xUpdateHigh; i++){
 		for(int j = 0; j < 16; j++){
-			tilemapBuffer[(i % 16) * 2 + j * 64] = 3;
-			tilemapBuffer[(i % 16) * 2 + j * 64 + 1] = 3;
-			tilemapBuffer[(i % 16) * 2 + j * 64 + 32] = 3;
-			tilemapBuffer[(i % 16) * 2 + j * 64 + 33] = 3;
+			tilemapBuffer[(i % 16) * 2 + j * 64] = shipsMap[3];
+			tilemapBuffer[(i % 16) * 2 + j * 64 + 1] = shipsMap[3];
+			tilemapBuffer[(i % 16) * 2 + j * 64 + 32] = shipsMap[3];
+			tilemapBuffer[(i % 16) * 2 + j * 64 + 33] = shipsMap[3];
 		}
 	}
 	
 	//clear the horizontal column of newly arrived spaces
 	for(int i = yUpdateLow; i < yUpdateHigh; i++){
 		for(int j = 0; j < 16; j++){
-			tilemapBuffer[(i % 16) * 64 + j * 2] = 3;
-			tilemapBuffer[(i % 16) * 64 + j * 2 + 1] = 3;
-			tilemapBuffer[(i % 16) * 64 + j * 2 + 32] = 3;
-			tilemapBuffer[(i % 16) * 64 + j * 2 + 33] = 3;
+			tilemapBuffer[(i % 16) * 64 + j * 2] = shipsMap[3];
+			tilemapBuffer[(i % 16) * 64 + j * 2 + 1] = shipsMap[3];
+			tilemapBuffer[(i % 16) * 64 + j * 2 + 32] = shipsMap[3];
+			tilemapBuffer[(i % 16) * 64 + j * 2 + 33] = shipsMap[3];
 		}
 	}
 	
 	//draw every ship that should be on screen
+	u8 globalIdleCounter; //0,2: center, 1: left, 3: right
+	globalIdleCounter = (currentScene.sceneCounter & 0xC0) >> 6;
+	if(globalIdleCounter == 2){
+		globalIdleCounter = 0;
+	}
+	else if(globalIdleCounter == 3){
+		globalIdleCounter = 2;
+	}
+		
 	for(u32 shipIndex = 0; shipIndex < mapData.numShips; shipIndex++){
 		u8 shipXPos = mapData.ships[shipIndex].xPos;
 		u8 shipYPos = mapData.ships[shipIndex].yPos;
+		s8 shipXVel = mapData.ships[shipIndex].xVel;
+		s8 shipYVel = mapData.ships[shipIndex].yVel;
+		u8 shipDirection; //0: right, 1: up, 2: left, 3: down
+		
+		if(ABS(shipXVel) > ABS(shipYVel)){
+			if(shipXVel > 0){
+				shipDirection = 0;
+			}
+			else{
+				shipDirection = 2;
+			}
+		}
+		else{
+			if(shipYVel > 0){
+				shipDirection = 3;
+			}
+			else{
+				shipDirection = 1;
+			}
+		}
 		
 		//if this particular ship is in one of the update regions
-		if(((shipXPos >= xUpdateLow) && (shipXPos < xUpdateHigh) && (shipYPos >= mapYPos) && (shipYPos <= mapYPos + 15))
-		|| ((shipYPos >= yUpdateLow) && (shipYPos < yUpdateHigh) && (shipXPos >= mapXPos) && (shipXPos <= mapXPos + 15))){
+		if((shipXPos >= mapXPos) && (shipXPos < mapXPos + 15) && (shipYPos >= mapYPos) && (shipYPos < mapYPos + 15)){
 			u16 baseIndex = (shipXPos % 16) * 2 + (shipYPos % 16) * 64;
-			u8 tilemapBase = (mapData.ships[shipIndex].type + 1) * 4;
-			tilemapBuffer[baseIndex] = tilemapBase;
-			tilemapBuffer[baseIndex + 1] = tilemapBase + 1;
-			tilemapBuffer[baseIndex + 32] = tilemapBase + 2;
-			tilemapBuffer[baseIndex + 33] = tilemapBase + 3;
-			
+			u16 tilemapBase = ((mapData.ships[shipIndex].type + 1) * 4) + (globalIdleCounter * IDLE_CYCLE_OFFSET) + (shipDirection * DIRECTION_OFFSET);
+			tilemapBuffer[baseIndex] = shipsMap[tilemapBase];
+			tilemapBuffer[baseIndex + 1] = shipsMap[tilemapBase + 1];
+			tilemapBuffer[baseIndex + 32] = shipsMap[tilemapBase + 2];
+			tilemapBuffer[baseIndex + 33] = shipsMap[tilemapBase + 3];
+
 		}
 	}
 	
@@ -571,64 +599,65 @@ void cameraBoundsCheck(s16 *xPosPointer, s16 *yPosPointer){
 
 //a temprary function to initialize a test map.
 void initMap(){
-	mapData.numShips = 6;
+	mapData.numShips = 28;
 	mapData.teams[BLUE_TEAM].state = ABSENT;
 	mapData.teams[GREEN_TEAM].state = ABSENT;
 	mapData.teams[YELLOW_TEAM].state = ABSENT;
+	u8 xPos = 8;
+	u8 yPos = 8;
+	u8 index = 0;
 	
-	mapData.ships[0].type = SCOUT;
-	mapData.ships[0].state = READY;
-	mapData.ships[0].team = RED_TEAM;
-	mapData.ships[0].health = 100;
-	mapData.ships[0].xPos = 0;
-	mapData.ships[0].yPos = 0;
-	mapData.ships[0].xVel = 5;
-	mapData.ships[0].yVel = 5;
-	
-	mapData.ships[1].type = BOMBER;
-	mapData.ships[1].state = READY;
-	mapData.ships[1].team = RED_TEAM;
-	mapData.ships[1].health = 100;
-	mapData.ships[1].xPos = 16;
-	mapData.ships[1].yPos = 16;
-	mapData.ships[1].xVel = -1;
-	mapData.ships[1].yVel = 1;
-	
-	mapData.ships[2].type = DESTROYER;
-	mapData.ships[2].state = READY;
-	mapData.ships[2].team = RED_TEAM;
-	mapData.ships[2].health = 100;
-	mapData.ships[2].xPos = 17;
-	mapData.ships[2].yPos = 5;
-	mapData.ships[2].xVel = -3;
-	mapData.ships[2].yVel = 1;
-	
-	mapData.ships[3].type = FIGHTER;
-	mapData.ships[3].state = READY;
-	mapData.ships[3].team = RED_TEAM;
-	mapData.ships[3].health = 100;
-	mapData.ships[3].xPos = 5;
-	mapData.ships[3].yPos = 17;
-	mapData.ships[3].xVel = 4;
-	mapData.ships[3].yVel = 10;
-	
-	mapData.ships[4].type = CRUISER;
-	mapData.ships[4].state = READY;
-	mapData.ships[4].team = RED_TEAM;
-	mapData.ships[4].health = 100;
-	mapData.ships[4].xPos = 10;
-	mapData.ships[4].yPos = 5;
-	mapData.ships[4].xVel = 16;
-	mapData.ships[4].yVel = 16;
-	
-	mapData.ships[5].type = BATTLESHIP;
-	mapData.ships[5].state = READY;
-	mapData.ships[5].team = RED_TEAM;
-	mapData.ships[5].health = 100;
-	mapData.ships[5].xPos = 255;
-	mapData.ships[5].yPos = 255;
-	mapData.ships[5].xVel = -50;
-	mapData.ships[5].yVel = -50;
+	for(u32 type = 0; type <= CARRIER; type++){
+		xPos = 8;
+		
+		mapData.ships[index].type = type;
+		mapData.ships[index].state = READY;
+		mapData.ships[index].team = RED_TEAM;
+		mapData.ships[index].health = 100;
+		mapData.ships[index].xPos = xPos;
+		mapData.ships[index].yPos = yPos;
+		mapData.ships[index].xVel = 1;
+		mapData.ships[index].yVel = 0;
+		
+		index++;
+		xPos++;
+		
+		mapData.ships[index].type = type;
+		mapData.ships[index].state = READY;
+		mapData.ships[index].team = RED_TEAM;
+		mapData.ships[index].health = 100;
+		mapData.ships[index].xPos = xPos;
+		mapData.ships[index].yPos = yPos;
+		mapData.ships[index].xVel = 0;
+		mapData.ships[index].yVel = -1;
+		
+		index++;
+		xPos++;
+		
+		mapData.ships[index].type = type;
+		mapData.ships[index].state = READY;
+		mapData.ships[index].team = RED_TEAM;
+		mapData.ships[index].health = 100;
+		mapData.ships[index].xPos = xPos;
+		mapData.ships[index].yPos = yPos;
+		mapData.ships[index].xVel = -1;
+		mapData.ships[index].yVel = 0;
+		
+		index++;
+		xPos++;
+		
+		mapData.ships[index].type = type;
+		mapData.ships[index].state = READY;
+		mapData.ships[index].team = RED_TEAM;
+		mapData.ships[index].health = 100;
+		mapData.ships[index].xPos = xPos;
+		mapData.ships[index].yPos = yPos;
+		mapData.ships[index].xVel = 0;
+		mapData.ships[index].yVel = 1;
+		
+		index++;
+		yPos++;
+	}
 	
 	for(u32 i = mapData.numShips; i < MAX_SHIPS; i++){
 		mapData.ships[i].state = NOT_PARTICIPATING;

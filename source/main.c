@@ -82,6 +82,7 @@ void softReset(){
 }
 
 void sceneManager(){
+	currentScene.sceneCounter++;
 	switch(currentScene.state){
 	case INITIALIZE:
 		(*currentScene.scenePointer->initialize)();
