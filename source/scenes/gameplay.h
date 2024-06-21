@@ -27,7 +27,7 @@ enum ShipType{
 };
 
 enum ShipState{
-	READY, FINISHED, UNAVAILABLE, DESTROYED, NOT_PARTICIPATING
+	READY_VISIBLE, READY_HIDDEN, FINISHED_VISIBLE, FINISHED_HIDDEN, WRONG_TEAM_VISIBLE, WRONG_TEAM_HIDDEN, DOCKED, DESTROYED, NOT_PARTICIPATING
 };
 
 enum MapState{
@@ -57,7 +57,6 @@ typedef struct ShipData{
 	s8 xVel; //the x velocity of this ship
 	s8 yVel; //the y velocity of this ship
 	u8 teamLink; //the index of the next ship of the same team, forming a linked list.
-	u8 activeLink; //the index of the next ship that has not yet moved, forming a linked list.
 	u8 sameTileLink; //the index of the next ship in the same tile as this one, forming a linked list. If this points to itself, there are no others
 }ShipData;
 
@@ -65,7 +64,7 @@ typedef struct TeamData{
 	enum TeamState state; //the state of this team in this particular battle
 	u8 firstShip; //the index of the first ship in every team a new turn will begin with this ship highlighted
 	u8 numStartingShips; //the number of ships each team began the battle with
-	u8 numActiveShips; //the number of ships each team has that is currently alive
+	u8 numAliveShips; //the number of ships each team has that is currently alive
 }TeamData;
 
 typedef struct CameraData{
@@ -85,6 +84,7 @@ typedef struct CameraData{
 typedef struct MapData{
 	enum MapState state; //what is the stage of the game are we in
 	enum Team teamTurn; //who's turn is it
+	u8 turnNum; //how many turns have elapsed
 	u8 xSize; //the number of tiles large the map is in the x direction
 	u8 ySize; //number of tiles in the y direction
 	u8 numShips; //the number of ships on the map.
@@ -97,8 +97,6 @@ typedef struct MapData{
 }MapData;
 
 //globals
-extern const unsigned int TestGfxPal[];
-extern const unsigned int TestGfxTiles[];
 extern const u32 inverseTimeSquared[];
 extern const unsigned short shipsTiles[3520];
 extern const unsigned short shipsMap[336];

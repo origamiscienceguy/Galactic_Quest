@@ -23,7 +23,7 @@ void gameplayInitialize(){
 	REG_BG1CNT = BG_4BPP | BG_SBB(BG_1_TILEMAP) | BG_CBB(BG_0_CHARDATA);
 	
 	//queue the palette to be sent
-	paletteData[0].size = 8;
+	paletteData[0].size = 64;
 	paletteData[0].buffer = (void *)shipsPal;
 	paletteData[0].position = pal_bg_mem;
 	
@@ -77,7 +77,6 @@ void gameplayInitialize(){
 }
 
 void gameplayNormal(){
-	
 	//update the game for this tick
 	switch(mapData.state){
 	case TURN_START:
@@ -175,7 +174,7 @@ void createShipTilemap(u16 *tilemapBuffer){
 		}
 	}
 	
-	//draw every ship that should be on screen
+	//handle ship idle animations
 	u8 globalIdleCounter; //0,2: center, 1: left, 3: right
 	globalIdleCounter = (currentScene.sceneCounter & 0xC0) >> 6;
 	if(globalIdleCounter == 2){
@@ -184,8 +183,15 @@ void createShipTilemap(u16 *tilemapBuffer){
 	else if(globalIdleCounter == 3){
 		globalIdleCounter = 2;
 	}
-		
+
+	//draw every ship that should be on screen
 	for(u32 shipIndex = 0; shipIndex < mapData.numShips; shipIndex++){
+		//if the ship is not visible, skip it
+		if((mapData.ships[shipIndex].state != READY_VISIBLE) && (mapData.ships[shipIndex].state != FINISHED_VISIBLE) && 
+		(mapData.ships[shipIndex].state != WRONG_TEAM_VISIBLE)){
+			continue;
+		}
+
 		u8 shipXPos = mapData.ships[shipIndex].xPos;
 		u8 shipYPos = mapData.ships[shipIndex].yPos;
 		s8 shipXVel = mapData.ships[shipIndex].xVel;
@@ -210,14 +216,13 @@ void createShipTilemap(u16 *tilemapBuffer){
 		}
 		
 		//if this particular ship is in one of the update regions
-		if((shipXPos >= mapXPos) && (shipXPos < mapXPos + 15) && (shipYPos >= mapYPos) && (shipYPos < mapYPos + 15)){
+		if((shipXPos >= mapXPos) && (shipXPos < mapXPos + 16) && (shipYPos >= mapYPos) && (shipYPos < mapYPos + 16)){
 			u16 baseIndex = (shipXPos % 16) * 2 + (shipYPos % 16) * 64;
 			u16 tilemapBase = ((mapData.ships[shipIndex].type + 1) * 4) + (globalIdleCounter * IDLE_CYCLE_OFFSET) + (shipDirection * DIRECTION_OFFSET);
-			tilemapBuffer[baseIndex] = shipsMap[tilemapBase];
-			tilemapBuffer[baseIndex + 1] = shipsMap[tilemapBase + 1];
-			tilemapBuffer[baseIndex + 32] = shipsMap[tilemapBase + 2];
-			tilemapBuffer[baseIndex + 33] = shipsMap[tilemapBase + 3];
-
+			tilemapBuffer[baseIndex] = shipsMap[tilemapBase] | SE_PALBANK(mapData.ships[shipIndex].team);
+			tilemapBuffer[baseIndex + 1] = shipsMap[tilemapBase + 1] | SE_PALBANK(mapData.ships[shipIndex].team);
+			tilemapBuffer[baseIndex + 32] = shipsMap[tilemapBase + 2] | SE_PALBANK(mapData.ships[shipIndex].team);
+			tilemapBuffer[baseIndex + 33] = shipsMap[tilemapBase + 3] | SE_PALBANK(mapData.ships[shipIndex].team);
 		}
 	}
 	
@@ -227,49 +232,48 @@ void createShipTilemap(u16 *tilemapBuffer){
 }
 
 void turnStartState(){
-	//create the active ship linked list based on which ships in the team linked list are still active
 	TeamData *teamPointer = &mapData.teams[mapData.teamTurn];
+	u32 numAliveShips = 0;
 	
-	//if this team has no active ships, end the turn immediately
-	if(teamPointer->state != ACTIVE){
-		mapData.state = TURN_END;
-		return;
-	}
-	
-	u32 firstShipIndex = teamPointer->firstShip;
-	u32 shipIndex = firstShipIndex;
-	
-	//find the first ship active on this team
-	while((mapData.ships[shipIndex].state == DESTROYED) || (mapData.ships[shipIndex].state == NOT_PARTICIPATING)){
+	//find the first active ship on this team and count how many are alive
+	u32 shipIndex = teamPointer->firstShip;
+	while(mapData.ships[shipIndex].teamLink != teamPointer->firstShip){
+		if(mapData.ships[shipIndex].state == WRONG_TEAM_VISIBLE){
+			mapData.ships[shipIndex].state = READY_VISIBLE;
+			//if this is the first alive ship found
+			if(numAliveShips == 0){
+				mapData.selectedShip = shipIndex;
+			}
+			numAliveShips++;
+		}
+		else if(mapData.ships[shipIndex].state == WRONG_TEAM_HIDDEN){
+			mapData.ships[shipIndex].state = READY_HIDDEN;
+			//if this is the first alive ship found
+			if(numAliveShips == 0){
+				mapData.selectedShip = shipIndex;
+			}
+			numAliveShips++;
+		}
 		shipIndex = mapData.ships[shipIndex].teamLink;
-		//if we run into the first ship index, it means all ships are dead
-		if(shipIndex == firstShipIndex){
-			teamPointer->state = DEFEATED;
-			mapData.state = TURN_END;
-			return;
+	}
+	if(mapData.ships[shipIndex].state == WRONG_TEAM_VISIBLE){
+		mapData.ships[shipIndex].state = READY_VISIBLE;
+		//if this is the first alive ship found
+		if(numAliveShips == 0){
+			mapData.selectedShip = shipIndex;
 		}
+		numAliveShips++;
+	}
+	else if(mapData.ships[shipIndex].state == WRONG_TEAM_HIDDEN){
+		mapData.ships[shipIndex].state = READY_HIDDEN;
+		//if this is the first alive ship found
+		if(numAliveShips == 0){
+			mapData.selectedShip = shipIndex;
+		}
+		numAliveShips++;
 	}
 	
-	u32 numActiveShips = 0;
-	
-	//shipIndex now contains the first active ship on this team.
-	mapData.selectedShip = shipIndex;
-	u32 lastShipIndex = shipIndex;
-	u32 nextIndex = mapData.ships[shipIndex].teamLink;
-	//add all other active ships to the linked list
-	while(nextIndex != firstShipIndex){
-		if((mapData.ships[nextIndex].state != DESTROYED) && (mapData.ships[nextIndex].state != NOT_PARTICIPATING)){
-			mapData.ships[lastShipIndex].activeLink = nextIndex;
-			lastShipIndex = nextIndex;
-			numActiveShips++;
-		}
-		nextIndex = mapData.ships[nextIndex].teamLink;
-	}
-	
-	//finish up the loop with the last ship
-	mapData.ships[lastShipIndex].activeLink = shipIndex;
-	
-	teamPointer->numActiveShips = numActiveShips;
+	teamPointer->numAliveShips = numAliveShips;
 	
 	mapData.state = OPEN_MAP;
 }
@@ -307,23 +311,37 @@ void openMapState(){
 	if((inputs.pressed & KEY_L) && (mapData.camera.state == STILL)){
 		//cycle through the linked list until we end up one before where we started
 		u32 currentIndex = mapData.selectedShip;
-		while(mapData.ships[currentIndex].activeLink != mapData.selectedShip){
-			currentIndex = mapData.ships[currentIndex].activeLink;
+		u32 lastActiveIndex = 0;
+		while(mapData.ships[currentIndex].teamLink != mapData.selectedShip){
+			if((mapData.ships[currentIndex].state == READY_VISIBLE) || (mapData.ships[currentIndex].state = READY_HIDDEN)){
+				lastActiveIndex = currentIndex;
+			}
+			currentIndex = mapData.ships[currentIndex].teamLink;
 		}
-		mapData.selectedShip = currentIndex;
+		if((mapData.ships[currentIndex].state == READY_VISIBLE) || (mapData.ships[currentIndex].state = READY_HIDDEN)){
+			lastActiveIndex = currentIndex;
+		}
+		mapData.selectedShip = lastActiveIndex;
 		
-		s64 xTarget = (mapData.ships[mapData.selectedShip].xPos << 4) - 112;
-		s64 yTarget = (mapData.ships[mapData.selectedShip].yPos << 4) - 72;
+		s16 xTarget = (mapData.ships[mapData.selectedShip].xPos << 4) - 112;
+		s16 yTarget = (mapData.ships[mapData.selectedShip].yPos << 4) - 72;
 		
 		//pan the camera to this ship
 		cameraPanInit(xTarget, yTarget, CYCLE_PAN_SPEED);
 	}
 	if((inputs.pressed & KEY_R) && (mapData.camera.state == STILL)){
 		//cycle to the next ship in the linked list of active ships
-		mapData.selectedShip = mapData.ships[mapData.selectedShip].activeLink;
+		u32 currentIndex = mapData.ships[mapData.selectedShip].teamLink;
+		while(mapData.ships[currentIndex].teamLink != mapData.selectedShip){
+			if((mapData.ships[currentIndex].state == READY_VISIBLE) || (mapData.ships[currentIndex].state = READY_HIDDEN)){
+				break;
+			}
+			currentIndex = mapData.ships[currentIndex].teamLink;
+		}
+		mapData.selectedShip = currentIndex;
 		
-		s64 xTarget = (mapData.ships[mapData.selectedShip].xPos << 4) - 112;
-		s64 yTarget = (mapData.ships[mapData.selectedShip].yPos << 4) - 72;
+		s16 xTarget = (mapData.ships[mapData.selectedShip].xPos << 4) - 112;
+		s16 yTarget = (mapData.ships[mapData.selectedShip].yPos << 4) - 72;
 		
 		//pan the camera to this ship
 		cameraPanInit(xTarget, yTarget, CYCLE_PAN_SPEED);
@@ -341,34 +359,30 @@ void openMapState(){
 
 //after this player has selected "end turn"
 void turnEndState(){	
-	//if we are just beginning a new movement
+	//if we need to move to a new ship
 	if(mapData.actionTimer == 0){
-		//starting with the first ship on this team
-		u8 firstIndex = mapData.teams[mapData.teamTurn].firstShip;
-		u8 shipIndex = firstIndex;
-		//cycle through every ship on this team until we find one that has not moved yet.
-		while(mapData.ships[shipIndex].state != READY){
-			//if we have cycled through every ship on this team, then all ships are done moving
-			if(mapData.ships[shipIndex].activeLink == firstIndex){
+		//find the first ship on this team that is still active
+		u32 shipIndex = mapData.teams[mapData.teamTurn].firstShip;
+		while((mapData.ships[shipIndex].state != READY_VISIBLE) && (mapData.ships[shipIndex].state != READY_HIDDEN)){
+			//if we have looped around to the original ship, all ships have finished movement.
+			if(mapData.ships[shipIndex].teamLink == mapData.teams[mapData.teamTurn].firstShip){
 				nextPlayer();
-				break;
+				processCamera();
+				return;
 			}
-			shipIndex = mapData.ships[shipIndex].activeLink;
+			shipIndex = mapData.ships[shipIndex].teamLink;
 		}
-		//select this ship
 		mapData.selectedShip = shipIndex;
-		
-		//start a camera pan to this ship
-		cameraPanInit(mapData.ships[shipIndex].xPos << 4, mapData.ships[shipIndex].yPos << 4, CYCLE_PAN_SPEED);
-		
-		//tell the function to wait until the camera pan is finished
+		//pan the camera to this ship
+		s16 xTarget = (mapData.ships[mapData.selectedShip].xPos << 4) - 112;
+		s16 yTarget = (mapData.ships[mapData.selectedShip].yPos << 4) - 72;
+		cameraPanInit(xTarget, yTarget, CYCLE_PAN_SPEED);
 		mapData.actionTimer = 1;
 	}
-	//if we have completed the camera pan to the ship in question
-	else if((mapData.actionTimer == 1) && (mapData.camera.state == STILL)){
-		//initialize a ship movement
-		mapData.state = TURN_END_MOVEMENT;
+	//if the camera has finished focusing on the next ship
+	else if(mapData.camera.state == STILL){
 		mapData.actionTimer = 0;
+		mapData.ships[mapData.selectedShip].state = FINISHED_VISIBLE;
 	}
 	
 	//handle any changes to the camera that occured this frame
@@ -387,7 +401,7 @@ void turnEndMovementState(){
 	}
 	//if the movement has concluded
 	else if(mapData.actionTimer == mapData.actionTarget){
-		mapData.ships[mapData.selectedShip].state = FINISHED;
+		mapData.ships[mapData.selectedShip].state = FINISHED_VISIBLE;
 		mapData.state = TURN_END;
 		mapData.actionTimer = 0;
 	}
@@ -400,6 +414,9 @@ void turnEndMovementState(){
 
 //initialize all of the linked lists of the ships in this scenario
 void shipListInit(){
+	//reset to 0 turns elapsed
+	mapData.turnNum = 0;
+
 	//initialize all four teams
 	for(u32 teamIndex = 0; teamIndex < NUM_TEAMS; teamIndex++){
 		TeamData *teamPointer = &mapData.teams[teamIndex];
@@ -407,7 +424,8 @@ void shipListInit(){
 		teamPointer->numStartingShips = 0;
 	}
 	
-	u32 lastShipIndex[NUM_TEAMS]; //the last found ship for this particular team
+	u32 lastShipIndex[NUM_TEAMS]; //the previous found ship for this particular team
+	u32 numShips = 0;
 	
 	//check every ship
 	for(u32 shipIndex = 0; shipIndex < MAX_SHIPS; shipIndex++){
@@ -415,10 +433,12 @@ void shipListInit(){
 		u32 shipTeam = shipPointer->team;
 		TeamData *teamPointer = &mapData.teams[shipTeam];
 		
-		//all active ships must be initialized with the ready state
-		if(shipPointer->state != READY){
+		//all active ships must be initialized with the ready_visible state
+		if(shipPointer->state != READY_VISIBLE){
 			continue;
 		}
+		
+		numShips++;
 		
 		//increment the number of ships for the team this ship belongs to
 		teamPointer->numStartingShips++;
@@ -441,10 +461,12 @@ void shipListInit(){
 		for(s32 overlapShipIndex = shipIndex - 1; overlapShipIndex >= 0; overlapShipIndex--){
 			if((mapData.ships[overlapShipIndex].xPos == xPos) && (mapData.ships[overlapShipIndex].yPos == yPos)){
 				mapData.ships[overlapShipIndex].sameTileLink = shipIndex;
+				mapData.ships[shipIndex].state = READY_HIDDEN;
 				break;
 			}
 		}
 	}
+	mapData.numShips = 112;
 	
 	//complete the linked list loop for each team that has at least one ship
 	for(u32 teamIndex = 0; teamIndex < NUM_TEAMS; teamIndex++){
@@ -463,7 +485,7 @@ void shipListInit(){
 			continue;
 		}
 		//if this ship is not active, skip it.
-		if(mapData.ships[shipIndex].state != READY){
+		if(mapData.ships[shipIndex].state != READY_VISIBLE){
 			continue;
 		}
 		
@@ -478,14 +500,76 @@ void shipListInit(){
 			nextIndex = mapData.ships[nextIndex].sameTileLink;
 		}
 	}
+	
+	//find out which team is going first
+	for(u32 team = 0; team < NUM_TEAMS; team++){
+		if(mapData.teams[team].state == ACTIVE){
+			mapData.teamTurn = team;
+			break;
+		}
+	}
+
+	//all teams that aren't currently in their turn have their ships set to wrong_team
+	for(u32 team = 0; team < NUM_TEAMS; team++){
+		if(team == mapData.teamTurn){
+			continue;
+		}
+		u32 shipIndex = mapData.teams[team].firstShip;
+		while(mapData.ships[shipIndex].teamLink != mapData.teams[team].firstShip){
+			if(mapData.ships[shipIndex].state == READY_VISIBLE){
+				mapData.ships[shipIndex].state = WRONG_TEAM_VISIBLE;
+			}
+			else if(mapData.ships[shipIndex].state == READY_HIDDEN){
+				mapData.ships[shipIndex].state = WRONG_TEAM_HIDDEN;
+			}
+			shipIndex = mapData.ships[shipIndex].teamLink;
+		}
+		if(mapData.ships[shipIndex].state == READY_VISIBLE){
+			mapData.ships[shipIndex].state = WRONG_TEAM_VISIBLE;
+		}
+		else if(mapData.ships[shipIndex].state == READY_HIDDEN){
+			mapData.ships[shipIndex].state = WRONG_TEAM_HIDDEN;
+		}
+	}
 }
 
 void nextPlayer(){
+	u32 team = mapData.teamTurn;
+	//set all ships on this team as wrong_team
+	u32 shipIndex = mapData.teams[team].firstShip;
+	while(mapData.ships[shipIndex].teamLink != mapData.teams[team].firstShip){
+		if(mapData.ships[shipIndex].state == FINISHED_VISIBLE){
+			mapData.ships[shipIndex].state = WRONG_TEAM_VISIBLE;
+		}
+		else if(mapData.ships[shipIndex].state == FINISHED_HIDDEN){
+			mapData.ships[shipIndex].state = WRONG_TEAM_HIDDEN;
+		}
+		shipIndex = mapData.ships[shipIndex].teamLink;
+	}
+	if(mapData.ships[shipIndex].state == FINISHED_VISIBLE){
+		mapData.ships[shipIndex].state = WRONG_TEAM_VISIBLE;
+	}
+	else if(mapData.ships[shipIndex].state == FINISHED_HIDDEN){
+		mapData.ships[shipIndex].state = WRONG_TEAM_HIDDEN;
+	}
+	mapData.state = TURN_START;
+	//find the next team
+	do{
+		team++;
+		//if all teams have gone, go to next turn
+		if(team >= NUM_TEAMS){
+			team = 0;
+			nextTurn();
+		}
+	}while(mapData.teams[team].state != ACTIVE);
+	
+	mapData.teamTurn = team;
+	
 	mapData.state = TURN_START;
 }
 
 void nextTurn(){
-
+	mapData.turnNum++;
 }
 
 void processCamera(){
@@ -599,67 +683,63 @@ void cameraBoundsCheck(s16 *xPosPointer, s16 *yPosPointer){
 
 //a temprary function to initialize a test map.
 void initMap(){
-	mapData.numShips = 28;
-	mapData.teams[BLUE_TEAM].state = ABSENT;
-	mapData.teams[GREEN_TEAM].state = ABSENT;
-	mapData.teams[YELLOW_TEAM].state = ABSENT;
-	u8 xPos = 8;
-	u8 yPos = 8;
 	u8 index = 0;
-	
-	for(u32 type = 0; type <= CARRIER; type++){
-		xPos = 8;
-		
-		mapData.ships[index].type = type;
-		mapData.ships[index].state = READY;
-		mapData.ships[index].team = RED_TEAM;
-		mapData.ships[index].health = 100;
-		mapData.ships[index].xPos = xPos;
-		mapData.ships[index].yPos = yPos;
-		mapData.ships[index].xVel = 1;
-		mapData.ships[index].yVel = 0;
-		
-		index++;
-		xPos++;
-		
-		mapData.ships[index].type = type;
-		mapData.ships[index].state = READY;
-		mapData.ships[index].team = RED_TEAM;
-		mapData.ships[index].health = 100;
-		mapData.ships[index].xPos = xPos;
-		mapData.ships[index].yPos = yPos;
-		mapData.ships[index].xVel = 0;
-		mapData.ships[index].yVel = -1;
-		
-		index++;
-		xPos++;
-		
-		mapData.ships[index].type = type;
-		mapData.ships[index].state = READY;
-		mapData.ships[index].team = RED_TEAM;
-		mapData.ships[index].health = 100;
-		mapData.ships[index].xPos = xPos;
-		mapData.ships[index].yPos = yPos;
-		mapData.ships[index].xVel = -1;
-		mapData.ships[index].yVel = 0;
-		
-		index++;
-		xPos++;
-		
-		mapData.ships[index].type = type;
-		mapData.ships[index].state = READY;
-		mapData.ships[index].team = RED_TEAM;
-		mapData.ships[index].health = 100;
-		mapData.ships[index].xPos = xPos;
-		mapData.ships[index].yPos = yPos;
-		mapData.ships[index].xVel = 0;
-		mapData.ships[index].yVel = 1;
-		
-		index++;
-		yPos++;
+	for(u32 team = 0; team <= YELLOW_TEAM; team++){
+		u8 yPos = 8;
+		for(u32 type = 0; type <= CARRIER; type++){
+			u8 xPos = 8 + 4 * team;
+			
+			mapData.ships[index].type = type;
+			mapData.ships[index].state = READY_VISIBLE;
+			mapData.ships[index].team = team;
+			mapData.ships[index].health = 100;
+			mapData.ships[index].xPos = xPos;
+			mapData.ships[index].yPos = yPos;
+			mapData.ships[index].xVel = 1;
+			mapData.ships[index].yVel = 0;
+			
+			index++;
+			xPos++;
+			
+			mapData.ships[index].type = type;
+			mapData.ships[index].state = READY_VISIBLE;
+			mapData.ships[index].team = team;
+			mapData.ships[index].health = 100;
+			mapData.ships[index].xPos = xPos;
+			mapData.ships[index].yPos = yPos;
+			mapData.ships[index].xVel = 0;
+			mapData.ships[index].yVel = -1;
+			
+			index++;
+			xPos++;
+			
+			mapData.ships[index].type = type;
+			mapData.ships[index].state = READY_VISIBLE;
+			mapData.ships[index].team = team;
+			mapData.ships[index].health = 100;
+			mapData.ships[index].xPos = xPos;
+			mapData.ships[index].yPos = yPos;
+			mapData.ships[index].xVel = -1;
+			mapData.ships[index].yVel = 0;
+			
+			index++;
+			xPos++;
+			
+			mapData.ships[index].type = type;
+			mapData.ships[index].state = READY_VISIBLE;
+			mapData.ships[index].team = team;
+			mapData.ships[index].health = 100;
+			mapData.ships[index].xPos = xPos;
+			mapData.ships[index].yPos = yPos;
+			mapData.ships[index].xVel = 0;
+			mapData.ships[index].yVel = 1;
+			
+			index++;
+			yPos++;
+		}
 	}
 	
-	for(u32 i = mapData.numShips; i < MAX_SHIPS; i++){
+	for(u32 i = index; i < MAX_SHIPS; i++){
 		mapData.ships[i].state = NOT_PARTICIPATING;
 	}
 }
