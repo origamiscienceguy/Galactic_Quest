@@ -742,7 +742,7 @@ void initMap(){
 			mapData.ships[index].health = 100;
 			mapData.ships[index].xPos = xPos;
 			mapData.ships[index].yPos = yPos;
-			mapData.ships[index].xVel = 1;
+			mapData.ships[index].xVel = team + 1;
 			mapData.ships[index].yVel = 0;
 			
 			index++;
@@ -755,7 +755,7 @@ void initMap(){
 			mapData.ships[index].xPos = xPos;
 			mapData.ships[index].yPos = yPos;
 			mapData.ships[index].xVel = 0;
-			mapData.ships[index].yVel = -1;
+			mapData.ships[index].yVel = -team - 1;
 			
 			index++;
 			xPos++;
@@ -766,7 +766,7 @@ void initMap(){
 			mapData.ships[index].health = 100;
 			mapData.ships[index].xPos = xPos;
 			mapData.ships[index].yPos = yPos;
-			mapData.ships[index].xVel = -1;
+			mapData.ships[index].xVel = -team - 1;
 			mapData.ships[index].yVel = 0;
 			
 			index++;
@@ -779,7 +779,7 @@ void initMap(){
 			mapData.ships[index].xPos = xPos;
 			mapData.ships[index].yPos = yPos;
 			mapData.ships[index].xVel = 0;
-			mapData.ships[index].yVel = 1;
+			mapData.ships[index].yVel = team + 1;
 			
 			index++;
 			yPos++;
