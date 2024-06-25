@@ -201,10 +201,10 @@ void drawSelectedShip(OBJ_ATTR *spriteBuffer){
 	
 	//handle sprite rotation
 	u32 angle = mapData.selectedShip.angle;
-	spriteBuffer[SELECTED_SHIP_AFFINE_MAT * 4].fill = ((s16)sinTable[(angle + 0x40) % 256]) * 2;
-	spriteBuffer[SELECTED_SHIP_AFFINE_MAT * 4 + 1].fill = ((s16)sinTable[angle]) * 2;
-	spriteBuffer[SELECTED_SHIP_AFFINE_MAT * 4 + 2].fill = -((s16)sinTable[angle]) * 2;
-	spriteBuffer[SELECTED_SHIP_AFFINE_MAT * 4 + 3].fill = ((s16)sinTable[(angle + 0x40) % 256]) * 2;
+	spriteBuffer[SELECTED_SHIP_AFFINE_MAT * 4].fill = (sinTable[(angle + 0x40) % 256]) * 2;
+	spriteBuffer[SELECTED_SHIP_AFFINE_MAT * 4 + 1].fill = (sinTable[angle % 256]) * 2;
+	spriteBuffer[SELECTED_SHIP_AFFINE_MAT * 4 + 2].fill = -(sinTable[angle % 256]) * 2;
+	spriteBuffer[SELECTED_SHIP_AFFINE_MAT * 4 + 3].fill = (sinTable[(angle + 0x40) % 256]) * 2;
 	
 	//load the graphics of the selected ship
 	for(u32 tile = 0; tile < 16; tile++){

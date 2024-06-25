@@ -114,7 +114,7 @@ typedef struct MapData{
 //globals
 extern const u32 inverseTimeSquared[];
 extern const u16 inverseTime[];
-extern const s8 sinTable[];
+extern const s16 sinTable[];
 extern const unsigned short shipsTiles[3520];
 extern const unsigned short shipsMap[336];
 extern const unsigned short shipsPal[16];
