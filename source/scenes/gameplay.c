@@ -4,7 +4,10 @@ u16 tilemapBuffer0[1024] EWRAM_DATA;
 u16 tilemapBuffer1[1024] EWRAM_DATA;
 u16 tilemapBuffer2[1024] EWRAM_DATA;
 u16 tilemapBuffer3[1024] EWRAM_DATA;
+u16 characterData0[1024] EWRAM_DATA;
+OBJ_ATTR spriteBuffer[128] EWRAM_DATA;
 u16 IOBuffer[30];
+
 MapData mapData EWRAM_DATA;
 
 
@@ -18,7 +21,7 @@ Scene gameplayScene = {
 };
 
 void gameplayInitialize(){
-	REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_OBJ;
+	REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_OBJ | DCNT_OBJ_1D;
 	REG_BG0CNT = BG_4BPP | BG_SBB(BG_0_TILEMAP) | BG_CBB(BG_0_CHARDATA);
 	REG_BG1CNT = BG_4BPP | BG_SBB(BG_1_TILEMAP) | BG_CBB(BG_0_CHARDATA);
 	
@@ -26,6 +29,10 @@ void gameplayInitialize(){
 	paletteData[0].size = 64;
 	paletteData[0].buffer = (void *)shipsPal;
 	paletteData[0].position = pal_bg_mem;
+	
+	paletteData[1].size = 64;
+	paletteData[1].buffer = (void *)shipsPal;
+	paletteData[1].position = pal_obj_mem;
 	
 	//queue the tiles to be sent
 	characterData[0].size = 1760;
@@ -54,14 +61,12 @@ void gameplayInitialize(){
 	
 	mapData.camera.xPos = 0;
 	mapData.camera.yPos = 0;
-	mapData.camera.xLastPos = 0x7fff;
-	mapData.camera.yLastPos = 0x7fff;
 	mapData.camera.state = STILL;
 	mapData.xSize = 255;
 	mapData.ySize = 255;
 	mapData.state = TURN_START;
 	mapData.teamTurn = RED_TEAM;
-	mapData.selectedShip = 0;
+	mapData.selectedShip.index = 0;
 	
 	//temporary function call to set up some ships like a saved scenareo would
 	initMap();
@@ -106,71 +111,18 @@ void gameplayEnd(){
 
 }
 
-void createShipTilemap(u16 *tilemapBuffer){
-	u16 xUpdateLow = 0; //lower bound of horizontal map cell that need to be updated
-	u16 xUpdateHigh = 0; //upper bound of horizontal map cell that need to be updated
-	u16 yUpdateLow = 0; //lower bound of vertical map cell that need to be updated
-	u16 yUpdateHigh = 0; //upper bound of vertical map cell that need to be updated
-	
+void createShipTilemap(u16 *tilemapBuffer){	
 	//convert pixel coordinates to map cell coordinates
 	u8 mapXPos = mapData.camera.xPos >> 4;
 	u8 mapYPos = mapData.camera.yPos >> 4; 
-	u8 mapXLastPos = mapData.camera.xLastPos >> 4;
-	u8 mapYLastPos = mapData.camera.yLastPos >> 4;
-
-	//set the bound for x updates
-	if(mapXPos > mapXLastPos){
-		xUpdateLow = mapXLastPos + 16;
-		xUpdateHigh = mapXPos + 16;
-		
-		if((xUpdateLow + 16) < xUpdateHigh){
-			xUpdateLow = xUpdateHigh - 16;
-		}
-	}
-	else if(mapXPos < mapXLastPos){
-		xUpdateLow = mapXPos;
-		xUpdateHigh = mapXLastPos;
-		
-		if((xUpdateLow + 16) < xUpdateHigh){
-			xUpdateHigh = xUpdateLow + 16;
-		}
-	}
 	
-	//set the bounds for y updates
-	if(mapYPos > mapYLastPos){
-		yUpdateLow = mapYLastPos + 16;
-		yUpdateHigh = mapYPos + 16;
-		
-		if((yUpdateLow + 16) < yUpdateHigh){
-			yUpdateLow = yUpdateHigh - 16;
-		}
-	}
-	else if(mapYPos < mapYLastPos){
-		yUpdateLow = mapYPos;
-		yUpdateHigh = mapYLastPos;
-		
-		if((yUpdateLow + 16) < yUpdateHigh){
-			yUpdateHigh = yUpdateLow + 16;
-		}
-	}
-	
-	//clear the vertical column of newly arrived spaces
-	for(int i = xUpdateLow; i < xUpdateHigh; i++){
-		for(int j = 0; j < 16; j++){
+	//clear the tilemap
+	for(int i = mapXPos; i < mapXPos + 16; i++){
+		for(int j = mapYPos; j < mapYPos + 16; j++){
 			tilemapBuffer[(i % 16) * 2 + j * 64] = shipsMap[3];
 			tilemapBuffer[(i % 16) * 2 + j * 64 + 1] = shipsMap[3];
 			tilemapBuffer[(i % 16) * 2 + j * 64 + 32] = shipsMap[3];
 			tilemapBuffer[(i % 16) * 2 + j * 64 + 33] = shipsMap[3];
-		}
-	}
-	
-	//clear the horizontal column of newly arrived spaces
-	for(int i = yUpdateLow; i < yUpdateHigh; i++){
-		for(int j = 0; j < 16; j++){
-			tilemapBuffer[(i % 16) * 64 + j * 2] = shipsMap[3];
-			tilemapBuffer[(i % 16) * 64 + j * 2 + 1] = shipsMap[3];
-			tilemapBuffer[(i % 16) * 64 + j * 2 + 32] = shipsMap[3];
-			tilemapBuffer[(i % 16) * 64 + j * 2 + 33] = shipsMap[3];
 		}
 	}
 	
@@ -225,10 +177,46 @@ void createShipTilemap(u16 *tilemapBuffer){
 			tilemapBuffer[baseIndex + 33] = shipsMap[tilemapBase + 3] | SE_PALBANK(mapData.ships[shipIndex].team);
 		}
 	}
+}
+
+void drawSelectedShip(OBJ_ATTR *spriteBuffer){
+	if(mapData.ships[mapData.selectedShip.index].state != SELECTED){
+		spriteBuffer[SELECTED_SHIP_SPRITE].attr0 = ATTR0_HIDE;
+		//clear the selected ships graphics from vram
+		for(u32 tile = 0; tile < 16; tile++){
+			u16 *VRAMPtr = &characterData0[tile * 16];
+			for(u32 i = 0; i < 16; i++){
+				VRAMPtr[i] = 0;
+			}
+		}
+		return;
+	}
+	//if the selected ship sprite is being drawn
+	u8 shipXPos = mapData.selectedShip.xPos - mapData.camera.xPos - 8;
+	u8 shipYPos = mapData.selectedShip.yPos - mapData.camera.yPos - 8;
 	
-	//update the map previous position
-	mapData.camera.xLastPos = mapData.camera.xPos;
-	mapData.camera.yLastPos = mapData.camera.yPos;
+	spriteBuffer[SELECTED_SHIP_SPRITE].attr0 = ATTR0_AFF | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(shipYPos);
+	spriteBuffer[SELECTED_SHIP_SPRITE].attr1 = ATTR1_SIZE_32 | ATTR1_X(shipXPos) | ATTR1_AFF_ID(SELECTED_SHIP_AFFINE_MAT);
+	spriteBuffer[SELECTED_SHIP_SPRITE].attr2 = ATTR2_ID(SELECTED_SHIP_GFX) | ATTR2_PRIO(0) | ATTR2_PALBANK(mapData.ships[mapData.selectedShip.index].team);
+	
+	//handle sprite rotation
+	u32 angle = mapData.selectedShip.angle;
+	spriteBuffer[SELECTED_SHIP_AFFINE_MAT * 4].fill = ((s16)sinTable[(angle + 0x40) % 256]) * 2;
+	spriteBuffer[SELECTED_SHIP_AFFINE_MAT * 4 + 1].fill = ((s16)sinTable[angle]) * 2;
+	spriteBuffer[SELECTED_SHIP_AFFINE_MAT * 4 + 2].fill = -((s16)sinTable[angle]) * 2;
+	spriteBuffer[SELECTED_SHIP_AFFINE_MAT * 4 + 3].fill = ((s16)sinTable[(angle + 0x40) % 256]) * 2;
+	
+	//load the graphics of the selected ship
+	for(u32 tile = 0; tile < 16; tile++){
+		cu16 *gfxPtr = &ships_selectedTiles[ships_selectedMap[tile] * 16];
+		u16 *VRAMPtr = &characterData0[tile * 16];
+		//load the tile graphics
+		for(u32 i = 0; i < 16; i++){
+			VRAMPtr[i] = gfxPtr[i];
+		}
+		
+	}
+	
 }
 
 void turnStartState(){
@@ -242,7 +230,7 @@ void turnStartState(){
 			mapData.ships[shipIndex].state = READY_VISIBLE;
 			//if this is the first alive ship found
 			if(numAliveShips == 0){
-				mapData.selectedShip = shipIndex;
+				mapData.selectedShip.index = shipIndex;
 			}
 			numAliveShips++;
 		}
@@ -250,7 +238,7 @@ void turnStartState(){
 			mapData.ships[shipIndex].state = READY_HIDDEN;
 			//if this is the first alive ship found
 			if(numAliveShips == 0){
-				mapData.selectedShip = shipIndex;
+				mapData.selectedShip.index = shipIndex;
 			}
 			numAliveShips++;
 		}
@@ -260,7 +248,7 @@ void turnStartState(){
 		mapData.ships[shipIndex].state = READY_VISIBLE;
 		//if this is the first alive ship found
 		if(numAliveShips == 0){
-			mapData.selectedShip = shipIndex;
+			mapData.selectedShip.index = shipIndex;
 		}
 		numAliveShips++;
 	}
@@ -268,7 +256,7 @@ void turnStartState(){
 		mapData.ships[shipIndex].state = READY_HIDDEN;
 		//if this is the first alive ship found
 		if(numAliveShips == 0){
-			mapData.selectedShip = shipIndex;
+			mapData.selectedShip.index = shipIndex;
 		}
 		numAliveShips++;
 	}
@@ -310,9 +298,9 @@ void openMapState(){
 	//L and R cycle backwards or forwards through the active ships for this team, and center the camera on the next ship in the cycle
 	if((inputs.pressed & KEY_L) && (mapData.camera.state == STILL)){
 		//cycle through the linked list until we end up one before where we started
-		u32 currentIndex = mapData.selectedShip;
+		u32 currentIndex = mapData.selectedShip.index;
 		u32 lastActiveIndex = 0;
-		while(mapData.ships[currentIndex].teamLink != mapData.selectedShip){
+		while(mapData.ships[currentIndex].teamLink != mapData.selectedShip.index){
 			if((mapData.ships[currentIndex].state == READY_VISIBLE) || (mapData.ships[currentIndex].state = READY_HIDDEN)){
 				lastActiveIndex = currentIndex;
 			}
@@ -321,27 +309,27 @@ void openMapState(){
 		if((mapData.ships[currentIndex].state == READY_VISIBLE) || (mapData.ships[currentIndex].state = READY_HIDDEN)){
 			lastActiveIndex = currentIndex;
 		}
-		mapData.selectedShip = lastActiveIndex;
+		mapData.selectedShip.index = lastActiveIndex;
 		
-		s16 xTarget = (mapData.ships[mapData.selectedShip].xPos << 4) - 112;
-		s16 yTarget = (mapData.ships[mapData.selectedShip].yPos << 4) - 72;
+		s16 xTarget = (mapData.ships[mapData.selectedShip.index].xPos << 4) - 112;
+		s16 yTarget = (mapData.ships[mapData.selectedShip.index].yPos << 4) - 72;
 		
 		//pan the camera to this ship
 		cameraPanInit(xTarget, yTarget, CYCLE_PAN_SPEED);
 	}
 	if((inputs.pressed & KEY_R) && (mapData.camera.state == STILL)){
 		//cycle to the next ship in the linked list of active ships
-		u32 currentIndex = mapData.ships[mapData.selectedShip].teamLink;
-		while(mapData.ships[currentIndex].teamLink != mapData.selectedShip){
+		u32 currentIndex = mapData.ships[mapData.selectedShip.index].teamLink;
+		while(mapData.ships[currentIndex].teamLink != mapData.selectedShip.index){
 			if((mapData.ships[currentIndex].state == READY_VISIBLE) || (mapData.ships[currentIndex].state = READY_HIDDEN)){
 				break;
 			}
 			currentIndex = mapData.ships[currentIndex].teamLink;
 		}
-		mapData.selectedShip = currentIndex;
+		mapData.selectedShip.index = currentIndex;
 		
-		s16 xTarget = (mapData.ships[mapData.selectedShip].xPos << 4) - 112;
-		s16 yTarget = (mapData.ships[mapData.selectedShip].yPos << 4) - 72;
+		s16 xTarget = (mapData.ships[mapData.selectedShip.index].xPos << 4) - 112;
+		s16 yTarget = (mapData.ships[mapData.selectedShip.index].yPos << 4) - 72;
 		
 		//pan the camera to this ship
 		cameraPanInit(xTarget, yTarget, CYCLE_PAN_SPEED);
@@ -372,17 +360,22 @@ void turnEndState(){
 			}
 			shipIndex = mapData.ships[shipIndex].teamLink;
 		}
-		mapData.selectedShip = shipIndex;
+		mapData.selectedShip.index = shipIndex;
 		//pan the camera to this ship
-		s16 xTarget = (mapData.ships[mapData.selectedShip].xPos << 4) - 112;
-		s16 yTarget = (mapData.ships[mapData.selectedShip].yPos << 4) - 72;
+		s16 xTarget = (mapData.ships[mapData.selectedShip.index].xPos << 4) - 112;
+		s16 yTarget = (mapData.ships[mapData.selectedShip.index].yPos << 4) - 72;
 		cameraPanInit(xTarget, yTarget, CYCLE_PAN_SPEED);
 		mapData.actionTimer = 1;
 	}
 	//if the camera has finished focusing on the next ship
 	else if(mapData.camera.state == STILL){
 		mapData.actionTimer = 0;
-		mapData.ships[mapData.selectedShip].state = FINISHED_VISIBLE;
+		mapData.ships[mapData.selectedShip.index].state = SELECTED;
+		mapData.state = TURN_END_MOVEMENT;
+		//start a movement of the selected ship
+		s16 xTarget = (mapData.ships[mapData.selectedShip.index].xPos + mapData.ships[mapData.selectedShip.index].xVel) << 4;
+		s16 yTarget = (mapData.ships[mapData.selectedShip.index].yPos + mapData.ships[mapData.selectedShip.index].yVel) << 4;
+		shipMoveInit(xTarget, yTarget, SHIP_MOVE_SPEED);
 	}
 	
 	//handle any changes to the camera that occured this frame
@@ -390,23 +383,18 @@ void turnEndState(){
 }
 
 void turnEndMovementState(){
-	s16 xStart = mapData.ships[mapData.selectedShip].xPos;
-	s16 yStart = mapData.ships[mapData.selectedShip].yPos;
-	s16 xEnd = xStart + mapData.ships[mapData.selectedShip].xVel;
-	s16 yEnd = yStart + mapData.ships[mapData.selectedShip].yVel;
-	
-	//if we are starting a new movement
+	//if the ship movement is not done yet
 	if(mapData.actionTimer == 0){
-		mapData.actionTarget = SHIP_MOVE_SPEED;
+		processShipMovement();
 	}
-	//if the movement has concluded
-	else if(mapData.actionTimer == mapData.actionTarget){
-		mapData.ships[mapData.selectedShip].state = FINISHED_VISIBLE;
+	//if the ship movement is finished
+	else{
+		mapData.ships[mapData.selectedShip.index].xPos += mapData.ships[mapData.selectedShip.index].xVel;
+		mapData.ships[mapData.selectedShip.index].yPos += mapData.ships[mapData.selectedShip.index].yVel;
+		mapData.ships[mapData.selectedShip.index].state = FINISHED_VISIBLE;
 		mapData.state = TURN_END;
 		mapData.actionTimer = 0;
 	}
-	
-	mapData.actionTimer++;
 	
 	//handle any changes to the camera that occured this frame
 	processCamera();
@@ -587,18 +575,31 @@ void processCamera(){
 	
 	cameraBoundsCheck(&mapData.camera.xPos, &mapData.camera.yPos);
 	
+	//update the tilemap with the new position
+	createShipTilemap(tilemapBuffer1);
+	
+	//process the selected ship's sprite if applicable
+	drawSelectedShip(spriteBuffer);
+	
 	//queue the tilemap for layer 1 to be sent
 	tilemapData[1].size = 512;
 	tilemapData[1].buffer = tilemapBuffer1;
 	tilemapData[1].position = se_mem[BG_1_TILEMAP];
 	
-	//update the tilemap with the new position
-	createShipTilemap(tilemapBuffer1);
+	//queue the character data for the sprites
+	characterData[0].buffer = characterData0;
+	characterData[0].size = sizeof(characterData0) >> 2;
+	characterData[0].position = tile_mem_obj[0];
 	
+	//queue the OAM data for all of the sprites
+	OAMData[0].position = (void *)oam_mem;
+	OAMData[0].buffer = spriteBuffer;
+	OAMData[0].size = sizeof(spriteBuffer) >> 2;
+	
+	//queue the background scroll registers
 	IOData[0].position = (void *)&REG_BG0HOFS;
 	IOData[0].buffer = IOBuffer;
 	IOData[0].size = 2;
-	
 	IOBuffer[0] = mapData.camera.xPos % 512;
 	IOBuffer[1] = mapData.camera.yPos % 512;
 	IOBuffer[2] = mapData.camera.xPos % 512;
@@ -679,6 +680,52 @@ void cameraBoundsCheck(s16 *xPosPointer, s16 *yPosPointer){
 	
 	*xPosPointer = xPos;
 	*yPosPointer = yPos;
+}
+
+void shipMoveInit(s16 xTarget, s16 yTarget, u8 moveTime){
+	ShipData *ship = &mapData.ships[mapData.selectedShip.index];
+	
+	mapData.selectedShip.xPos = ship->xPos << 4;
+	mapData.selectedShip.yPos = ship->yPos << 4;
+	mapData.selectedShip.xInitial = ship->xPos << 4;
+	mapData.selectedShip.yInitial = ship->yPos << 4;
+	mapData.selectedShip.xTarget = xTarget;
+	mapData.selectedShip.yTarget = yTarget;
+	mapData.selectedShip.animationTimer = 0;
+	mapData.selectedShip.actionTimer = 1;
+	mapData.selectedShip.actionTarget = moveTime;
+	
+	if(ABS(ship->xVel) > ABS(ship->yVel)){
+		if(ship->xVel > 0){
+			mapData.selectedShip.angle = 0;
+		}
+		else{
+			mapData.selectedShip.angle = 0x80;
+		}
+	}
+	else{
+		if(ship->yVel > 0){
+			mapData.selectedShip.angle = 0x40;
+		}
+		else{
+			mapData.selectedShip.angle = 0xC0;
+		}
+	}
+}
+
+void processShipMovement(){
+	//if this move is done
+	if(mapData.selectedShip.actionTimer == mapData.selectedShip.actionTarget){
+		mapData.actionTimer = 1;
+	}
+	else{
+		u32 multiplier = inverseTime[mapData.selectedShip.actionTarget - 1] * mapData.selectedShip.actionTimer;
+		s16 xPos = mapData.selectedShip.xInitial + (((mapData.selectedShip.xTarget - mapData.selectedShip.xInitial) * multiplier) >> 15);
+		s16 yPos = mapData.selectedShip.yInitial + (((mapData.selectedShip.yTarget - mapData.selectedShip.yInitial) * multiplier) >> 15);
+		mapData.selectedShip.xPos = xPos;
+		mapData.selectedShip.yPos = yPos;
+		mapData.selectedShip.actionTimer++;
+	}
 }
 
 //a temprary function to initialize a test map.

@@ -32,7 +32,6 @@ extern vu8 gameState;
 void gameLoop();
 void globalInitialize();
 void softReset();
-void taskManager();
 __attribute__ ((noreturn)) void gameLoop();
 void criticalUpdates();
 void sceneManager();
