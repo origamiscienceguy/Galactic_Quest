@@ -26,16 +26,16 @@ void gameplayInitialize(){
 	REG_BG1CNT = BG_4BPP | BG_SBB(BG_1_TILEMAP) | BG_CBB(BG_0_CHARDATA);
 	
 	//queue the palette to be sent
-	paletteData[0].size = 64;
+	paletteData[0].size = sizeof(shipsPal) >> 2;
 	paletteData[0].buffer = (void *)shipsPal;
 	paletteData[0].position = pal_bg_mem;
 	
-	paletteData[1].size = 64;
+	paletteData[1].size = sizeof(shipsPal) >> 2;
 	paletteData[1].buffer = (void *)shipsPal;
 	paletteData[1].position = pal_obj_mem;
 	
 	//queue the tiles to be sent
-	characterData[0].size = 1760;
+	characterData[0].size = sizeof(shipsTiles) >> 2;
 	characterData[0].buffer = (void *)shipsTiles;
 	characterData[0].position = tile8_mem[BG_0_CHARDATA];
 	
@@ -119,10 +119,10 @@ void createShipTilemap(u16 *tilemapBuffer){
 	//clear the tilemap
 	for(int i = mapXPos; i < mapXPos + 16; i++){
 		for(int j = mapYPos; j < mapYPos + 16; j++){
-			tilemapBuffer[(i % 16) * 2 + j * 64] = shipsMap[3];
-			tilemapBuffer[(i % 16) * 2 + j * 64 + 1] = shipsMap[3];
-			tilemapBuffer[(i % 16) * 2 + j * 64 + 32] = shipsMap[3];
-			tilemapBuffer[(i % 16) * 2 + j * 64 + 33] = shipsMap[3];
+			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64] = shipsMap[3];
+			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64 + 1] = shipsMap[3];
+			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64 + 32] = shipsMap[3];
+			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64 + 33] = shipsMap[3];
 		}
 	}
 	
@@ -136,6 +136,28 @@ void createShipTilemap(u16 *tilemapBuffer){
 		globalIdleCounter = 2;
 	}
 
+	//if it is time to cycle to the next ship
+	if((currentScene.sceneCounter & 0xFF) == 0){
+		u8 handledList[256];
+		for(u32 i = 0; i < 256; i++){
+			handledList[i] = 0;
+		}
+		for(u32 shipIndex = 0; shipIndex < mapData.numShips; shipIndex++){
+			if((mapData.ships[shipIndex].sameTileLink != shipIndex) && (handledList[shipIndex] == 0) && (isShipVisible(shipIndex))){
+				//make the next ship visible
+				makeShipVisible(mapData.ships[shipIndex].sameTileLink);
+				//hide the current ship
+				makeShipHidden(shipIndex);
+				//mark all ships in this linked list as handled
+				u8 checkingIndex = mapData.ships[shipIndex].sameTileLink;
+				while(checkingIndex != shipIndex){
+					handledList[checkingIndex]  = 1;
+					checkingIndex = mapData.ships[checkingIndex].sameTileLink;
+				}
+			}
+		}
+	}
+
 	//draw every ship that should be on screen
 	for(u32 shipIndex = 0; shipIndex < mapData.numShips; shipIndex++){
 		//if the ship is not visible, skip it
@@ -143,9 +165,21 @@ void createShipTilemap(u16 *tilemapBuffer){
 		(mapData.ships[shipIndex].state != WRONG_TEAM_VISIBLE)){
 			continue;
 		}
-
+		
 		u8 shipXPos = mapData.ships[shipIndex].xPos;
 		u8 shipYPos = mapData.ships[shipIndex].yPos;
+		
+		//if we are in the cycling animation
+		if(((currentScene.sceneCounter & 0xFF) >= 0xF6) && (mapData.ships[shipIndex].sameTileLink != shipIndex)){
+			u16 baseIndex = (shipXPos % 16) * 2 + (shipYPos % 16) * 64;
+			u16 tilemapBase = 4 + (((currentScene.sceneCounter & 0xFF) - 0xF6) >> 1) * 4;
+			tilemapBuffer[baseIndex] = shipsMap[tilemapBase];
+			tilemapBuffer[baseIndex + 1] = shipsMap[tilemapBase + 1];
+			tilemapBuffer[baseIndex + 32] = shipsMap[tilemapBase + 2];
+			tilemapBuffer[baseIndex + 33] = shipsMap[tilemapBase + 3];
+			continue;
+		}
+		
 		s8 shipXVel = mapData.ships[shipIndex].xVel;
 		s8 shipYVel = mapData.ships[shipIndex].yVel;
 		u8 shipDirection; //0: right, 1: up, 2: left, 3: down
@@ -170,7 +204,7 @@ void createShipTilemap(u16 *tilemapBuffer){
 		//if this particular ship is in one of the update regions
 		if((shipXPos >= mapXPos) && (shipXPos < mapXPos + 16) && (shipYPos >= mapYPos) && (shipYPos < mapYPos + 16)){
 			u16 baseIndex = (shipXPos % 16) * 2 + (shipYPos % 16) * 64;
-			u16 tilemapBase = ((mapData.ships[shipIndex].type + 1) * 4) + (globalIdleCounter * IDLE_CYCLE_OFFSET) + (shipDirection * DIRECTION_OFFSET);
+			u16 tilemapBase = ((mapData.ships[shipIndex].type + SHIP_GFX_START) * 4) + (globalIdleCounter * IDLE_CYCLE_OFFSET) + (shipDirection * DIRECTION_OFFSET);
 			tilemapBuffer[baseIndex] = shipsMap[tilemapBase] | SE_PALBANK(mapData.ships[shipIndex].team);
 			tilemapBuffer[baseIndex + 1] = shipsMap[tilemapBase + 1] | SE_PALBANK(mapData.ships[shipIndex].team);
 			tilemapBuffer[baseIndex + 32] = shipsMap[tilemapBase + 2] | SE_PALBANK(mapData.ships[shipIndex].team);
@@ -376,6 +410,17 @@ void turnEndState(){
 		s16 xTarget = (mapData.ships[mapData.selectedShip.index].xPos + mapData.ships[mapData.selectedShip.index].xVel) << 4;
 		s16 yTarget = (mapData.ships[mapData.selectedShip.index].yPos + mapData.ships[mapData.selectedShip.index].yVel) << 4;
 		shipMoveInit(xTarget, yTarget, SHIP_MOVE_SPEED);
+		//if the ship is moving, break it's same tile link
+		if((mapData.ships[mapData.selectedShip.index].xVel != 0) || (mapData.ships[mapData.selectedShip.index].yVel != 0)){
+			u8 newLink = mapData.ships[mapData.selectedShip.index].sameTileLink;
+			u8 shipIndex = mapData.selectedShip.index;
+			u8 checkedIndex = mapData.selectedShip.index;
+			while(mapData.ships[checkedIndex].sameTileLink != shipIndex){
+				checkedIndex = mapData.ships[shipIndex].sameTileLink;
+			}
+			mapData.ships[shipIndex].sameTileLink = newLink;
+			mapData.ships[mapData.selectedShip.index].sameTileLink = mapData.selectedShip.index;
+		}
 	}
 	
 	//handle any changes to the camera that occured this frame
@@ -392,6 +437,8 @@ void turnEndMovementState(){
 		mapData.ships[mapData.selectedShip.index].xPos += mapData.ships[mapData.selectedShip.index].xVel;
 		mapData.ships[mapData.selectedShip.index].yPos += mapData.ships[mapData.selectedShip.index].yVel;
 		mapData.ships[mapData.selectedShip.index].state = FINISHED_VISIBLE;
+		mapData.ships[mapData.selectedShip.index].sameTileLink = mapData.selectedShip.index;
+		checkForOverlap(mapData.selectedShip.index);
 		mapData.state = TURN_END;
 		mapData.actionTimer = 0;
 	}
@@ -683,7 +730,8 @@ void cameraBoundsCheck(s16 *xPosPointer, s16 *yPosPointer){
 }
 
 void shipMoveInit(s16 xTarget, s16 yTarget, u8 moveTime){
-	ShipData *ship = &mapData.ships[mapData.selectedShip.index];
+	u8 shipIndex = mapData.selectedShip.index;
+	ShipData *ship = &mapData.ships[shipIndex];
 	
 	mapData.selectedShip.xPos = ship->xPos << 4;
 	mapData.selectedShip.yPos = ship->yPos << 4;
@@ -728,13 +776,78 @@ void processShipMovement(){
 	}
 }
 
+void checkForOverlap(u8 shipIndex){
+	u8 xPos = mapData.ships[shipIndex].xPos;
+	u8 yPos = mapData.ships[shipIndex].yPos;
+	
+	//check all 256 ships for the first example of a ship in this position
+	for(s32 i = 0; i < MAX_SHIPS; i++){
+		if((mapData.ships[i].xPos == DOCKED) || (mapData.ships[i].xPos == DESTROYED) || (mapData.ships[i].xPos == NOT_PARTICIPATING)){
+			continue;
+		}
+		if(i == shipIndex){
+			continue;
+		}
+		//if the position is identical
+		if((mapData.ships[i].xPos == xPos) && (mapData.ships[i].yPos == yPos)){
+			
+			//insert this ship into the same-tile linked list
+			mapData.ships[shipIndex].sameTileLink = mapData.ships[i].sameTileLink;
+			mapData.ships[i].sameTileLink = shipIndex;
+			
+			//set whichever ship on this tile is currently visible to hidden
+			shipIndex = mapData.ships[shipIndex].sameTileLink;
+			while((mapData.ships[shipIndex].state != READY_VISIBLE) && (mapData.ships[shipIndex].state != FINISHED_VISIBLE) && 
+			(mapData.ships[shipIndex].state != WRONG_TEAM_VISIBLE)){
+				shipIndex = mapData.ships[shipIndex].sameTileLink;
+			}
+			makeShipHidden(shipIndex);
+			return;
+		}
+	}
+}
+
+void makeShipVisible(u8 shipIndex){
+	if(mapData.ships[shipIndex].state == READY_HIDDEN){
+		mapData.ships[shipIndex].state = READY_VISIBLE;
+	}
+	else if(mapData.ships[shipIndex].state == FINISHED_HIDDEN){
+		mapData.ships[shipIndex].state = FINISHED_VISIBLE;
+	}
+	else if(mapData.ships[shipIndex].state == WRONG_TEAM_HIDDEN){
+		mapData.ships[shipIndex].state = WRONG_TEAM_VISIBLE;
+	}
+}
+
+void makeShipHidden(u8 shipIndex){
+	if(mapData.ships[shipIndex].state == READY_VISIBLE){
+		mapData.ships[shipIndex].state = READY_HIDDEN;
+	}
+	else if(mapData.ships[shipIndex].state == FINISHED_VISIBLE){
+		mapData.ships[shipIndex].state = FINISHED_HIDDEN;
+	}
+	else if(mapData.ships[shipIndex].state == WRONG_TEAM_VISIBLE){
+		mapData.ships[shipIndex].state = WRONG_TEAM_HIDDEN;
+	}
+}
+
+u8 isShipVisible(u8 shipindex){
+	if((mapData.ships[shipindex].state == READY_VISIBLE) || (mapData.ships[shipindex].state == FINISHED_VISIBLE) || 
+	(mapData.ships[shipindex].state == WRONG_TEAM_VISIBLE)){
+		return 1;
+	}
+	else{
+		return 0;
+	}
+}
+
 //a temprary function to initialize a test map.
 void initMap(){
 	u8 index = 0;
 	for(u32 team = 0; team <= YELLOW_TEAM; team++){
 		u8 yPos = 8;
 		for(u32 type = 0; type <= CARRIER; type++){
-			u8 xPos = 8 + 4 * team;
+			u8 xPos = 8;
 			
 			mapData.ships[index].type = type;
 			mapData.ships[index].state = READY_VISIBLE;

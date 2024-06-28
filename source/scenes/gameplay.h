@@ -23,6 +23,7 @@
 
 #define IDLE_CYCLE_OFFSET 112
 #define DIRECTION_OFFSET 28
+#define SHIP_GFX_START 6
 
 //enums
 enum ShipType{
@@ -61,6 +62,7 @@ typedef struct ShipData{
 	s8 yVel; //the y velocity of this ship
 	u8 teamLink; //the index of the next ship of the same team, forming a linked list.
 	u8 sameTileLink; //the index of the next ship in the same tile as this one, forming a linked list. If this points to itself, there are no others
+	u8 padding[6];
 }ShipData;
 
 typedef struct SelectedShip{
@@ -115,11 +117,11 @@ typedef struct MapData{
 extern const u32 inverseTimeSquared[];
 extern const u16 inverseTime[];
 extern const s16 sinTable[];
-extern const unsigned short shipsTiles[3520];
-extern const unsigned short shipsMap[336];
-extern const unsigned short shipsPal[16];
-extern const unsigned short ships_selectedTiles[112];
-extern const unsigned short ships_selectedMap[16];
+extern const unsigned short shipsTiles[3744];
+extern const unsigned short shipsMap[360];
+extern const unsigned short shipsPal[64];
+extern const unsigned short ships_selectedTiles[];
+extern const unsigned short ships_selectedMap[];
 
 //local functions
 void gameplayInitialize();
@@ -143,7 +145,10 @@ void processCameraPan();
 void cameraBoundsCheck(s16 *, s16 *);
 void shipMoveInit(s16, s16, u8);
 void processShipMovement();
-
+void checkForOverlap(u8);
+void makeShipVisible(u8);
+void makeShipHidden(u8);
+u8 isShipVisible(u8);
 
 //temp function
 void initMap();
