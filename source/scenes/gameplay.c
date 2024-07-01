@@ -223,12 +223,12 @@ void createShipTilemap(u16 *tilemapBuffer){
 
 void createGridTilemap(u16 *tilemapBuffer){
 	//convert pixel coordinates to map cell coordinates
-	u8 mapXPos = mapData.camera.xPos >> 4;
-	u8 mapYPos = mapData.camera.yPos >> 4; 
+	u32 mapXPos = (mapData.camera.xPos >> 4);
+	u32 mapYPos = (mapData.camera.yPos >> 4); 
 	
 	//clear the tilemap
-	for(int i = mapXPos; i < mapXPos + 16; i++){
-		for(int j = mapYPos; j < mapYPos + 16; j++){
+	for(u32 i = mapXPos; i < mapXPos + 16; i++){
+		for(u32 j = mapYPos; j < mapYPos + 16; j++){
 			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64] = bgGfxMap[GRID_GFX_START * 4 + (7 * 4)];
 			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64 + 1] = bgGfxMap[GRID_GFX_START * 4 + (7 * 4) + 1];
 			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64 + 32] = bgGfxMap[GRID_GFX_START * 4 + (7 * 4) + 2];
@@ -236,24 +236,32 @@ void createGridTilemap(u16 *tilemapBuffer){
 		}
 	}
 	
-	u32 cycle = currentScene.sceneCounter % 64;
+	u32 cycle = currentScene.sceneCounter % 256;
 	
 	//draw the diagonal
-	for(int i = 0; i < 32; i++){
+	for(u32 i = (mapXPos % 128); i < ((mapXPos % 128) + 16); i++){
 		u32 xPos = i;
-		u32 yPos = (cycle >> 2) - i;
+		u32 yPos = ((cycle >> 1) - i) % 128;
+		u8 draw = 0;
 		
-		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 4) * 4];
-		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 1] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 4) * 4 + 1];
-		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 32] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 4) * 4 + 2];
-		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 33] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 4) * 4 + 3];
+		if(((yPos - mapYPos) % 128) < 16){
+			draw = 1;
+		}
+		
+		if(draw){
+		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 2) * 8];
+		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 1] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 2) * 8 + 1];
+		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 32] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 2) * 8 + 2];
+		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 33] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 2) * 8 + 3];
 		
 		xPos--;
 		
-		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 4) + 4) * 4];
-		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 1] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 4) + 4) * 4 + 1];
-		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 32] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 4) + 4) * 4 + 2];
-		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 33] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 4) + 4) * 4 + 3];
+		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 2) * 2 + 4) * 4];
+		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 1] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 2) * 2 + 4) * 4 + 1];
+		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 32] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 2) * 2 + 4) * 4 + 2];
+		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 33] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 2) * 2 + 4) * 4 + 3];
+		
+		}
 	}
 }
 void drawSelectedShip(OBJ_ATTR *spriteBuffer){
