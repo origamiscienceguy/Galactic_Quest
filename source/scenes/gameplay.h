@@ -17,13 +17,18 @@
 #define SELECTED_SHIP_GFX 0
 #define SELECTED_SHIP_GFX_SIZE 16
 #define SELECTED_SHIP_AFFINE_MAT 0
+#define CURSOR_SPRITE 1
+#define CURSOR_GFX 16
+#define CURSOR_GFX_SIZE 32
 
 #define CYCLE_PAN_SPEED 20
 #define SHIP_MOVE_SPEED 32
 
 #define IDLE_CYCLE_OFFSET 112
 #define DIRECTION_OFFSET 28
-#define SHIP_GFX_START 6
+#define SHIP_GFX_START 15
+#define CYCLE_GFX_START 10
+#define GRID_GFX_START 1
 
 //enums
 enum ShipType{
@@ -39,7 +44,7 @@ enum MapState{
 };
 
 enum TeamState{
-	ABSENT, ACTIVE, DEFEATED
+	TEAM_ABSENT, TEAM_ACTIVE, TEAM_DEFEATED
 };
 
 enum Team{
@@ -47,7 +52,11 @@ enum Team{
 };
 
 enum CameraState{
-	STILL, PANNING, TRACKING, 
+	CAM_STILL, CAM_PANNING, CAM_TRACKING, 
+};
+
+enum CursorState{
+	CUR_HIDDEN, CUR_STILL
 };
 
 //structs
@@ -98,6 +107,12 @@ typedef struct CameraData{
 	s16 yTargetPos; //the y position the camera is currently seeking towards
 }CameraData;
 
+typedef struct cursorData{
+	s16 xPos; //the pixel position of the cursor in the x axis
+	s16 yPos; //the pixel position of the cursor in the y axis
+	u8 counter;
+}cursorData;
+
 typedef struct MapData{
 	enum MapState state; //what is the stage of the game are we in
 	enum Team teamTurn; //who's turn is it
@@ -111,17 +126,19 @@ typedef struct MapData{
 	TeamData teams[NUM_TEAMS]; //the array of information about each team in the battle
 	CameraData camera; //the struct containing data about the camera
 	SelectedShip selectedShip; //the struct containing data about the currently selected ship
+	cursorData cursor; //the struct containing data about the cursor
 }MapData;
 
 //globals
 extern const u32 inverseTimeSquared[];
 extern const u16 inverseTime[];
 extern const s16 sinTable[];
-extern const unsigned short shipsTiles[3744];
-extern const unsigned short shipsMap[360];
-extern const unsigned short shipsPal[64];
+extern const unsigned short bgGfxTiles[3984];
+extern const unsigned short bgGfxMap[396];
+extern const unsigned short bgGfxPal[64];
 extern const unsigned short ships_selectedTiles[];
 extern const unsigned short ships_selectedMap[];
+extern const unsigned short cursorTiles[512];
 
 //local functions
 void gameplayInitialize();
@@ -132,6 +149,7 @@ void gameplayOutro();
 void gameplayEnd();
 void shipListInit();
 void createShipTilemap(u16 *);
+void createGridTilemap(u16 *);
 void drawSelectedShip(OBJ_ATTR *);
 void nextPlayer();
 void nextTurn();

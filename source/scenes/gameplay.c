@@ -4,7 +4,8 @@ u16 tilemapBuffer0[1024] EWRAM_DATA;
 u16 tilemapBuffer1[1024] EWRAM_DATA;
 u16 tilemapBuffer2[1024] EWRAM_DATA;
 u16 tilemapBuffer3[1024] EWRAM_DATA;
-u16 characterData0[1024] EWRAM_DATA;
+u16 characterBuffer0[1024] EWRAM_DATA;
+u16 characterBuffer1[1024] EWRAM_DATA;
 OBJ_ATTR spriteBuffer[128] EWRAM_DATA;
 u16 IOBuffer[30];
 
@@ -26,47 +27,53 @@ void gameplayInitialize(){
 	REG_BG1CNT = BG_4BPP | BG_SBB(BG_1_TILEMAP) | BG_CBB(BG_0_CHARDATA);
 	
 	//queue the palette to be sent
-	paletteData[0].size = sizeof(shipsPal) >> 2;
-	paletteData[0].buffer = (void *)shipsPal;
+	paletteData[0].size = sizeof(bgGfxPal) >> 2;
+	paletteData[0].buffer = (void *)bgGfxPal;
 	paletteData[0].position = pal_bg_mem;
 	
-	paletteData[1].size = sizeof(shipsPal) >> 2;
-	paletteData[1].buffer = (void *)shipsPal;
+	paletteData[1].size = sizeof(bgGfxPal) >> 2;
+	paletteData[1].buffer = (void *)bgGfxPal;
 	paletteData[1].position = pal_obj_mem;
 	
 	//queue the tiles to be sent
-	characterData[0].size = sizeof(shipsTiles) >> 2;
-	characterData[0].buffer = (void *)shipsTiles;
-	characterData[0].position = tile8_mem[BG_0_CHARDATA];
+	characterData[0].size = sizeof(bgGfxTiles) >> 2;
+	characterData[0].buffer = (void *)bgGfxTiles;
+	characterData[0].position = &tile8_mem[BG_0_CHARDATA];
 	
 	//queue the tilemap for layer 0 to be sent
 	tilemapData[0].size = 512;
 	tilemapData[0].buffer = tilemapBuffer0;
-	tilemapData[0].position = se_mem[BG_0_TILEMAP];
+	tilemapData[0].position = &se_mem[BG_0_TILEMAP];
 	
 	//queue the tilemap for layer 1 to be sent
 	tilemapData[1].size = 512;
 	tilemapData[1].buffer = tilemapBuffer1;
-	tilemapData[1].position = se_mem[BG_1_TILEMAP];
+	tilemapData[1].position = &se_mem[BG_1_TILEMAP];
 	
 	//fill the tilemap buffer for layer 0
 	for(u32 i = 0; i < 16; i++){
 		for(u32 j = 0; j < 16; j++){
-			tilemapBuffer0[i * 64 + j * 2] = shipsMap[0];
-			tilemapBuffer0[i * 64 + j * 2 + 1] = shipsMap[1];
-			tilemapBuffer0[i * 64 + j * 2 + 32] = shipsMap[2];
-			tilemapBuffer0[i * 64 + j * 2 + 33] = shipsMap[3];
+			tilemapBuffer0[i * 64 + j * 2] = bgGfxMap[0];
+			tilemapBuffer0[i * 64 + j * 2 + 1] = bgGfxMap[1];
+			tilemapBuffer0[i * 64 + j * 2 + 32] = bgGfxMap[2];
+			tilemapBuffer0[i * 64 + j * 2 + 33] = bgGfxMap[3];
 		}
 	}
 	
+	//send the graphics for the cursor
+	characterData[1].size = sizeof(cursorTiles) >> 2;
+	characterData[1].buffer = (void *)cursorTiles;
+	characterData[1].position = &tile_mem_obj[0][CURSOR_GFX];
+	
 	mapData.camera.xPos = 0;
 	mapData.camera.yPos = 0;
-	mapData.camera.state = STILL;
+	mapData.camera.state = CAM_STILL;
 	mapData.xSize = 255;
 	mapData.ySize = 255;
 	mapData.state = TURN_START;
 	mapData.teamTurn = RED_TEAM;
 	mapData.selectedShip.index = 0;
+	
 	
 	//temporary function call to set up some ships like a saved scenareo would
 	initMap();
@@ -119,10 +126,10 @@ void createShipTilemap(u16 *tilemapBuffer){
 	//clear the tilemap
 	for(int i = mapXPos; i < mapXPos + 16; i++){
 		for(int j = mapYPos; j < mapYPos + 16; j++){
-			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64] = shipsMap[3];
-			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64 + 1] = shipsMap[3];
-			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64 + 32] = shipsMap[3];
-			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64 + 33] = shipsMap[3];
+			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64] = bgGfxMap[3];
+			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64 + 1] = bgGfxMap[3];
+			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64 + 32] = bgGfxMap[3];
+			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64 + 33] = bgGfxMap[3];
 		}
 	}
 	
@@ -170,13 +177,14 @@ void createShipTilemap(u16 *tilemapBuffer){
 		u8 shipYPos = mapData.ships[shipIndex].yPos;
 		
 		//if we are in the cycling animation
-		if(((currentScene.sceneCounter & 0xFF) >= 0xF6) && (mapData.ships[shipIndex].sameTileLink != shipIndex)){
+		if(((currentScene.sceneCounter & 0xFF) >= 0xF6) && (mapData.ships[shipIndex].sameTileLink != shipIndex) && 
+		(shipXPos >= mapXPos) && (shipXPos < mapXPos + 16) && (shipYPos >= mapYPos) && (shipYPos < mapYPos + 16)){
 			u16 baseIndex = (shipXPos % 16) * 2 + (shipYPos % 16) * 64;
-			u16 tilemapBase = 4 + (((currentScene.sceneCounter & 0xFF) - 0xF6) >> 1) * 4;
-			tilemapBuffer[baseIndex] = shipsMap[tilemapBase];
-			tilemapBuffer[baseIndex + 1] = shipsMap[tilemapBase + 1];
-			tilemapBuffer[baseIndex + 32] = shipsMap[tilemapBase + 2];
-			tilemapBuffer[baseIndex + 33] = shipsMap[tilemapBase + 3];
+			u16 tilemapBase = (CYCLE_GFX_START << 2) + (((currentScene.sceneCounter & 0xFF) - 0xF6) >> 1) * 4;
+			tilemapBuffer[baseIndex] = bgGfxMap[tilemapBase];
+			tilemapBuffer[baseIndex + 1] = bgGfxMap[tilemapBase + 1];
+			tilemapBuffer[baseIndex + 32] = bgGfxMap[tilemapBase + 2];
+			tilemapBuffer[baseIndex + 33] = bgGfxMap[tilemapBase + 3];
 			continue;
 		}
 		
@@ -205,20 +213,55 @@ void createShipTilemap(u16 *tilemapBuffer){
 		if((shipXPos >= mapXPos) && (shipXPos < mapXPos + 16) && (shipYPos >= mapYPos) && (shipYPos < mapYPos + 16)){
 			u16 baseIndex = (shipXPos % 16) * 2 + (shipYPos % 16) * 64;
 			u16 tilemapBase = ((mapData.ships[shipIndex].type + SHIP_GFX_START) * 4) + (globalIdleCounter * IDLE_CYCLE_OFFSET) + (shipDirection * DIRECTION_OFFSET);
-			tilemapBuffer[baseIndex] = shipsMap[tilemapBase] | SE_PALBANK(mapData.ships[shipIndex].team);
-			tilemapBuffer[baseIndex + 1] = shipsMap[tilemapBase + 1] | SE_PALBANK(mapData.ships[shipIndex].team);
-			tilemapBuffer[baseIndex + 32] = shipsMap[tilemapBase + 2] | SE_PALBANK(mapData.ships[shipIndex].team);
-			tilemapBuffer[baseIndex + 33] = shipsMap[tilemapBase + 3] | SE_PALBANK(mapData.ships[shipIndex].team);
+			tilemapBuffer[baseIndex] = bgGfxMap[tilemapBase] | SE_PALBANK(mapData.ships[shipIndex].team);
+			tilemapBuffer[baseIndex + 1] = bgGfxMap[tilemapBase + 1] | SE_PALBANK(mapData.ships[shipIndex].team);
+			tilemapBuffer[baseIndex + 32] = bgGfxMap[tilemapBase + 2] | SE_PALBANK(mapData.ships[shipIndex].team);
+			tilemapBuffer[baseIndex + 33] = bgGfxMap[tilemapBase + 3] | SE_PALBANK(mapData.ships[shipIndex].team);
 		}
 	}
 }
 
+void createGridTilemap(u16 *tilemapBuffer){
+	//convert pixel coordinates to map cell coordinates
+	u8 mapXPos = mapData.camera.xPos >> 4;
+	u8 mapYPos = mapData.camera.yPos >> 4; 
+	
+	//clear the tilemap
+	for(int i = mapXPos; i < mapXPos + 16; i++){
+		for(int j = mapYPos; j < mapYPos + 16; j++){
+			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64] = bgGfxMap[GRID_GFX_START * 4 + (7 * 4)];
+			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64 + 1] = bgGfxMap[GRID_GFX_START * 4 + (7 * 4) + 1];
+			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64 + 32] = bgGfxMap[GRID_GFX_START * 4 + (7 * 4) + 2];
+			tilemapBuffer[(i % 16) * 2 + (j % 16) * 64 + 33] = bgGfxMap[GRID_GFX_START * 4 + (7 * 4) + 3];
+		}
+	}
+	
+	u32 cycle = currentScene.sceneCounter % 64;
+	
+	//draw the diagonal
+	for(int i = 0; i < 32; i++){
+		u32 xPos = i;
+		u32 yPos = (cycle >> 2) - i;
+		
+		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 4) * 4];
+		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 1] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 4) * 4 + 1];
+		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 32] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 4) * 4 + 2];
+		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 33] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 4) * 4 + 3];
+		
+		xPos--;
+		
+		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 4) + 4) * 4];
+		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 1] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 4) + 4) * 4 + 1];
+		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 32] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 4) + 4) * 4 + 2];
+		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 33] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 4) + 4) * 4 + 3];
+	}
+}
 void drawSelectedShip(OBJ_ATTR *spriteBuffer){
 	if(mapData.ships[mapData.selectedShip.index].state != SELECTED){
 		spriteBuffer[SELECTED_SHIP_SPRITE].attr0 = ATTR0_HIDE;
 		//clear the selected ships graphics from vram
 		for(u32 tile = 0; tile < 16; tile++){
-			u16 *VRAMPtr = &characterData0[tile * 16];
+			u16 *VRAMPtr = &characterBuffer0[tile * 16];
 			for(u32 i = 0; i < 16; i++){
 				VRAMPtr[i] = 0;
 			}
@@ -243,7 +286,7 @@ void drawSelectedShip(OBJ_ATTR *spriteBuffer){
 	//load the graphics of the selected ship
 	for(u32 tile = 0; tile < 16; tile++){
 		cu16 *gfxPtr = &ships_selectedTiles[ships_selectedMap[tile] * 16];
-		u16 *VRAMPtr = &characterData0[tile * 16];
+		u16 *VRAMPtr = &characterBuffer0[tile * 16];
 		//load the tile graphics
 		for(u32 i = 0; i < 16; i++){
 			VRAMPtr[i] = gfxPtr[i];
@@ -330,7 +373,7 @@ void openMapState(){
 	}
 	
 	//L and R cycle backwards or forwards through the active ships for this team, and center the camera on the next ship in the cycle
-	if((inputs.pressed & KEY_L) && (mapData.camera.state == STILL)){
+	if((inputs.pressed & KEY_L) && (mapData.camera.state == CAM_STILL)){
 		//cycle through the linked list until we end up one before where we started
 		u32 currentIndex = mapData.selectedShip.index;
 		u32 lastActiveIndex = 0;
@@ -351,7 +394,7 @@ void openMapState(){
 		//pan the camera to this ship
 		cameraPanInit(xTarget, yTarget, CYCLE_PAN_SPEED);
 	}
-	if((inputs.pressed & KEY_R) && (mapData.camera.state == STILL)){
+	if((inputs.pressed & KEY_R) && (mapData.camera.state == CAM_STILL)){
 		//cycle to the next ship in the linked list of active ships
 		u32 currentIndex = mapData.ships[mapData.selectedShip.index].teamLink;
 		while(mapData.ships[currentIndex].teamLink != mapData.selectedShip.index){
@@ -402,7 +445,7 @@ void turnEndState(){
 		mapData.actionTimer = 1;
 	}
 	//if the camera has finished focusing on the next ship
-	else if(mapData.camera.state == STILL){
+	else if(mapData.camera.state == CAM_STILL){
 		mapData.actionTimer = 0;
 		mapData.ships[mapData.selectedShip.index].state = SELECTED;
 		mapData.state = TURN_END_MOVEMENT;
@@ -412,14 +455,17 @@ void turnEndState(){
 		shipMoveInit(xTarget, yTarget, SHIP_MOVE_SPEED);
 		//if the ship is moving, break it's same tile link
 		if((mapData.ships[mapData.selectedShip.index].xVel != 0) || (mapData.ships[mapData.selectedShip.index].yVel != 0)){
-			u8 newLink = mapData.ships[mapData.selectedShip.index].sameTileLink;
 			u8 shipIndex = mapData.selectedShip.index;
-			u8 checkedIndex = mapData.selectedShip.index;
+			u8 checkedIndex = shipIndex;
 			while(mapData.ships[checkedIndex].sameTileLink != shipIndex){
-				checkedIndex = mapData.ships[shipIndex].sameTileLink;
+				checkedIndex = mapData.ships[checkedIndex].sameTileLink;
+				if(isShipVisible(checkedIndex)){
+					makeShipHidden(checkedIndex);
+				}
 			}
-			mapData.ships[shipIndex].sameTileLink = newLink;
-			mapData.ships[mapData.selectedShip.index].sameTileLink = mapData.selectedShip.index;
+			makeShipVisible(checkedIndex);
+			mapData.ships[checkedIndex].sameTileLink = mapData.ships[shipIndex].sameTileLink;
+			mapData.ships[shipIndex].sameTileLink = shipIndex;
 		}
 	}
 	
@@ -455,7 +501,7 @@ void shipListInit(){
 	//initialize all four teams
 	for(u32 teamIndex = 0; teamIndex < NUM_TEAMS; teamIndex++){
 		TeamData *teamPointer = &mapData.teams[teamIndex];
-		teamPointer->state = ABSENT;
+		teamPointer->state = TEAM_ABSENT;
 		teamPointer->numStartingShips = 0;
 	}
 	
@@ -478,8 +524,8 @@ void shipListInit(){
 		//increment the number of ships for the team this ship belongs to
 		teamPointer->numStartingShips++;
 		//if this was the first ship for a particular team, activate that team
-		if(teamPointer->state == ABSENT){
-			teamPointer->state = ACTIVE;
+		if(teamPointer->state == TEAM_ABSENT){
+			teamPointer->state = TEAM_ACTIVE;
 			teamPointer->firstShip = shipIndex;
 		}
 		//if this team has other ships as well, link this ship to the previous to extend the linked list
@@ -506,7 +552,7 @@ void shipListInit(){
 	//complete the linked list loop for each team that has at least one ship
 	for(u32 teamIndex = 0; teamIndex < NUM_TEAMS; teamIndex++){
 		TeamData *teamPointer = &mapData.teams[teamIndex];
-		if(teamPointer->state == ABSENT){
+		if(teamPointer->state == TEAM_ABSENT){
 			continue;
 		}
 		
@@ -538,7 +584,7 @@ void shipListInit(){
 	
 	//find out which team is going first
 	for(u32 team = 0; team < NUM_TEAMS; team++){
-		if(mapData.teams[team].state == ACTIVE){
+		if(mapData.teams[team].state == TEAM_ACTIVE){
 			mapData.teamTurn = team;
 			break;
 		}
@@ -566,6 +612,16 @@ void shipListInit(){
 			mapData.ships[shipIndex].state = WRONG_TEAM_HIDDEN;
 		}
 	}
+	
+	//pan the camera to the first ship
+	mapData.selectedShip.index = mapData.teams[mapData.teamTurn].firstShip;
+	s16 xTarget = (mapData.ships[mapData.selectedShip.index].xPos << 4) - 112;
+	s16 yTarget = (mapData.ships[mapData.selectedShip.index].yPos << 4) - 72;
+	cameraPanInit(xTarget, yTarget, CYCLE_PAN_SPEED);
+	
+	//setup the cursor
+	mapData.cursor.xPos = xTarget;
+	mapData.cursor.yPos = yTarget;
 }
 
 void nextPlayer(){
@@ -596,7 +652,7 @@ void nextPlayer(){
 			team = 0;
 			nextTurn();
 		}
-	}while(mapData.teams[team].state != ACTIVE);
+	}while(mapData.teams[team].state != TEAM_ACTIVE);
 	
 	mapData.teamTurn = team;
 	
@@ -611,12 +667,12 @@ void processCamera(){
 	
 	//handle the camera based on its state
 	switch(mapData.camera.state){
-	case STILL:
+	case CAM_STILL:
 		break;
-	case PANNING:
+	case CAM_PANNING:
 		processCameraPan();
 		break;
-	case TRACKING:
+	case CAM_TRACKING:
 		break;
 	}
 	
@@ -624,6 +680,9 @@ void processCamera(){
 	
 	//update the tilemap with the new position
 	createShipTilemap(tilemapBuffer1);
+	
+	//update the grid
+	createGridTilemap(tilemapBuffer2);
 	
 	//process the selected ship's sprite if applicable
 	drawSelectedShip(spriteBuffer);
@@ -633,9 +692,14 @@ void processCamera(){
 	tilemapData[1].buffer = tilemapBuffer1;
 	tilemapData[1].position = se_mem[BG_1_TILEMAP];
 	
+	//queue the tilemap for layer 0 to be sent
+	tilemapData[0].size = 512;
+	tilemapData[0].buffer = tilemapBuffer2;
+	tilemapData[0].position = se_mem[BG_0_TILEMAP];
+	
 	//queue the character data for the sprites
-	characterData[0].buffer = characterData0;
-	characterData[0].size = sizeof(characterData0) >> 2;
+	characterData[0].buffer = characterBuffer0;
+	characterData[0].size = 128;
 	characterData[0].position = tile_mem_obj[0];
 	
 	//queue the OAM data for all of the sprites
@@ -673,7 +737,7 @@ void processCameraPan(){
 	}
 	//if we have finished this pan
 	else if(mapData.camera.actionTimer == mapData.camera.actionTarget){
-		mapData.camera.state = STILL;
+		mapData.camera.state = CAM_STILL;
 		mapData.camera.xPos = mapData.camera.xTargetPos;
 		mapData.camera.yPos = mapData.camera.yTargetPos;
 	}
@@ -684,7 +748,7 @@ void processCameraPan(){
 void cameraPanInit(s16 xTarget, s16 yTarget, u8 panTime){
 	
 	//only initialize a pan if the camera is not performing another action
-	if(mapData.camera.state != STILL){
+	if(mapData.camera.state != CAM_STILL){
 		return;
 	}
 	
@@ -701,7 +765,7 @@ void cameraPanInit(s16 xTarget, s16 yTarget, u8 panTime){
 		mapData.camera.yTargetPos = yTarget;
 		mapData.camera.xStartingPos = mapData.camera.xPos;
 		mapData.camera.yStartingPos = mapData.camera.yPos;
-		mapData.camera.state = PANNING;
+		mapData.camera.state = CAM_PANNING;
 		mapData.camera.actionTarget = panTime << 1;
 		mapData.camera.actionTimer = 0;
 	}
@@ -782,10 +846,7 @@ void checkForOverlap(u8 shipIndex){
 	
 	//check all 256 ships for the first example of a ship in this position
 	for(s32 i = 0; i < MAX_SHIPS; i++){
-		if((mapData.ships[i].xPos == DOCKED) || (mapData.ships[i].xPos == DESTROYED) || (mapData.ships[i].xPos == NOT_PARTICIPATING)){
-			continue;
-		}
-		if(i == shipIndex){
+		if((mapData.ships[i].state == DOCKED) || (mapData.ships[i].state == DESTROYED) || (mapData.ships[i].state == NOT_PARTICIPATING) || (i == shipIndex)){
 			continue;
 		}
 		//if the position is identical
@@ -796,12 +857,11 @@ void checkForOverlap(u8 shipIndex){
 			mapData.ships[i].sameTileLink = shipIndex;
 			
 			//set whichever ship on this tile is currently visible to hidden
-			shipIndex = mapData.ships[shipIndex].sameTileLink;
-			while((mapData.ships[shipIndex].state != READY_VISIBLE) && (mapData.ships[shipIndex].state != FINISHED_VISIBLE) && 
-			(mapData.ships[shipIndex].state != WRONG_TEAM_VISIBLE)){
-				shipIndex = mapData.ships[shipIndex].sameTileLink;
+			u8 checkedIndex = mapData.ships[shipIndex].sameTileLink;
+			while(!isShipVisible(checkedIndex)){
+				checkedIndex = mapData.ships[checkedIndex].sameTileLink;
 			}
-			makeShipHidden(shipIndex);
+			makeShipHidden(checkedIndex);
 			return;
 		}
 	}
@@ -844,7 +904,7 @@ u8 isShipVisible(u8 shipindex){
 //a temprary function to initialize a test map.
 void initMap(){
 	u8 index = 0;
-	for(u32 team = 0; team <= YELLOW_TEAM; team++){
+	for(u32 team = 0; team < NUM_TEAMS; team++){
 		u8 yPos = 8;
 		for(u32 type = 0; type <= CARRIER; type++){
 			u8 xPos = 8;
