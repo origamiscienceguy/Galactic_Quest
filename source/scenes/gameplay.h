@@ -23,6 +23,10 @@
 
 #define CYCLE_PAN_SPEED 20
 #define SHIP_MOVE_SPEED 32
+#define CURSOR_WAIT_FRAMES 20
+#define CURSOR_SLOW_SPEED_1 4
+#define CURSOR_SLOW_SPEED_2 8
+#define CURSOR_FAST_SPEED 16
 
 #define IDLE_CYCLE_OFFSET 112
 #define DIRECTION_OFFSET 28
@@ -56,7 +60,11 @@ enum CameraState{
 };
 
 enum CursorState{
-	CUR_HIDDEN, CUR_STILL
+	CUR_HIDDEN, CUR_STILL, CUR_MOVE_ONCE_1, CUR_MOVE_ONCE_2, CUR_MOVE_ONCE_3, CUR_MOVE_ONCE_WAIT, CUR_MOVE_SLOW_1, CUR_MOVE_SLOW_2, CUR_MOVE_FAST
+};
+
+enum CursorDirection{
+	CUR_NO_DIRECTION, CUR_RIGHT, CUR_UP, CUR_LEFT, CUR_DOWN, CUR_UP_RIGHT, CUR_UP_LEFT, CUR_DOWN_RIGHT, CUR_DOWN_LEFT
 };
 
 //structs
@@ -110,7 +118,9 @@ typedef struct CameraData{
 typedef struct cursorData{
 	s16 xPos; //the pixel position of the cursor in the x axis
 	s16 yPos; //the pixel position of the cursor in the y axis
-	u8 counter;
+	enum CursorState state; //the state of the cursor
+	enum CursorDirection direction; //the direction of the cursor
+	u8 counter; //how long the button to move the cursor has been held down
 }cursorData;
 
 typedef struct MapData{
@@ -151,6 +161,7 @@ void shipListInit();
 void createShipTilemap(u16 *);
 void createGridTilemap(u16 *);
 void drawSelectedShip(OBJ_ATTR *);
+void drawCursor(OBJ_ATTR *);
 void nextPlayer();
 void nextTurn();
 void turnStartState();
@@ -167,6 +178,7 @@ void checkForOverlap(u8);
 void makeShipVisible(u8);
 void makeShipHidden(u8);
 u8 isShipVisible(u8);
+void moveCursor();
 
 //temp function
 void initMap();

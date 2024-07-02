@@ -73,6 +73,9 @@ void gameplayInitialize(){
 	mapData.state = TURN_START;
 	mapData.teamTurn = RED_TEAM;
 	mapData.selectedShip.index = 0;
+	mapData.cursor.state = CUR_STILL;
+	mapData.cursor.direction = CUR_NO_DIRECTION;
+	mapData.cursor.counter = 0;
 	
 	
 	//temporary function call to set up some ships like a saved scenareo would
@@ -242,25 +245,19 @@ void createGridTilemap(u16 *tilemapBuffer){
 	for(u32 i = (mapXPos % 128); i < ((mapXPos % 128) + 16); i++){
 		u32 xPos = i;
 		u32 yPos = ((cycle >> 1) - i) % 128;
-		u8 draw = 0;
 		
 		if(((yPos - mapYPos) % 128) < 16){
-			draw = 1;
-		}
-		
-		if(draw){
-		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 2) * 8];
-		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 1] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 2) * 8 + 1];
-		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 32] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 2) * 8 + 2];
-		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 33] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 2) * 8 + 3];
-		
-		xPos--;
-		
-		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 2) * 2 + 4) * 4];
-		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 1] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 2) * 2 + 4) * 4 + 1];
-		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 32] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 2) * 2 + 4) * 4 + 2];
-		tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 33] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 2) * 2 + 4) * 4 + 3];
-		
+			tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 2) * 8];
+			tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 1] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 2) * 8 + 1];
+			tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 32] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 2) * 8 + 2];
+			tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 33] = bgGfxMap[GRID_GFX_START * 4 + (cycle % 2) * 8 + 3];
+			
+			xPos--;
+			
+			tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 2) * 2 + 4) * 4];
+			tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 1] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 2) * 2 + 4) * 4 + 1];
+			tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 32] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 2) * 2 + 4) * 4 + 2];
+			tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 33] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 2) * 2 + 4) * 4 + 3];
 		}
 	}
 }
@@ -302,6 +299,30 @@ void drawSelectedShip(OBJ_ATTR *spriteBuffer){
 		
 	}
 	
+}
+
+void drawCursor(OBJ_ATTR *){
+	//if the cursor is hidden, don't draw anything.
+	if(mapData.cursor.state == CUR_HIDDEN){
+		spriteBuffer[CURSOR_SPRITE].attr0 = ATTR0_HIDE;
+		return;
+	}
+	
+	u8 animationFrame = (currentScene.sceneCounter >> 5) % 2;
+	
+	s32 cursorYPos = (mapData.cursor.yPos - mapData.camera.yPos) % 256; 
+	s32 cursorXPos = (mapData.cursor.xPos - mapData.camera.xPos) % 256;
+	
+	if(cursorXPos < 0){
+		cursorXPos = 512 + cursorXPos;
+	}
+	if(cursorYPos < 0){
+		cursorYPos = 256 + cursorYPos;
+	}
+	
+	spriteBuffer[CURSOR_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE |  ATTR0_Y(cursorYPos);
+	spriteBuffer[CURSOR_SPRITE].attr1 = ATTR1_SIZE_32 | ATTR1_X(cursorXPos);
+	spriteBuffer[CURSOR_SPRITE].attr2 = ATTR2_ID(CURSOR_GFX + animationFrame * 16) | ATTR2_PRIO(0) | ATTR2_PALBANK(mapData.teamTurn);
 }
 
 void turnStartState(){
@@ -352,33 +373,8 @@ void turnStartState(){
 }
 
 void openMapState(){
-	u16 scrollSpeed = 12;
 	
-	//the d pad scrolls the map
-	if(inputs.current & KEY_RIGHT){
-		s16 xTarget = mapData.camera.xPos + scrollSpeed;
-		s16 yTarget = mapData.camera.yPos;
-		
-		cameraPanInit(xTarget, yTarget, 0);
-	}
-	if(inputs.current & KEY_LEFT){
-		s16 xTarget = mapData.camera.xPos - scrollSpeed;
-		s16 yTarget = mapData.camera.yPos;
-		
-		cameraPanInit(xTarget, yTarget, 0);
-	}
-	if(inputs.current & KEY_DOWN){
-		s16 xTarget = mapData.camera.xPos;
-		s16 yTarget = mapData.camera.yPos + scrollSpeed;
-		
-		cameraPanInit(xTarget, yTarget, 0);
-	}
-	if(inputs.current & KEY_UP){
-		s16 xTarget = mapData.camera.xPos;
-		s16 yTarget = mapData.camera.yPos - scrollSpeed;
-		
-		cameraPanInit(xTarget, yTarget, 0);
-	}
+	moveCursor();
 	
 	//L and R cycle backwards or forwards through the active ships for this team, and center the camera on the next ship in the cycle
 	if((inputs.pressed & KEY_L) && (mapData.camera.state == CAM_STILL)){
@@ -399,6 +395,10 @@ void openMapState(){
 		s16 xTarget = (mapData.ships[mapData.selectedShip.index].xPos << 4) - 112;
 		s16 yTarget = (mapData.ships[mapData.selectedShip.index].yPos << 4) - 72;
 		
+		mapData.cursor.state = CUR_STILL;
+		mapData.cursor.xPos = xTarget + 104;
+		mapData.cursor.yPos = yTarget + 64;
+		
 		//pan the camera to this ship
 		cameraPanInit(xTarget, yTarget, CYCLE_PAN_SPEED);
 	}
@@ -415,6 +415,10 @@ void openMapState(){
 		
 		s16 xTarget = (mapData.ships[mapData.selectedShip.index].xPos << 4) - 112;
 		s16 yTarget = (mapData.ships[mapData.selectedShip.index].yPos << 4) - 72;
+		
+		mapData.cursor.state = CUR_STILL;
+		mapData.cursor.xPos = xTarget + 104;
+		mapData.cursor.yPos = yTarget + 64;
 		
 		//pan the camera to this ship
 		cameraPanInit(xTarget, yTarget, CYCLE_PAN_SPEED);
@@ -628,8 +632,8 @@ void shipListInit(){
 	cameraPanInit(xTarget, yTarget, CYCLE_PAN_SPEED);
 	
 	//setup the cursor
-	mapData.cursor.xPos = xTarget;
-	mapData.cursor.yPos = yTarget;
+	mapData.cursor.xPos = xTarget + 104;
+	mapData.cursor.yPos = yTarget + 64;
 }
 
 void nextPlayer(){
@@ -684,6 +688,22 @@ void processCamera(){
 		break;
 	}
 	
+	//follow the cursor
+	if(mapData.cursor.state != CUR_HIDDEN){
+		if((mapData.cursor.xPos - mapData.camera.xPos) < 24){
+			mapData.camera.xPos = mapData.cursor.xPos - 24;
+		}
+		else if((mapData.cursor.xPos - mapData.camera.xPos) > 184){
+			mapData.camera.xPos = mapData.cursor.xPos - 184;
+		}
+		if((mapData.cursor.yPos - mapData.camera.yPos) < 24){
+			mapData.camera.yPos = mapData.cursor.yPos - 24;
+		}
+		else if((mapData.cursor.yPos - mapData.camera.yPos) > 104){
+			mapData.camera.yPos = mapData.cursor.yPos - 104;
+		}
+	}
+	
 	cameraBoundsCheck(&mapData.camera.xPos, &mapData.camera.yPos);
 	
 	//update the tilemap with the new position
@@ -694,6 +714,9 @@ void processCamera(){
 	
 	//process the selected ship's sprite if applicable
 	drawSelectedShip(spriteBuffer);
+	
+	//draw the cursor if applicable
+	drawCursor(spriteBuffer);
 	
 	//queue the tilemap for layer 1 to be sent
 	tilemapData[1].size = 512;
@@ -906,6 +929,255 @@ u8 isShipVisible(u8 shipindex){
 	}
 	else{
 		return 0;
+	}
+}
+
+void moveCursor(){
+	//if the cursor is not on, then don't move it
+	if(mapData.cursor.state == CUR_HIDDEN){
+		return;
+	}
+	
+	u8 cursorMoving = 0;
+	u8 isBHeld = 0;
+	
+	//if the cursor is in the middle of a multi-frame movement, ignore inputs
+	if((mapData.cursor.state != CUR_MOVE_ONCE_1) && (mapData.cursor.state != CUR_MOVE_ONCE_2)
+	&& (mapData.cursor.state != CUR_MOVE_SLOW_1)){
+		//if the cursor is moving up right
+		if(((inputs.current & KEY_UP) && !(inputs.current & KEY_DOWN)) && ((inputs.current & KEY_RIGHT) && !(inputs.current & KEY_LEFT))){
+			//if the cursor is already moving in this direction
+			if((mapData.cursor.direction == CUR_UP) || (mapData.cursor.direction == CUR_RIGHT) || (mapData.cursor.direction == CUR_UP_RIGHT)){
+				mapData.cursor.counter++;
+				mapData.cursor.direction = CUR_UP_RIGHT;
+			}
+			//if this is a distinct new input
+			else{
+				mapData.cursor.direction = CUR_UP_RIGHT;
+				mapData.cursor.counter = 0;
+			}
+			cursorMoving = 1;		
+		}
+		//if the cursor is moving up left
+		else if(((inputs.current & KEY_UP) && !(inputs.current & KEY_DOWN)) && ((inputs.current & KEY_LEFT) && !(inputs.current & KEY_RIGHT))){
+			//if the cursor is already moving in this direction
+			if((mapData.cursor.direction == CUR_UP) || (mapData.cursor.direction == CUR_LEFT) || (mapData.cursor.direction == CUR_UP_LEFT)){
+				mapData.cursor.counter++;
+				mapData.cursor.direction = CUR_UP_LEFT;
+			}
+			//if this is a distinct new input
+			else{
+				mapData.cursor.direction = CUR_UP_LEFT;
+				mapData.cursor.counter = 0;
+			}
+			cursorMoving = 1;		
+		}	
+		//if the cursor is moving down right
+		else if(((inputs.current & KEY_DOWN) && !(inputs.current & KEY_UP)) && ((inputs.current & KEY_RIGHT) && !(inputs.current & KEY_LEFT))){
+			//if the cursor is already moving in this direction
+			if((mapData.cursor.direction == CUR_DOWN) || (mapData.cursor.direction == CUR_RIGHT) || (mapData.cursor.direction == CUR_DOWN_RIGHT)){
+				mapData.cursor.counter++;
+				mapData.cursor.direction = CUR_DOWN_RIGHT;
+			}
+			//if this is a distinct new input
+			else{
+				mapData.cursor.direction = CUR_DOWN_RIGHT;
+				mapData.cursor.counter = 0;
+			}
+			cursorMoving = 1;		
+		}
+		//if the cursor is moving down left
+		else if(((inputs.current & KEY_DOWN) && !(inputs.current & KEY_UP)) && ((inputs.current & KEY_LEFT) && !(inputs.current & KEY_RIGHT))){
+			//if the cursor is already moving in this direction
+			if((mapData.cursor.direction == CUR_DOWN) || (mapData.cursor.direction == CUR_LEFT) || (mapData.cursor.direction == CUR_DOWN_LEFT)){
+				mapData.cursor.counter++;
+				mapData.cursor.direction = CUR_DOWN_LEFT;
+			}	
+			//if this is a distinct new input
+			else{
+				mapData.cursor.direction = CUR_DOWN_LEFT;
+				mapData.cursor.counter = 0;
+			}
+			cursorMoving = 1;		
+		}
+		//if the cursor is moving up
+		else if((inputs.current & KEY_UP) && !(inputs.current & KEY_DOWN)){
+			//if the cursor is already moving in this direction
+			if((mapData.cursor.direction == CUR_UP) || (mapData.cursor.direction == CUR_UP_LEFT) || (mapData.cursor.direction == CUR_UP_RIGHT)){
+				mapData.cursor.counter++;
+				mapData.cursor.direction = CUR_UP;
+			}
+			//if this is a distinct new input
+			else{
+				mapData.cursor.direction = CUR_UP;
+				mapData.cursor.counter = 0;
+			}	
+			cursorMoving = 1;	
+		}	
+		//if the cursor is moving down
+		else if((inputs.current & KEY_DOWN) && !(inputs.current & KEY_UP)){
+			//if the cursor is already moving in this direction
+			if((mapData.cursor.direction == CUR_DOWN) || (mapData.cursor.direction == CUR_DOWN_LEFT) || (mapData.cursor.direction == CUR_DOWN_RIGHT)){
+				mapData.cursor.counter++;
+				mapData.cursor.direction = CUR_DOWN;
+			}
+			//if this is a distinct new input
+			else{
+				mapData.cursor.direction = CUR_DOWN;
+				mapData.cursor.counter = 0;
+			}
+			cursorMoving = 1;	
+		}
+		//if the cursor is moving left
+		else if((inputs.current & KEY_LEFT) && !(inputs.current & KEY_RIGHT)){
+			//if the cursor is already moving in this direction
+			if((mapData.cursor.direction == CUR_LEFT) || (mapData.cursor.direction == CUR_DOWN_LEFT) || (mapData.cursor.direction == CUR_UP_LEFT)){
+				mapData.cursor.counter++;
+				mapData.cursor.direction = CUR_LEFT;
+			}
+			//if this is a distinct new input
+			else{
+				mapData.cursor.direction = CUR_LEFT;
+				mapData.cursor.counter = 0;
+			}
+			cursorMoving = 1;	
+		}
+		//if the cursor is moving right
+		else if((inputs.current & KEY_RIGHT) && !(inputs.current & KEY_LEFT)){
+			//if the cursor is already moving in this direction
+			if((mapData.cursor.direction == CUR_RIGHT) || (mapData.cursor.direction == CUR_DOWN_RIGHT) || (mapData.cursor.direction == CUR_UP_RIGHT)){
+				mapData.cursor.counter++;
+				mapData.cursor.direction = CUR_RIGHT;
+			}
+			//if this is a distinct new input
+			else{
+				mapData.cursor.direction = CUR_RIGHT;
+				mapData.cursor.counter = 0;
+			}
+			cursorMoving = 1;	
+		}
+		//check if B is held
+		if(inputs.current & KEY_B){
+			isBHeld = 1;
+		}
+	}
+	//if the cursor is mid-movement
+	else{
+		cursorMoving = 1;
+		mapData.cursor.counter++;
+	}
+	
+	//if the cursor is not moving
+	if(cursorMoving == 0){
+		mapData.cursor.state = CUR_STILL;
+		mapData.cursor.direction = CUR_NO_DIRECTION;
+	}
+	//if B is held
+	else if(isBHeld){
+		mapData.cursor.state = CUR_MOVE_FAST;
+	}
+	//if a new direction was just input
+	else if(mapData.cursor.counter == 0){
+		mapData.cursor.state = CUR_MOVE_ONCE_1;
+	}
+	//if direction is held and first movement completes
+	else if(mapData.cursor.state == CUR_MOVE_ONCE_3){
+		mapData.cursor.state = CUR_MOVE_ONCE_WAIT;
+	}
+	//advance to the next frame of movement
+	else if(mapData.cursor.state == CUR_MOVE_ONCE_1){
+		mapData.cursor.state = CUR_MOVE_ONCE_2;
+	}
+	//advance to the next frame of movement
+	else if(mapData.cursor.state == CUR_MOVE_SLOW_1){
+		mapData.cursor.state = CUR_MOVE_SLOW_2;
+	}
+	//advance to the next frame of movement
+	else if(mapData.cursor.state == CUR_MOVE_ONCE_2){
+		mapData.cursor.state = CUR_MOVE_ONCE_3;
+	}
+	//advance to the next frame of movement
+	else if(mapData.cursor.state == CUR_MOVE_SLOW_2){
+		mapData.cursor.state = CUR_MOVE_SLOW_1;
+	}
+	//if direction is held and first movement finishes waiting
+	else if(mapData.cursor.counter >= CURSOR_WAIT_FRAMES){
+		mapData.cursor.state = CUR_MOVE_SLOW_1;
+	}
+	
+	u32 vel;
+	//decide the speed based on state
+	if(mapData.cursor.state == CUR_MOVE_FAST){
+		vel = CURSOR_FAST_SPEED;
+	}
+	else if((mapData.cursor.state == CUR_MOVE_ONCE_1) || (mapData.cursor.state == CUR_MOVE_ONCE_3)){
+		vel = CURSOR_SLOW_SPEED_1;
+	}
+	else if((mapData.cursor.state == CUR_MOVE_ONCE_2) || (mapData.cursor.state == CUR_MOVE_SLOW_2) || (mapData.cursor.state == CUR_MOVE_SLOW_1)){
+		vel = CURSOR_SLOW_SPEED_2;
+	}
+	else{
+		vel = 0;
+	}
+	
+	s32 deltaX;
+	s32 deltaY;
+	//decide the x and y offsets based on direction
+	switch(mapData.cursor.direction){
+	case CUR_UP:
+		deltaX = 0;
+		deltaY = -vel;
+		break;
+	case CUR_DOWN:
+		deltaX = 0;
+		deltaY = vel;
+		break;
+	case CUR_LEFT:
+		deltaX = -vel;
+		deltaY = 0;
+		break;
+	case CUR_RIGHT:
+		deltaX = vel;
+		deltaY = 0;
+		break;
+	case CUR_UP_RIGHT:
+		deltaX = vel;
+		deltaY = -vel;
+		break;
+	case CUR_UP_LEFT:
+		deltaX = -vel;
+		deltaY = -vel;
+		break;
+	case CUR_DOWN_RIGHT:
+		deltaX = vel;
+		deltaY = vel;
+		break;
+	case CUR_DOWN_LEFT:
+		deltaX = -vel;
+		deltaY = vel;
+		break;
+	default:
+		deltaX = 0;
+		deltaY = 0;
+		break;
+	}
+	
+	//update position
+	mapData.cursor.xPos += deltaX;
+	mapData.cursor.yPos += deltaY;
+	
+	//bounds check
+	if(mapData.cursor.xPos < -8){
+		mapData.cursor.xPos = -8;
+	}
+	else if(mapData.cursor.xPos > (mapData.xSize * 16 - 8)){
+		mapData.cursor.xPos = mapData.xSize * 16 - 8;
+	}
+	if(mapData.cursor.yPos < -8){
+		mapData.cursor.yPos = -8;
+	}
+	else if(mapData.cursor.yPos > (mapData.ySize * 16 - 8)){
+		mapData.cursor.yPos = mapData.ySize * 16 - 8;
 	}
 }
 
