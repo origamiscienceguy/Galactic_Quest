@@ -341,8 +341,6 @@ void drawHighlight(u16 *tilemapBuffer){
 	s16 yTarget = mapData.ships[shipIndex].yPos + mapData.ships[shipIndex].yVel;
 	//18 X 13 buffer, representing the 16 X 11 tiles on screen, plus one outer unseen ring
 	u8 drawBuffer[236];
-	//a pointer at the top left corner of the screen
-	u8 *drawBufferPtr = drawBuffer + 19;
 	
 	//clear the tilemap
 	memset32(tilemapBuffer, (bgGfxMap[3] | bgGfxMap[3] << 16), 512);
@@ -396,7 +394,7 @@ void drawHighlight(u16 *tilemapBuffer){
 	for(u32 i = 0; i < 16; i++){
 		for(u32 j = 0; j < 11; j++){
 			if(drawBuffer[(i + 1) + (j + 1) * 18] == 1){
-				u16 baseIndex = ((i + 1) % 16) * 2 + ((j + 1) % 16) * 64;
+				u16 baseIndex = (i % 16) * 2 + (j % 16) * 64;
 				//figure out which corners and edges are touching
 				u32 tilemapBase = 0;
 				if(drawBuffer[(i + 2) + (j + 1) * 18] == 1){
@@ -872,8 +870,8 @@ void processCamera(){
 	IOBuffer[1] = mapData.camera.yPos % 512;
 	IOBuffer[2] = mapData.camera.xPos % 512;
 	IOBuffer[3] = mapData.camera.yPos % 512;
-	IOBuffer[4] = ((mapData.camera.xPos % 16) + 16) % 512;
-	IOBuffer[5] = ((mapData.camera.yPos % 16) + 16) % 512;
+	IOBuffer[4] = mapData.camera.xPos % 16;
+	IOBuffer[5] = mapData.camera.yPos % 16;
 }
 
 void processCameraPan(){
