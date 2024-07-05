@@ -10,9 +10,14 @@
 #define MAX_MAP_SIZE 256
 #define NUM_TEAMS 4
 
-#define BG_0_TILEMAP 31
 #define BG_0_CHARDATA 0
+#define BG_1_CHARDATA 0
+#define BG_2_CHARDATA 0
+#define BG_3_CHARDATA 0
+#define BG_0_TILEMAP 31
 #define BG_1_TILEMAP 30
+#define BG_2_TILEMAP 29
+#define BG_3_TILEMAP 28
 #define SELECTED_SHIP_SPRITE 0
 #define SELECTED_SHIP_GFX 0
 #define SELECTED_SHIP_GFX_SIZE 16
@@ -30,9 +35,11 @@
 
 #define IDLE_CYCLE_OFFSET 112
 #define DIRECTION_OFFSET 28
-#define SHIP_GFX_START 15
-#define CYCLE_GFX_START 10
+#define HIGHLIGHT_OFFSET 240
+#define SHIP_GFX_START (CYCLE_GFX_START + 5)
+#define CYCLE_GFX_START (GRID_GFX_START + 4)
 #define GRID_GFX_START 1
+#define SHIP_ACC 4
 
 //enums
 enum ShipType{
@@ -44,7 +51,7 @@ enum ShipState{
 };
 
 enum MapState{
-	TURN_START, OPEN_MAP, SHIP_SELECTED, SHIP_MOVING, BATTLE, TURN_END, TURN_END_MOVEMENT, TURN_REPLAY
+	TURN_START, OPEN_MAP, SHIP_SELECTED, SHIP_MOVEMENT_SELECT, SHIP_MOVING, BATTLE, TURN_END, TURN_END_MOVEMENT, TURN_REPLAY
 };
 
 enum TeamState{
@@ -65,6 +72,10 @@ enum CursorState{
 
 enum CursorDirection{
 	CUR_NO_DIRECTION, CUR_RIGHT, CUR_UP, CUR_LEFT, CUR_DOWN, CUR_UP_RIGHT, CUR_UP_LEFT, CUR_DOWN_RIGHT, CUR_DOWN_LEFT
+};
+
+enum HighlightState{
+	NO_HIGHLIGHT, MOVEMENT_RANGE_HIGHLIGHT, VISIBILITY_HIGHLIGHT, POTENTIAL_ENCOUNTERS_HIGHLIGHT
 };
 
 //structs
@@ -115,13 +126,17 @@ typedef struct CameraData{
 	s16 yTargetPos; //the y position the camera is currently seeking towards
 }CameraData;
 
-typedef struct cursorData{
+typedef struct CursorData{
 	s16 xPos; //the pixel position of the cursor in the x axis
 	s16 yPos; //the pixel position of the cursor in the y axis
 	enum CursorState state; //the state of the cursor
 	enum CursorDirection direction; //the direction of the cursor
 	u8 counter; //how long the button to move the cursor has been held down
-}cursorData;
+}CursorData;
+
+typedef struct HighlightData{
+	enum HighlightState state;
+}HighlightData;
 
 typedef struct MapData{
 	enum MapState state; //what is the stage of the game are we in
@@ -136,19 +151,22 @@ typedef struct MapData{
 	TeamData teams[NUM_TEAMS]; //the array of information about each team in the battle
 	CameraData camera; //the struct containing data about the camera
 	SelectedShip selectedShip; //the struct containing data about the currently selected ship
-	cursorData cursor; //the struct containing data about the cursor
+	CursorData cursor; //the struct containing data about the cursor
+	HighlightData highlight; //the data about the highlight layer
 }MapData;
 
 //globals
 extern const u32 inverseTimeSquared[];
 extern const u16 inverseTime[];
 extern const s16 sinTable[];
-extern const unsigned short bgGfxTiles[3984];
-extern const unsigned short bgGfxMap[396];
-extern const unsigned short bgGfxPal[64];
+extern const unsigned short bgGfxTiles[3840];
+extern const unsigned short bgGfxMap[376];
+extern const unsigned short bgGfxPal[256];
 extern const unsigned short ships_selectedTiles[];
 extern const unsigned short ships_selectedMap[];
 extern const unsigned short cursorTiles[512];
+extern const unsigned short HighlightTiles[192];
+extern const unsigned short HighlightMap[512];
 
 //local functions
 void gameplayInitialize();
@@ -162,10 +180,13 @@ void createShipTilemap(u16 *);
 void createGridTilemap(u16 *);
 void drawSelectedShip(OBJ_ATTR *);
 void drawCursor(OBJ_ATTR *);
+void drawHighlight(u16 *);
 void nextPlayer();
 void nextTurn();
 void turnStartState();
 void openMapState();
+void shipSelectedState();
+void shipMovementSelectState();
 void turnEndState();
 void turnEndMovementState();
 void processCamera();
@@ -179,6 +200,7 @@ void makeShipVisible(u8);
 void makeShipHidden(u8);
 u8 isShipVisible(u8);
 void moveCursor();
+void selectShip(u8);
 
 //temp function
 void initMap();
