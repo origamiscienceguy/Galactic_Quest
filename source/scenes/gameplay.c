@@ -334,8 +334,8 @@ void drawCursor(OBJ_ATTR *){
 void drawHighlight(u16 *tilemapBuffer){
 
 	//convert pixel coordinates to map cell coordinates
-	s8 mapXPos = mapData.camera.xPos >> 4;
-	s8 mapYPos = mapData.camera.yPos >> 4; 
+	s16 mapXPos = mapData.camera.xPos >> 4;
+	s16 mapYPos = mapData.camera.yPos >> 4; 
 	u8 shipIndex = mapData.selectedShip.index;
 	s16 xTarget = mapData.ships[shipIndex].xPos + mapData.ships[shipIndex].xVel;
 	s16 yTarget = mapData.ships[shipIndex].yPos + mapData.ships[shipIndex].yVel;
@@ -357,7 +357,7 @@ void drawHighlight(u16 *tilemapBuffer){
 	if(mapData.highlight.state == MOVEMENT_RANGE_HIGHLIGHT){
 		//designate bottom portion of ship movement range
 		for(s32 i = 1; i <= SHIP_ACC; i++){
-			if(((yTarget + i) < (mapYPos - 1)) || ((yTarget + i) >= (mapYPos + 16))){
+			if(((yTarget + i) < (mapYPos - 1)) || ((yTarget + i) >= (mapYPos + 11))){
 				continue;
 			}
 			for(s32 j = -(SHIP_ACC - i); j <= (SHIP_ACC - i); j++){
