@@ -511,6 +511,7 @@ void openMapState(){
 	//if start is pressed, transition to the end turn sequence
 	if(inputs.pressed & KEY_START){
 		mapData.state = TURN_END;
+		mapData.cursor.state = CUR_HIDDEN;
 		mapData.actionTimer = 0;
 	}
 	
