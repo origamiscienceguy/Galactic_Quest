@@ -480,32 +480,23 @@ void openMapState(){
 	moveCursor();
 	
 	//L and R cycle backwards or forwards through the active ships for this team, and center the camera on the next ship in the cycle
-	if((inputs.pressed & KEY_L)){
-		//cycle through the linked list until we end up one before where we started
-		u32 currentIndex = mapData.selectedShip.index;
-		u32 lastActiveIndex = 0;
-		while(mapData.ships[currentIndex].teamLink != mapData.selectedShip.index){
-			if((mapData.ships[currentIndex].state == READY_VISIBLE) || (mapData.ships[currentIndex].state = READY_HIDDEN)){
-				lastActiveIndex = currentIndex;
-			}
-			currentIndex = mapData.ships[currentIndex].teamLink;
-		}
-		if((mapData.ships[currentIndex].state == READY_VISIBLE) || (mapData.ships[currentIndex].state = READY_HIDDEN)){
-			lastActiveIndex = currentIndex;
-		}
-		selectShip(lastActiveIndex);
-	}
-	if((inputs.pressed & KEY_R)){
-		//cycle to the next ship in the linked list of active ships
-		u32 currentIndex = mapData.ships[mapData.selectedShip.index].teamLink;
-		while(mapData.ships[currentIndex].teamLink != mapData.selectedShip.index){
-			if((mapData.ships[currentIndex].state == READY_VISIBLE) || (mapData.ships[currentIndex].state = READY_HIDDEN)){
+	checkCycleButtons();
+	
+	//if a is pressed, select the ship that is under the cursor
+	if(inputs.pressed & KEY_A){
+		//find which ship on this team is at the cursor's select location
+		u8 currentIndex = mapData.teams[mapData.teamTurn].firstShip;
+		u16 selectedIndex = 0xffff;
+		while(mapData.ships[currentIndex].teamLink != mapData.teams[mapData.teamTurn].firstShip){
+			if((mapData.ships[currentIndex].xPos == mapData.cursor.selectXPos) && (mapData.ships[currentIndex].yPos == mapData.cursor.selectYPos)){
+				selectedIndex = currentIndex;
 				break;
 			}
 			currentIndex = mapData.ships[currentIndex].teamLink;
-			
 		}
-		selectShip(currentIndex);
+		if(selectedIndex != 0xffff){
+			selectShip(selectedIndex);
+		}
 	}
 	
 	//if start is pressed, transition to the end turn sequence
@@ -530,6 +521,8 @@ void shipSelectedState(){
 	mapData.cursor.state = CUR_STILL;
 	mapData.cursor.xPos = (xTarget << 4) - 8;
 	mapData.cursor.yPos = (yTarget << 4) - 8;
+	mapData.cursor.selectXPos = xTarget;
+	mapData.cursor.selectYPos = yTarget;
 
 	//pan to that location
 	cameraPanInit((xTarget << 4) - 112, (yTarget << 4) - 72, CYCLE_PAN_SPEED);
@@ -540,11 +533,50 @@ void shipSelectedState(){
 void shipMovementSelectState(){
 	//draw the highlighted region of movement for the selected ship
 	mapData.highlight.state = MOVEMENT_RANGE_HIGHLIGHT;
+	u8 shipIndex = mapData.selectedShip.index;
 	
+	s16 xTarget = mapData.ships[shipIndex].xPos + mapData.ships[shipIndex].xVel;
+	s16 yTarget = mapData.ships[shipIndex].yPos + mapData.ships[shipIndex].yVel;
+	
+	//L and R cycle backwards or forwards through the active ships for this team, and center the camera on the next ship in the cycle
+	if((inputs.pressed & KEY_L) || (inputs.pressed & KEY_R)){
+		mapData.ships[mapData.selectedShip.index].state = READY_VISIBLE; 
+		mapData.cursor.selectXPos = mapData.ships[mapData.selectedShip.index].xPos;
+		mapData.cursor.selectYPos = mapData.ships[mapData.selectedShip.index].yPos;
+		checkCycleButtons();
+	}
+	
+	//b canceles the movement of this ship
 	if(inputs.pressed & KEY_B){
 		mapData.state = OPEN_MAP;
 		mapData.ships[mapData.selectedShip.index].state = READY_VISIBLE; 
 		mapData.highlight.state = NO_HIGHLIGHT;
+		mapData.cursor.selectXPos = mapData.ships[mapData.selectedShip.index].xPos;
+		mapData.cursor.selectYPos = mapData.ships[mapData.selectedShip.index].yPos;
+		mapData.cursor.xPos = (mapData.ships[mapData.selectedShip.index].xPos << 4) - 8;
+		mapData.cursor.yPos = (mapData.ships[mapData.selectedShip.index].yPos << 4) - 8; 
+	}
+	
+	//arrows will move the cursor within the movement range
+	u8 cursorLastXPos = mapData.cursor.selectXPos;
+	u8 cursorLastYPos = mapData.cursor.selectYPos;
+	moveCursor();
+	
+	//cancel the cursor movement if it leaves the ship's movement range.
+	if((ABS(mapData.cursor.selectXPos - xTarget) + ABS(mapData.cursor.selectYPos - yTarget)) > SHIP_ACC){
+		mapData.cursor.selectXPos = cursorLastXPos;
+		mapData.cursor.selectYPos = cursorLastYPos;
+		mapData.cursor.xPos = (cursorLastXPos << 4) - 8;
+		mapData.cursor.yPos = (cursorLastYPos << 4) - 8;
+		mapData.cursor.state = CUR_STILL;
+		mapData.cursor.counter = 0;
+	}
+	
+	mapData.selectedShip.angle = arctan2(mapData.cursor.selectXPos - mapData.ships[shipIndex].xPos, mapData.cursor.selectYPos - mapData.ships[shipIndex].yPos);
+	
+	//pressing A starts a ship movement
+	if(inputs.pressed & KEY_A){
+	
 	}
 	
 	//handle any changes to the camera that occured this frame
@@ -748,6 +780,8 @@ void shipListInit(){
 	//setup the cursor
 	mapData.cursor.xPos = xTarget + 104;
 	mapData.cursor.yPos = yTarget + 64;
+	mapData.cursor.selectXPos = (mapData.cursor.xPos >> 4) + 1;
+	mapData.cursor.selectYPos = (mapData.cursor.yPos >> 4) + 1;
 	
 	//set no highlight
 	mapData.highlight.state = NO_HIGHLIGHT;
@@ -1060,6 +1094,7 @@ void moveCursor(){
 	
 	u8 cursorMoving = 0;
 	u8 isBHeld = 0;
+	u8 squaresMoved = 0;
 	
 	//if the cursor is in the middle of a multi-frame movement, ignore inputs
 	if((mapData.cursor.state != CUR_MOVE_ONCE_1) && (mapData.cursor.state != CUR_MOVE_ONCE_2)
@@ -1076,7 +1111,7 @@ void moveCursor(){
 				mapData.cursor.direction = CUR_UP_RIGHT;
 				mapData.cursor.counter = 0;
 			}
-			cursorMoving = 1;		
+			cursorMoving = 1;
 		}
 		//if the cursor is moving up left
 		else if(((inputs.current & KEY_UP) && !(inputs.current & KEY_DOWN)) && ((inputs.current & KEY_LEFT) && !(inputs.current & KEY_RIGHT))){
@@ -1195,10 +1230,12 @@ void moveCursor(){
 	//if B is held
 	else if(isBHeld){
 		mapData.cursor.state = CUR_MOVE_FAST;
+		squaresMoved = 1;
 	}
 	//if a new direction was just input
 	else if(mapData.cursor.counter == 0){
 		mapData.cursor.state = CUR_MOVE_ONCE_1;
+		squaresMoved = 1;
 	}
 	//if direction is held and first movement completes
 	else if(mapData.cursor.state == CUR_MOVE_ONCE_3){
@@ -1219,10 +1256,12 @@ void moveCursor(){
 	//advance to the next frame of movement
 	else if(mapData.cursor.state == CUR_MOVE_SLOW_2){
 		mapData.cursor.state = CUR_MOVE_SLOW_1;
+		squaresMoved = 1;
 	}
 	//if direction is held and first movement finishes waiting
 	else if(mapData.cursor.counter >= CURSOR_WAIT_FRAMES){
 		mapData.cursor.state = CUR_MOVE_SLOW_1;
+		squaresMoved = 1;
 	}
 	
 	u32 vel;
@@ -1242,49 +1281,88 @@ void moveCursor(){
 	
 	s32 deltaX;
 	s32 deltaY;
+	s32 selectedDeltaX;
+	s32 selectedDeltaY;
 	//decide the x and y offsets based on direction
 	switch(mapData.cursor.direction){
 	case CUR_UP:
 		deltaX = 0;
 		deltaY = -vel;
+		selectedDeltaY = -squaresMoved;
+		selectedDeltaX = 0;
 		break;
 	case CUR_DOWN:
 		deltaX = 0;
 		deltaY = vel;
+		selectedDeltaY = squaresMoved;
+		selectedDeltaX = 0;
 		break;
 	case CUR_LEFT:
 		deltaX = -vel;
 		deltaY = 0;
+		selectedDeltaY = 0;
+		selectedDeltaX = -squaresMoved;
 		break;
 	case CUR_RIGHT:
 		deltaX = vel;
 		deltaY = 0;
+		selectedDeltaY = 0;
+		selectedDeltaX = squaresMoved;
 		break;
 	case CUR_UP_RIGHT:
 		deltaX = vel;
 		deltaY = -vel;
+		selectedDeltaY = -squaresMoved;
+		selectedDeltaX = squaresMoved;
 		break;
 	case CUR_UP_LEFT:
 		deltaX = -vel;
 		deltaY = -vel;
+		selectedDeltaY = -squaresMoved;
+		selectedDeltaX = -squaresMoved;
 		break;
 	case CUR_DOWN_RIGHT:
 		deltaX = vel;
 		deltaY = vel;
+		selectedDeltaY = squaresMoved;
+		selectedDeltaX = squaresMoved;
 		break;
 	case CUR_DOWN_LEFT:
 		deltaX = -vel;
 		deltaY = vel;
+		selectedDeltaY = squaresMoved;
+		selectedDeltaX = -squaresMoved;
 		break;
 	default:
 		deltaX = 0;
 		deltaY = 0;
+		selectedDeltaY = 0;
+		selectedDeltaX = 0;
 		break;
 	}
 	
 	//update position
 	mapData.cursor.xPos += deltaX;
 	mapData.cursor.yPos += deltaY;
+	if((mapData.cursor.selectXPos + selectedDeltaX) < 0){
+		mapData.cursor.selectXPos = 0;
+	}
+	else if((mapData.cursor.selectXPos + selectedDeltaX) >= 256){
+		mapData.cursor.selectXPos = 255;
+	}
+	else{
+		mapData.cursor.selectXPos += selectedDeltaX;
+	}
+	if((mapData.cursor.selectYPos + selectedDeltaY) < 0){
+		mapData.cursor.selectYPos = 0;
+	}
+	else if((mapData.cursor.selectYPos + selectedDeltaY) >= 256){
+		mapData.cursor.selectYPos = 255;
+	}
+	else{
+		mapData.cursor.selectYPos += selectedDeltaY;
+	}
+
 	
 	//bounds check
 	if(mapData.cursor.xPos < -8){
@@ -1299,6 +1377,9 @@ void moveCursor(){
 	else if(mapData.cursor.yPos > (mapData.ySize * 16 - 8)){
 		mapData.cursor.yPos = mapData.ySize * 16 - 8;
 	}
+	
+	//update the selected Position;
+	
 }
 
 void selectShip(u8 shipIndex){
@@ -1313,16 +1394,94 @@ void selectShip(u8 shipIndex){
 			currentIndex = mapData.ships[currentIndex].sameTileLink;
 		}
 		
+		mapData.selectedShip.xPos = (mapData.ships[shipIndex].xPos << 4);
+		mapData.selectedShip.yPos = (mapData.ships[shipIndex].yPos << 4);
+		mapData.selectedShip.angle = arctan2(mapData.cursor.selectXPos - mapData.ships[shipIndex].xPos, mapData.cursor.selectYPos - mapData.ships[shipIndex].yPos);
+		
 		s16 xTarget = (mapData.ships[shipIndex].xPos << 4) - 112;
 		s16 yTarget = (mapData.ships[shipIndex].yPos << 4) - 72;
 		
 		mapData.cursor.state = CUR_STILL;
-		mapData.cursor.xPos = (xTarget << 4) - 8;
-		mapData.cursor.yPos = (yTarget << 4) - 8;
+		mapData.cursor.selectXPos = mapData.ships[shipIndex].xPos;
+		mapData.cursor.selectYPos = mapData.ships[shipIndex].yPos;
 		
 		//pan the camera to this ship
 		mapData.camera.state = CAM_STILL;
 		cameraPanInit(xTarget, yTarget, CYCLE_PAN_SPEED);
+}
+
+u8 arctan2(s16 deltaX, s16 deltaY){
+	u8 xNegative = 0;
+	u8 yNegative = 0;
+	u8 angle;
+	//check the signs of the inputs
+	if(deltaX < 0){
+		xNegative = 1;
+		deltaX = -deltaX;
+	}
+	if(deltaY < 0){
+		yNegative = 1;
+		deltaY = -deltaY;
+	}
+	//if we are pointing up
+	if((deltaX == 0) && yNegative){
+		return 192;
+	}
+	//if we are not moving
+	else if((deltaX == 0) && (deltaY == 0)){
+		return 0;
+	}
+	//if we are pointing down
+	else if(deltaX == 0){
+		return 64;
+	}
+	else if(deltaX >= deltaY){
+		angle = (arctanTable1[(inverseTime[deltaX - 1] * deltaY) >> 8] >> 2);
+	}
+	else{
+		angle = (arctanTable2[(inverseTime[deltaX - 1] * deltaY) >> 11] >> 2);
+	}
+	
+	if(xNegative){
+		angle = 128 - angle;
+	}
+	
+	if(yNegative){
+		angle = 256 - angle;
+	}
+	
+	return angle;
+	
+}
+
+void checkCycleButtons(){
+	if(inputs.pressed & KEY_L){
+		//cycle through the linked list until we end up one before where we started
+		u32 currentIndex = mapData.selectedShip.index;
+		u32 lastActiveIndex = 0;
+		while(mapData.ships[currentIndex].teamLink != mapData.selectedShip.index){
+			if((mapData.ships[currentIndex].state == READY_VISIBLE) || (mapData.ships[currentIndex].state = READY_HIDDEN)){
+				lastActiveIndex = currentIndex;
+			}
+			currentIndex = mapData.ships[currentIndex].teamLink;
+		}
+		if((mapData.ships[currentIndex].state == READY_VISIBLE) || (mapData.ships[currentIndex].state = READY_HIDDEN)){
+			lastActiveIndex = currentIndex;
+		}
+		selectShip(lastActiveIndex);
+	}
+	else if(inputs.pressed & KEY_R){
+		//cycle to the next ship in the linked list of active ships
+		u32 currentIndex = mapData.ships[mapData.selectedShip.index].teamLink;
+		while(mapData.ships[currentIndex].teamLink != mapData.selectedShip.index){
+			if((mapData.ships[currentIndex].state == READY_VISIBLE) || (mapData.ships[currentIndex].state = READY_HIDDEN)){
+				break;
+			}
+			currentIndex = mapData.ships[currentIndex].teamLink;
+			
+		}
+		selectShip(currentIndex);
+	}
 }
 //a temprary function to initialize a test map.
 void initMap(){

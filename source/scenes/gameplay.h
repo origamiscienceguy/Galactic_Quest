@@ -39,7 +39,7 @@
 #define SHIP_GFX_START (CYCLE_GFX_START + 5)
 #define CYCLE_GFX_START (GRID_GFX_START + 4)
 #define GRID_GFX_START 1
-#define SHIP_ACC 4
+#define SHIP_ACC 10
 
 //enums
 enum ShipType{
@@ -129,6 +129,8 @@ typedef struct CameraData{
 typedef struct CursorData{
 	s16 xPos; //the pixel position of the cursor in the x axis
 	s16 yPos; //the pixel position of the cursor in the y axis
+	u8 selectXPos; //the map position that the cursor will select
+	u8 selectYPos; //the map position that the cursor will select
 	enum CursorState state; //the state of the cursor
 	enum CursorDirection direction; //the direction of the cursor
 	u8 counter; //how long the button to move the cursor has been held down
@@ -159,6 +161,8 @@ typedef struct MapData{
 extern const u32 inverseTimeSquared[];
 extern const u16 inverseTime[];
 extern const s16 sinTable[];
+extern const u8 arctanTable1[];
+extern const u8 arctanTable2[];
 extern const unsigned short bgGfxTiles[3840];
 extern const unsigned short bgGfxMap[376];
 extern const unsigned short bgGfxPal[256];
@@ -201,6 +205,8 @@ void makeShipHidden(u8);
 u8 isShipVisible(u8);
 void moveCursor();
 void selectShip(u8);
+u8 arctan2(s16, s16);
+void checkCycleButtons();
 
 //temp function
 void initMap();
