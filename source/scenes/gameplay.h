@@ -191,6 +191,7 @@ void turnStartState();
 void openMapState();
 void shipSelectedState();
 void shipMovementSelectState();
+void shipMovingState();
 void turnEndState();
 void turnEndMovementState();
 void processCamera();

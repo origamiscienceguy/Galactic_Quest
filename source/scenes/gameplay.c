@@ -115,6 +115,7 @@ void gameplayNormal(){
 		shipMovementSelectState();
 		break;
 	case SHIP_MOVING:
+		shipMovingState();
 		break;
 	case BATTLE:
 		break;
@@ -273,9 +274,24 @@ void drawSelectedShip(OBJ_ATTR *spriteBuffer){
 		}
 		return;
 	}
-	//if the selected ship sprite is being drawn
-	u8 shipXPos = mapData.selectedShip.xPos - mapData.camera.xPos - 8;
-	u8 shipYPos = mapData.selectedShip.yPos - mapData.camera.yPos - 8;
+	
+	//if the selected ship is offscreen, don't draw it
+	if(((mapData.selectedShip.xPos - mapData.camera.xPos) < -24) || ((mapData.selectedShip.xPos - mapData.camera.xPos) > 248) || 
+	((mapData.selectedShip.yPos - mapData.camera.yPos) < -24) || ((mapData.selectedShip.yPos - mapData.camera.yPos) > 168)){
+		spriteBuffer[SELECTED_SHIP_SPRITE].attr0 = ATTR0_HIDE;
+		return;
+	}
+	
+	
+	s32 shipYPos = (mapData.selectedShip.yPos - mapData.camera.yPos - 8) % 256; 
+	s32 shipXPos = (mapData.selectedShip.xPos - mapData.camera.xPos - 8) % 256;
+	
+	if(shipXPos < 0){
+		shipXPos = 512 + shipXPos;
+	}
+	if(shipYPos < 0){
+		shipYPos = 256 + shipYPos;
+	}
 	
 	spriteBuffer[SELECTED_SHIP_SPRITE].attr0 = ATTR0_AFF | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(shipYPos);
 	spriteBuffer[SELECTED_SHIP_SPRITE].attr1 = ATTR1_SIZE_32 | ATTR1_X(shipXPos) | ATTR1_AFF_ID(SELECTED_SHIP_AFFINE_MAT);
@@ -484,11 +500,12 @@ void openMapState(){
 	
 	//if a is pressed, select the ship that is under the cursor
 	if(inputs.pressed & KEY_A){
-		//find which ship on this team is at the cursor's select location
+		//find which active ship on this team is at the cursor's select location
 		u8 currentIndex = mapData.teams[mapData.teamTurn].firstShip;
 		u16 selectedIndex = 0xffff;
 		while(mapData.ships[currentIndex].teamLink != mapData.teams[mapData.teamTurn].firstShip){
-			if((mapData.ships[currentIndex].xPos == mapData.cursor.selectXPos) && (mapData.ships[currentIndex].yPos == mapData.cursor.selectYPos)){
+			if((mapData.ships[currentIndex].xPos == mapData.cursor.selectXPos) && (mapData.ships[currentIndex].yPos == mapData.cursor.selectYPos) && 
+			((mapData.ships[currentIndex].state == READY_VISIBLE) || (mapData.ships[currentIndex].state == READY_HIDDEN))){
 				selectedIndex = currentIndex;
 				break;
 			}
@@ -576,9 +593,41 @@ void shipMovementSelectState(){
 	
 	//pressing A starts a ship movement
 	if(inputs.pressed & KEY_A){
-	
+		//start a movement of the selected ship
+		
+		s16 xTarget = (mapData.cursor.selectXPos) << 4;
+		s16 yTarget = (mapData.cursor.selectYPos) << 4;
+		
+		mapData.ships[mapData.selectedShip.index].xVel = mapData.cursor.selectXPos - mapData.ships[mapData.selectedShip.index].xPos;
+		mapData.ships[mapData.selectedShip.index].yVel = mapData.cursor.selectYPos - mapData.ships[mapData.selectedShip.index].yPos;
+		
+		mapData.ships[mapData.selectedShip.index].state = SELECTED;
+		mapData.highlight.state = NO_HIGHLIGHT;
+		mapData.state = SHIP_MOVING;
+		mapData.actionTimer = 0;
+		shipMoveInit(xTarget, yTarget, SHIP_MOVE_SPEED);
 	}
 	
+	//handle any changes to the camera that occured this frame
+	processCamera();
+}
+
+void shipMovingState(){
+	//if the ship movement is not done yet
+	if(mapData.actionTimer == 0){
+		processShipMovement();
+	}
+	//if the ship movement is finished
+	else{
+		mapData.ships[mapData.selectedShip.index].xPos += mapData.ships[mapData.selectedShip.index].xVel;
+		mapData.ships[mapData.selectedShip.index].yPos += mapData.ships[mapData.selectedShip.index].yVel;
+		mapData.ships[mapData.selectedShip.index].state = FINISHED_VISIBLE;
+		mapData.ships[mapData.selectedShip.index].sameTileLink = mapData.selectedShip.index;
+		checkForOverlap(mapData.selectedShip.index);
+		mapData.state = OPEN_MAP;
+		mapData.actionTimer = 0;
+	}
+
 	//handle any changes to the camera that occured this frame
 	processCamera();
 }
@@ -605,27 +654,13 @@ void turnEndState(){
 	}
 	//if the camera has finished focusing on the next ship
 	else if(mapData.camera.state == CAM_STILL){
-		mapData.actionTimer = 0;
-		mapData.ships[mapData.selectedShip.index].state = SELECTED;
-		mapData.state = TURN_END_MOVEMENT;
 		//start a movement of the selected ship
 		s16 xTarget = (mapData.ships[mapData.selectedShip.index].xPos + mapData.ships[mapData.selectedShip.index].xVel) << 4;
 		s16 yTarget = (mapData.ships[mapData.selectedShip.index].yPos + mapData.ships[mapData.selectedShip.index].yVel) << 4;
+		
+		mapData.ships[mapData.selectedShip.index].state = SELECTED;
+		mapData.state = TURN_END_MOVEMENT;
 		shipMoveInit(xTarget, yTarget, SHIP_MOVE_SPEED);
-		//if the ship is moving, break it's same tile link
-		if((mapData.ships[mapData.selectedShip.index].xVel != 0) || (mapData.ships[mapData.selectedShip.index].yVel != 0)){
-			u8 shipIndex = mapData.selectedShip.index;
-			u8 checkedIndex = shipIndex;
-			while(mapData.ships[checkedIndex].sameTileLink != shipIndex){
-				checkedIndex = mapData.ships[checkedIndex].sameTileLink;
-				if(isShipVisible(checkedIndex)){
-					makeShipHidden(checkedIndex);
-				}
-			}
-			makeShipVisible(checkedIndex);
-			mapData.ships[checkedIndex].sameTileLink = mapData.ships[shipIndex].sameTileLink;
-			mapData.ships[shipIndex].sameTileLink = shipIndex;
-		}
 	}
 	
 	//handle any changes to the camera that occured this frame
@@ -979,7 +1014,23 @@ void cameraBoundsCheck(s16 *xPosPointer, s16 *yPosPointer){
 }
 
 void shipMoveInit(s16 xTarget, s16 yTarget, u8 moveTime){
+	mapData.actionTimer = 0;
 	u8 shipIndex = mapData.selectedShip.index;
+	
+	//if the ship is moving, break it's same tile link
+	if((mapData.ships[shipIndex].xVel != 0) || (mapData.ships[shipIndex].yVel != 0)){
+		u8 checkedIndex = shipIndex;
+		while(mapData.ships[checkedIndex].sameTileLink != shipIndex){
+			checkedIndex = mapData.ships[checkedIndex].sameTileLink;
+			if(isShipVisible(checkedIndex)){
+				makeShipHidden(checkedIndex);
+			}
+		}
+		makeShipVisible(checkedIndex);
+		mapData.ships[checkedIndex].sameTileLink = mapData.ships[shipIndex].sameTileLink;
+		mapData.ships[shipIndex].sameTileLink = shipIndex;
+	}
+
 	ShipData *ship = &mapData.ships[shipIndex];
 	
 	mapData.selectedShip.xPos = ship->xPos << 4;
@@ -991,23 +1042,7 @@ void shipMoveInit(s16 xTarget, s16 yTarget, u8 moveTime){
 	mapData.selectedShip.animationTimer = 0;
 	mapData.selectedShip.actionTimer = 1;
 	mapData.selectedShip.actionTarget = moveTime;
-	
-	if(ABS(ship->xVel) > ABS(ship->yVel)){
-		if(ship->xVel > 0){
-			mapData.selectedShip.angle = 0;
-		}
-		else{
-			mapData.selectedShip.angle = 0x80;
-		}
-	}
-	else{
-		if(ship->yVel > 0){
-			mapData.selectedShip.angle = 0x40;
-		}
-		else{
-			mapData.selectedShip.angle = 0xC0;
-		}
-	}
+	mapData.selectedShip.angle = arctan2((xTarget>> 4) - ship->xPos, (yTarget >> 4) - ship->yPos);
 }
 
 void processShipMovement(){
