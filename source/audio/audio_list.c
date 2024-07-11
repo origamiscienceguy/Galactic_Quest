@@ -9,7 +9,7 @@ AudioSample _edmkick = {
 
 extern cu8 _edmsnare_data[];
 AudioSample _edmsnare = {
-	.sampleStart = _edmsnare_data, .sampleLength = 9168, .loopEnd = 8832, .loopStart = 5888, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
+	.sampleStart = _edmsnare_data, .sampleLength = 8832, .loopEnd = 8832, .loopStart = 5888, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 60, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
@@ -21,13 +21,13 @@ AudioSample _hihat = {
 
 extern cu8 _fm_bass_data[];
 AudioSample _fm_bass = {
-	.sampleStart = _fm_bass_data, .sampleLength = 7560, .loopEnd = 7511, .loopStart = 5299, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
+	.sampleStart = _fm_bass_data, .sampleLength = 7511, .loopEnd = 7511, .loopStart = 5299, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 58, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
 extern cu8 _rave_lead_data[];
 AudioSample _rave_lead = {
-	.sampleStart = _rave_lead_data, .sampleLength = 25141, .loopEnd = 25076, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
+	.sampleStart = _rave_lead_data, .sampleLength = 25076, .loopEnd = 25076, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 57, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
@@ -45,7 +45,7 @@ AudioSample _25pulse = {
 
 extern cu8 _50pulse_data[];
 AudioSample _50pulse = {
-	.sampleStart = _50pulse_data, .sampleLength = 103, .loopEnd = 101, .loopStart = 59, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 11025,
+	.sampleStart = _50pulse_data, .sampleLength = 101, .loopEnd = 101, .loopStart = 59, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 11025,
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
@@ -57,7 +57,7 @@ AudioSample _triangle = {
 
 extern cu8 _tri_hi_data[];
 AudioSample _tri_hi = {
-	.sampleStart = _tri_hi_data, .sampleLength = 682, .loopEnd = 678, .loopStart = 657, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
+	.sampleStart = _tri_hi_data, .sampleLength = 678, .loopEnd = 678, .loopStart = 657, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
@@ -69,13 +69,13 @@ AudioSample _vsaw0 = {
 
 extern cu8 _FM_Bell1_data[];
 AudioSample _FM_Bell1 = {
-	.sampleStart = _FM_Bell1_data, .sampleLength = 3989, .loopEnd = 3968, .loopStart = 3799, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
+	.sampleStart = _FM_Bell1_data, .sampleLength = 3968, .loopEnd = 3968, .loopStart = 3799, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 26, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
 extern cu8 _FM_Bass2_data[];
 AudioSample _FM_Bass2 = {
-	.sampleStart = _FM_Bass2_data, .sampleLength = 4398, .loopEnd = 4378, .loopStart = 3706, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
+	.sampleStart = _FM_Bass2_data, .sampleLength = 4378, .loopEnd = 4378, .loopStart = 3706, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 48, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
