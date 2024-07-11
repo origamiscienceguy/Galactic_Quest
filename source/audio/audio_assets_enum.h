@@ -3,7 +3,7 @@
 #define audioAssetEnumh
 
 enum AudioAssetName{
-	_AreaA_DMA_Only, _sfx_test, 
+	_ThemeA, 
 };
 
 #endif
