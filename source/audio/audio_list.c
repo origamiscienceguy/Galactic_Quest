@@ -124,7 +124,7 @@ AudioSample _SnareAcoustic3 = {
 extern cu8 _cym_crash_orch_data[];
 AudioSample _cym_crash_orch = {
 	.sampleStart = _cym_crash_orch_data, .sampleLength = 10356, .loopEnd = 10329, .loopStart = 5462, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
-	.sampleType = 1, .globalVolume = 64, .defaultVolume = 45, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+	.sampleType = 5, .globalVolume = 64, .defaultVolume = 45, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
 AudioSample *sampleList[] = {
