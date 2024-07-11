@@ -496,7 +496,7 @@ void processAssetTick(CurrentAssetSettings *assetPointer, u8 assetIndex){
 	}
 	
 	//now we go through each of the 8 sampled channels, and process all of their data.
-	for(u8 channel = 2; channel < 3; channel++){
+	for(u8 channel = 0; channel < MAX_DMA_CHANNELS; channel++){
 		u8 channelIndex = assetPointer->channelSettings[channel].channelIndex;
 		if(channelIndex != 0xff){
 			processSampledChannel(&assetPointer->channelSettings[channel], &channelsMixData[channelIndex], assetPointer);
