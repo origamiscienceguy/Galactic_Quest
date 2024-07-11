@@ -95,7 +95,6 @@ void gameplayInitialize(){
 	//generate the tilemap based on the camera position and the positions of all the ships
 	createShipTilemap(tilemapBuffer1);
 	
-	playNewAsset(_ThemeA);
 	currentScene.state = NORMAL;
 }
 
