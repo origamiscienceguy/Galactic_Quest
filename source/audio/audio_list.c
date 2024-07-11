@@ -79,6 +79,12 @@ AudioSample _FM_Bass2 = {
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 48, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
+extern cu8 _string_ensemble_data[];
+AudioSample _string_ensemble = {
+	.sampleStart = _string_ensemble_data, .sampleLength = 14727, .loopEnd = 14727, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 37810,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
 extern cu8 _StringsHard_data[];
 AudioSample _StringsHard = {
 	.sampleStart = _StringsHard_data, .sampleLength = 25712, .loopEnd = 25712, .loopStart = 3342, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 31827,
@@ -128,10 +134,10 @@ AudioSample _cym_crash_orch = {
 };
 
 AudioSample *sampleList[] = {
-	&_edmkick, &_edmsnare, &_hihat, &_fm_bass, &_rave_lead, &_12_5pulse, &_25pulse, &_50pulse, &_triangle, &_tri_hi, &_vsaw0, &_FM_Bell1, &_FM_Bass2, &_StringsHard, &_horn, &_FM_Wavetable1, &_piano_hi, &_FM_Wavetable2, &_FM_EPianoBell, &_SnareAcoustic3, &_cym_crash_orch
+	&_edmkick, &_edmsnare, &_hihat, &_fm_bass, &_rave_lead, &_12_5pulse, &_25pulse, &_50pulse, &_triangle, &_tri_hi, &_vsaw0, &_FM_Bell1, &_FM_Bass2, &_string_ensemble, &_StringsHard, &_horn, &_FM_Wavetable1, &_piano_hi, &_FM_Wavetable2, &_FM_EPianoBell, &_SnareAcoustic3, &_cym_crash_orch
 };
 
-cu16 numSamples = 21;
+cu16 numSamples = 22;
 
 extern AssetData _SongTemplateAsset;
 extern AssetData _ThemeAAsset;
