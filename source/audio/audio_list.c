@@ -123,7 +123,7 @@ AudioSample _FM_EPianoBell = {
 
 extern cu8 _SnareAcoustic3_data[];
 AudioSample _SnareAcoustic3 = {
-	.sampleStart = _SnareAcoustic3_data, .sampleLength = 6736, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
+	.sampleStart = _SnareAcoustic3_data, .sampleLength = 5516, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 41625,
 	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 

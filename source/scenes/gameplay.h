@@ -23,8 +23,11 @@
 #define SELECTED_SHIP_GFX_SIZE 16
 #define SELECTED_SHIP_AFFINE_MAT 0
 #define CURSOR_SPRITE 1
-#define CURSOR_GFX 16
+#define CURSOR_GFX (SELECTED_SHIP_GFX + SELECTED_SHIP_GFX_SIZE)
 #define CURSOR_GFX_SIZE 32
+#define MINIMAP_SPRITE 2
+#define MINIMAP_GFX (CURSOR_GFX + CURSOR_GFX_SIZE)
+#define MINIMAP_GFX_SIZE 64
 
 #define CYCLE_PAN_SPEED 20
 #define SHIP_MOVE_SPEED 32
@@ -39,7 +42,7 @@
 #define SHIP_GFX_START (CYCLE_GFX_START + 5)
 #define CYCLE_GFX_START (GRID_GFX_START + 4)
 #define GRID_GFX_START 1
-#define SHIP_ACC 10
+#define SHIP_ACC 5
 
 //enums
 enum ShipType{
@@ -76,6 +79,12 @@ enum CursorDirection{
 
 enum HighlightState{
 	NO_HIGHLIGHT, MOVEMENT_RANGE_HIGHLIGHT, VISIBILITY_HIGHLIGHT, POTENTIAL_ENCOUNTERS_HIGHLIGHT
+};
+
+enum MinimapState{
+	MINIMAP_HIDDEN_LEFT, MINIMAP_HIDDEN_RIGHT, MINIMAP_STILL_LEFT, MINIMAP_STILL_RIGHT, 
+	MINIMAP_MOVING_LEFT, MINIMAP_MOVING_RIGHT, MINIMAP_HIDING_LEFT, MINIMAP_HIDING_RIGHT,
+	MINIMAP_EMERGING_LEFT, MINIMAP_EMERGING_RIGHT
 };
 
 //structs
@@ -140,6 +149,12 @@ typedef struct HighlightData{
 	enum HighlightState state;
 }HighlightData;
 
+typedef struct MinimapData{
+	enum MinimapState state;
+	u8 actionTimer;
+	u8 actionTarget;
+}MinimapData;
+
 typedef struct MapData{
 	enum MapState state; //what is the stage of the game are we in
 	enum Team teamTurn; //who's turn is it
@@ -155,6 +170,7 @@ typedef struct MapData{
 	SelectedShip selectedShip; //the struct containing data about the currently selected ship
 	CursorData cursor; //the struct containing data about the cursor
 	HighlightData highlight; //the data about the highlight layer
+	MinimapData minimap; //the data about the minimap layer
 }MapData;
 
 //globals
@@ -183,8 +199,9 @@ void shipListInit();
 void createShipTilemap(u16 *);
 void createGridTilemap(u16 *);
 void drawSelectedShip(OBJ_ATTR *);
-void drawCursor(OBJ_ATTR *);
+void drawCursor();
 void drawHighlight(u16 *);
+void drawMinimap();
 void nextPlayer();
 void nextTurn();
 void turnStartState();
@@ -208,6 +225,8 @@ void moveCursor();
 void selectShip(u8);
 u8 arctan2(s16, s16);
 void checkCycleButtons();
+void revealMinimap();
+void hideMinimap();
 
 //temp function
 void initMap();

@@ -316,7 +316,7 @@ void drawSelectedShip(OBJ_ATTR *spriteBuffer){
 	
 }
 
-void drawCursor(OBJ_ATTR *){
+void drawCursor(){
 	//if the cursor is hidden, don't draw anything.
 	if(mapData.cursor.state == CUR_HIDDEN){
 		spriteBuffer[CURSOR_SPRITE].attr0 = ATTR0_HIDE;
@@ -346,16 +346,31 @@ void drawCursor(OBJ_ATTR *){
 	spriteBuffer[CURSOR_SPRITE].attr2 = ATTR2_ID(CURSOR_GFX + animationFrame * 16) | ATTR2_PRIO(0) | ATTR2_PALBANK(mapData.teamTurn);
 }
 
+void drawMinimap(){
+	u8 minimapYPos = 0;
+	u8 minimapXPos = 0;
+	
+	//if the minimap is hidden, don't bother updating it
+	if((mapData.minimap.state == MINIMAP_HIDDEN_LEFT) || (mapData.minimap.state == MINIMAP_HIDDEN_RIGHT)){
+		spriteBuffer[MINIMAP_SPRITE].attr0 = ATTR0_HIDE;
+		return;
+	}
+
+	spriteBuffer[MINIMAP_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE |  ATTR0_Y(minimapYPos);
+	spriteBuffer[MINIMAP_SPRITE].attr1 = ATTR1_SIZE_64 | ATTR1_X(minimapXPos);
+	spriteBuffer[MINIMAP_SPRITE].attr2 = ATTR2_ID(0) | ATTR2_PRIO(0) | ATTR2_PALBANK(mapData.teamTurn);
+}
+
 void drawHighlight(u16 *tilemapBuffer){
 
 	//convert pixel coordinates to map cell coordinates
-	s16 mapXPos = mapData.camera.xPos >> 4;
-	s16 mapYPos = mapData.camera.yPos >> 4; 
-	u8 shipIndex = mapData.selectedShip.index;
-	s16 xTarget = mapData.ships[shipIndex].xPos + mapData.ships[shipIndex].xVel;
-	s16 yTarget = mapData.ships[shipIndex].yPos + mapData.ships[shipIndex].yVel;
+	s32 mapXPos = mapData.camera.xPos >> 4;
+	s32 mapYPos = mapData.camera.yPos >> 4; 
+	u32 shipIndex = mapData.selectedShip.index;
+	s32 xTarget = mapData.ships[shipIndex].xPos + mapData.ships[shipIndex].xVel;
+	s32 yTarget = mapData.ships[shipIndex].yPos + mapData.ships[shipIndex].yVel;
 	//18 X 13 buffer, representing the 16 X 11 tiles on screen, plus one outer unseen ring
-	u8 drawBuffer[236];
+	u32 drawBuffer[236];
 	
 	//clear the tilemap
 	memset32(tilemapBuffer, (bgGfxMap[3] | bgGfxMap[3] << 16), 512);
@@ -366,7 +381,7 @@ void drawHighlight(u16 *tilemapBuffer){
 	}
 	
 	//clear drawBuffer
-	memset32(drawBuffer, 0, 59);
+	memset32(drawBuffer, 0, 236);
 	
 	//draw the movement range of one ship
 	if(mapData.highlight.state == MOVEMENT_RANGE_HIGHLIGHT){
@@ -409,28 +424,28 @@ void drawHighlight(u16 *tilemapBuffer){
 	for(u32 i = 0; i < 16; i++){
 		for(u32 j = 0; j < 11; j++){
 			if(drawBuffer[(i + 1) + (j + 1) * 18] == 1){
-				u16 baseIndex = (i % 16) * 2 + (j % 16) * 64;
+				u32 baseIndex = (i % 16) * 2 + (j % 16) * 64;
 				//figure out which corners and edges are touching
 				u32 tilemapBase = 0;
-				if(drawBuffer[(i + 2) + (j + 1) * 18] == 1){
+				if(drawBuffer[(i + 2) + (j + 1) * 18]){
 					tilemapBase += 1;
 				}
-				if(drawBuffer[(i + 2) + (j) * 18] == 1){
+				if(drawBuffer[(i + 2) + (j) * 18]){
 					tilemapBase += 2;
 				}
-				if(drawBuffer[(i + 1) + (j) * 18] == 1){
+				if(drawBuffer[(i + 1) + (j) * 18]){
 					tilemapBase += 4;
 				}
-				if(drawBuffer[(i) + (j) * 18] == 1){
+				if(drawBuffer[(i) + (j) * 18]){
 					tilemapBase += 8;
 				}
-				if(drawBuffer[(i) + (j + 1) * 18] == 1){
+				if(drawBuffer[(i) + (j + 1) * 18]){
 					tilemapBase += 16;
 				}
-				if(drawBuffer[(i) + (j + 2) * 18] == 1){
+				if(drawBuffer[(i) + (j + 2) * 18]){
 					tilemapBase += 32;
 				}
-				if(drawBuffer[(i + 1) + (j + 2) * 18] == 1){
+				if(drawBuffer[(i + 1) + (j + 2) * 18]){
 					tilemapBase += 64;
 				}
 				tilemapBase *= 4;
@@ -520,6 +535,11 @@ void openMapState(){
 		mapData.state = TURN_END;
 		mapData.cursor.state = CUR_HIDDEN;
 		mapData.actionTimer = 0;
+	}
+	
+	//if the minimap is hidden, start bringing it visible again
+	if((mapData.minimap.state == MINIMAP_HIDDEN_LEFT) || (mapData.minimap.state == MINIMAP_HIDDEN_RIGHT)){
+		revealMinimap();
 	}
 	
 	//handle any changes to the camera that occured this frame
@@ -819,6 +839,9 @@ void shipListInit(){
 	
 	//set no highlight
 	mapData.highlight.state = NO_HIGHLIGHT;
+	
+	//enable the minimap
+	mapData.minimap.state = MINIMAP_HIDDEN_LEFT;
 }
 
 void nextPlayer(){
@@ -901,10 +924,13 @@ void processCamera(){
 	drawSelectedShip(spriteBuffer);
 	
 	//draw the cursor if applicable
-	drawCursor(spriteBuffer);
+	drawCursor();
 	
 	//draw the highlight layer
 	drawHighlight(tilemapBuffer2);
+	
+	//draw the minimap
+	drawMinimap();
 	
 	//queue the tilemap for layer 1 to be sent
 	tilemapData[1].size = 512;
@@ -1517,61 +1543,101 @@ void checkCycleButtons(){
 		selectShip(currentIndex);
 	}
 }
+
+void revealMinimap(){
+	//if the minimap is already out, or coming out, do nothing
+	if((mapData.minimap.state != MINIMAP_HIDDEN_LEFT) || (mapData.minimap.state != MINIMAP_HIDDEN_RIGHT)){
+		return;
+	}
+	//bring the minimap back where it last was
+	if(mapData.minimap.state == MINIMAP_HIDDEN_LEFT){
+		mapData.minimap.state = MINIMAP_EMERGING_LEFT;
+	}
+	else if(mapData.minimap.state == MINIMAP_HIDDEN_RIGHT){
+		mapData.minimap.state = MINIMAP_EMERGING_RIGHT;
+	}
+}
+
+void hideMinimap(){
+	//if the minimap is already hidden or hiding, do nothing
+	if((mapData.minimap.state == MINIMAP_HIDING_RIGHT) || (mapData.minimap.state == MINIMAP_HIDING_LEFT) || 
+	(mapData.minimap.state == MINIMAP_HIDDEN_RIGHT) || (mapData.minimap.state == MINIMAP_HIDDEN_LEFT)){
+		return;
+	}
+	if((mapData.minimap.state == MINIMAP_STILL_LEFT) || (mapData.minimap.state == MINIMAP_MOVING_RIGHT) || (mapData.minimap.state == MINIMAP_EMERGING_RIGHT)){
+		mapData.minimap.state = MINIMAP_HIDING_LEFT;
+	}
+	else if((mapData.minimap.state == MINIMAP_STILL_RIGHT) || (mapData.minimap.state == MINIMAP_MOVING_LEFT) || (mapData.minimap.state == MINIMAP_EMERGING_LEFT)){
+		mapData.minimap.state = MINIMAP_HIDING_RIGHT;
+	}
+}
+
+void initMinimapMove(){
+	
+}
+
 //a temprary function to initialize a test map.
 void initMap(){
 	u8 index = 0;
+	u32 yPos = 8;
+	u32 xPos = 10;
+	
 	for(u32 team = 0; team < NUM_TEAMS; team++){
-		u8 yPos = 8;
 		for(u32 type = 0; type <= CARRIER; type++){
-			u8 xPos = 8;
+			xPos = (xPos * 1103515245) + 12345;
+			yPos = (yPos * 1103515245) + 12345;
 			
 			mapData.ships[index].type = type;
 			mapData.ships[index].state = READY_VISIBLE;
 			mapData.ships[index].team = team;
 			mapData.ships[index].health = 100;
-			mapData.ships[index].xPos = xPos;
-			mapData.ships[index].yPos = yPos;
+			mapData.ships[index].xPos = xPos % 256;
+			mapData.ships[index].yPos = yPos % 256;
 			mapData.ships[index].xVel = team + 1;
 			mapData.ships[index].yVel = 0;
 			
 			index++;
-			xPos++;
+			xPos = (xPos * 1103515245) + 12345;
+			yPos = (yPos * 1103515245) + 12345;
 			
 			mapData.ships[index].type = type;
 			mapData.ships[index].state = READY_VISIBLE;
 			mapData.ships[index].team = team;
 			mapData.ships[index].health = 100;
-			mapData.ships[index].xPos = xPos;
-			mapData.ships[index].yPos = yPos;
+			mapData.ships[index].xPos = xPos % 256;
+			mapData.ships[index].yPos = yPos % 256;
 			mapData.ships[index].xVel = 0;
 			mapData.ships[index].yVel = -team - 1;
 			
 			index++;
-			xPos++;
+			xPos = (xPos * 1103515245) + 12345;
+			yPos = (yPos * 1103515245) + 12345;
 			
 			mapData.ships[index].type = type;
 			mapData.ships[index].state = READY_VISIBLE;
 			mapData.ships[index].team = team;
 			mapData.ships[index].health = 100;
-			mapData.ships[index].xPos = xPos;
-			mapData.ships[index].yPos = yPos;
+			mapData.ships[index].xPos = xPos % 256;
+			mapData.ships[index].yPos = yPos % 256;
 			mapData.ships[index].xVel = -team - 1;
 			mapData.ships[index].yVel = 0;
 			
 			index++;
-			xPos++;
+			xPos = (xPos * 1103515245) + 12345;
+			yPos = (yPos * 1103515245) + 12345;
 			
 			mapData.ships[index].type = type;
 			mapData.ships[index].state = READY_VISIBLE;
 			mapData.ships[index].team = team;
 			mapData.ships[index].health = 100;
-			mapData.ships[index].xPos = xPos;
-			mapData.ships[index].yPos = yPos;
+			mapData.ships[index].xPos = xPos % 256;
+			mapData.ships[index].yPos = yPos % 256;
 			mapData.ships[index].xVel = 0;
 			mapData.ships[index].yVel = team + 1;
 			
 			index++;
-			yPos++;
+			xPos = (xPos * 1103515245) + 12345;
+			yPos = (yPos * 1103515245) + 12345;
 		}
 	}
 	
