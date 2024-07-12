@@ -1556,6 +1556,7 @@ void revealMinimap(){
 	else if(mapData.minimap.state == MINIMAP_HIDDEN_RIGHT){
 		mapData.minimap.state = MINIMAP_EMERGING_RIGHT;
 	}
+	initMinimapMove();
 }
 
 void hideMinimap(){
@@ -1570,10 +1571,12 @@ void hideMinimap(){
 	else if((mapData.minimap.state == MINIMAP_STILL_RIGHT) || (mapData.minimap.state == MINIMAP_MOVING_LEFT) || (mapData.minimap.state == MINIMAP_EMERGING_LEFT)){
 		mapData.minimap.state = MINIMAP_HIDING_RIGHT;
 	}
+	initMinimapMove();
 }
 
 void initMinimapMove(){
-	
+	mapData.minimap.actionTarget = 4;
+	mapData.minimap.actionTimer = 0;
 }
 
 //a temprary function to initialize a test map.
