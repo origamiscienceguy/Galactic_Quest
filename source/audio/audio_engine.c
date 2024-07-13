@@ -655,7 +655,7 @@ void applySettings(ChannelData *channelMixData, AudioSample *samplePtr, u32 pitc
 		break;
 	case TRIGGER_TICK_NOTE:
 		//set the starting index
-		channelMixData->sampleIndex = offset << 8;
+		channelMixData->sampleIndex = offset << 20;
 		//set the sample pointer
 		channelMixData->samplePtr = samplePtr;
 		
