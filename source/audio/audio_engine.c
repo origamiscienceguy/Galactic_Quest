@@ -68,6 +68,9 @@ void audioInitialize(){
 	//initialize all assets
 	for(u32 i = 0; i < MAX_ASSETS_IN_QUEUE; i++){
 		currentAssets[i].enabled = 0;
+		for(u32 j = 0; j < MAX_DMA_CHANNELS; j++){
+			currentAssets[i].channelSettings[j].channelIndex = 0xff;
+		}
 	}
 	
 	//enable vcount interrupts so that the audio iterrupt can be synced to this point
