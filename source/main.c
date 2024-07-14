@@ -79,8 +79,8 @@ void criticalUpdates(){
 	if(inputs.pressed & KEY_SELECT){
 		if(playingState == 1){
 			playingState = 2;
-			if(!isAssetPlaying(_ThemeC_Battle, battleAssetIndex)){
-				battleAssetIndex = playNewAsset(_ThemeC_Battle);
+			if(!isAssetPlaying(_ThemeC_Peace, battleAssetIndex)){
+				battleAssetIndex = playNewAsset(_ThemeC_Peace);
 				setAssetVolume(battleAssetIndex, 0);
 				syncAsset(battleAssetIndex, peaceAssetIndex);
 			}
@@ -92,7 +92,7 @@ void criticalUpdates(){
 		}
 		else{
 			playingState = 1;
-			peaceAssetIndex = playNewAsset(_ThemeC_Peace);
+			peaceAssetIndex = playNewAsset(_ThemeC_Battle);
 		}
 	}
 	
