@@ -128,6 +128,7 @@ u8 playNewAsset(u16 assetID){
 	assetPointer->globalEffects.C = 0xff;
 	assetPointer->globalEffects.SE = 0xff;
 	assetPointer->priority = *assetsList[assetID]->assetPriority;
+	assetPointer->mixVolume = 0xff;
 	
 	for(u32 channel = 0; channel < MAX_DMA_CHANNELS; channel++){
 		assetPointer->channelSettings[channel].noteState = NO_NOTE;
@@ -225,6 +226,52 @@ void resumeAsset(u8 assetIndex){
 			mixDataPointer->state = mixDataPointer->padding;
 			mixDataPointer->padding = 0;
 		}
+	}
+}
+
+void setAssetVolume(u8 assetIndex, u8 volume){
+	currentAssets[assetIndex].mixVolume = volume;
+}
+
+void volumeSlideAsset(u8 assetIndex, u8 volumePerTick, u8 finalVolume){
+	currentAssets[assetIndex].volumeSlideAmount = volumePerTick;
+	currentAssets[assetIndex].finalVolume = finalVolume;
+}
+
+void syncAsset(u8 assetIndex1, u8 assetIndex2){
+	CurrentAssetSettings *assetPointer1 = &currentAssets[assetIndex1];
+	currentAssets[assetIndex1].orderIndex = currentAssets[assetIndex2].orderIndex;
+	currentAssets[assetIndex1].rowNum = currentAssets[assetIndex2].rowNum;
+	
+	PatternData *patternPtr = &assetPointer1->asset->patterns[assetPointer1->asset->orders[assetPointer1->orderIndex]];
+	assetPointer1->patternOffset = 0;
+	for(u32 i = 0; i < assetPointer1->rowNum; i++){
+		nextRow(patternPtr, &assetPointer1->patternOffset, assetPointer1);
+		for(u8 channel = 0; channel < MAX_DMA_CHANNELS; channel++){
+			CurrentChannelSettings *channelPointer = &assetPointer1->channelSettings[channel];
+			channelPointer->previousBasicSettings.volume = channelPointer->currentBasicSettings.volume;
+			channelPointer->previousBasicSettings.note = channelPointer->currentBasicSettings.note;
+			channelPointer->previousBasicSettings.instrument = channelPointer->currentBasicSettings.instrument;
+		}
+	}
+	for(u8 channel = 0; channel < MAX_DMA_CHANNELS; channel++){
+		assetPointer1->channelSettings[channel].noteState = NO_NOTE;
+		assetPointer1->channelSettings[channel].triggerState = NO_TRIGGER;
+		assetPointer1->channelSettings[channel].volumeState = NO_VOLUME;
+		assetPointer1->channelSettings[channel].effectState = NO_EFFECT;
+		assetPointer1->channelSettings[channel].pitchState = NO_PITCH;
+	}
+	
+	currentAssets[assetIndex1].tickCounter = currentAssets[assetIndex2].tickCounter;
+	currentAssets[assetIndex1].leftoverSamples = currentAssets[assetIndex2].leftoverSamples;
+}
+
+u8 isAssetPlaying(u16 assetName, u8 assetIndex){
+	if((currentAssets[assetIndex].assetID == assetName) && (currentAssets[assetIndex].enabled != 0)){
+		return 1;
+	}
+	else{
+		return 0;
 	}
 }
 
@@ -492,6 +539,38 @@ void processAssetTick(CurrentAssetSettings *assetPointer, u8 assetIndex){
 		assetPointer->tickCounter++;
 	}
 	
+	//check if there is a mixing volume slide
+	if(assetPointer->volumeSlideAmount != 0){
+		s32 finalVolume = assetPointer->finalVolume;
+		s32 currentVolume = assetPointer->mixVolume;
+		s32 slideAmount = assetPointer->volumeSlideAmount;
+		
+		//if volume is ramping down
+		if(currentVolume > finalVolume){
+			//if we hit the target volume
+			if((currentVolume - slideAmount) <= finalVolume){
+				assetPointer->volumeSlideAmount = 0;
+				assetPointer->mixVolume = finalVolume;
+				if(finalVolume == 0){
+					endAsset(assetIndex);
+					return;
+				}
+			}
+			else{
+				assetPointer->mixVolume -= slideAmount;
+			}
+		}
+		else{
+			if((currentVolume + slideAmount) >= finalVolume){
+				assetPointer->volumeSlideAmount = 0;
+				assetPointer->mixVolume = finalVolume;
+			}
+			else{
+				assetPointer->mixVolume += slideAmount;
+			}
+		}
+	}
+	
 	for(u8 channel = 0; channel < MAX_DMA_CHANNELS; channel++){
 		CurrentChannelSettings *channelPointer = &assetPointer->channelSettings[channel];
 		//process any effects
@@ -573,8 +652,9 @@ void processSampledChannel(CurrentChannelSettings *channelPointer, ChannelData *
 	autoVibrato = processVibrato(&channelPointer->autoVibrato);
 	
 	//calculate the final volume
-	finalVolume = (((envalopeVolume * channelPointer->noteFadeComponent * channelPointer->currentVolume * assetPointer->globalVolume >> 6) *
-				channelPointer->channelVolume >> 6) * channelPointer->samplePointer->globalVolume >> 6) * channelPointer->instrumentPointer->globalVolume >> 23;
+	finalVolume = ((((envalopeVolume * channelPointer->noteFadeComponent * channelPointer->currentVolume * assetPointer->globalVolume >> 6) *
+				channelPointer->channelVolume >> 6) * channelPointer->samplePointer->globalVolume >> 6) * channelPointer->instrumentPointer->globalVolume >> 8) * 
+				assetPointer->mixVolume >> 23;
 	//if the tremor has turned off the note right now
 	if(finalVolume + tremolo > 0x80){
 		finalVolume = 0x80;

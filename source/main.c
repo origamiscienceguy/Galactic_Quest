@@ -65,9 +65,9 @@ __attribute__ ((noreturn)) void gameLoop(){
 //things that we want to happen every frame, no matter what. This is called from the vblank handler.
 void criticalUpdates(){
 	u16 lastInputs; 
-	static u8 currentAsset = 0;
-	static u8 currentAssetIndex = 0;
-	extern cu16 numAssets;
+	static u8 peaceAssetIndex = 0;
+	static u8 battleAssetIndex = 0;
+	static u8 playingState = 0;
 	
 	//handle inputs
 	lastInputs = inputs.current;
@@ -77,14 +77,23 @@ void criticalUpdates(){
 	inputs.released = ~inputs.current & lastInputs;
 	
 	if(inputs.pressed & KEY_SELECT){
-		endAsset(currentAssetIndex);
-		if((currentAsset + 1) == numAssets){
-			currentAsset = 0;
+		if(playingState == 1){
+			playingState = 2;
+			if(!isAssetPlaying(_ThemeC_Battle, battleAssetIndex)){
+				battleAssetIndex = playNewAsset(_ThemeC_Battle);
+				setAssetVolume(battleAssetIndex, 0);
+				syncAsset(battleAssetIndex, peaceAssetIndex);
+			}
+			volumeSlideAsset(battleAssetIndex, 0x4, 0xff);
+		}
+		else if(playingState == 2){
+			playingState = 1;
+			volumeSlideAsset(battleAssetIndex, 0x4, 0);
 		}
 		else{
-			currentAsset++;
+			playingState = 1;
+			peaceAssetIndex = playNewAsset(_ThemeC_Peace);
 		}
-		currentAssetIndex = playNewAsset(currentAsset);
 	}
 	
 	//process this frame's audio (this will take a majority of a frame.)

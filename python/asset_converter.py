@@ -120,8 +120,8 @@ for currentOriginalAssetFile in assetsList:
 	currentAssetInitGlobalVol = currentAssetRawData[0x30]
 	currentAssetInitTickSpeed = currentAssetRawData[0x32]
 	currentAssetInitTempo = currentAssetRawData[0x33]
-	currentAssetInitChannelPan = currentAssetRawData[0x40:0x4C]
-	currentAssetInitChannelVol = currentAssetRawData[0x80:0x8C]
+	currentAssetInitChannelPan = currentAssetRawData[0x40:0x4A]
+	currentAssetInitChannelVol = currentAssetRawData[0x80:0x8A]
 		
 	#extract the sequenced pattern orders
 	currentAssetOrders = [] 

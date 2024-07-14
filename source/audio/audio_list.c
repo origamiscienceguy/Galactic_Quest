@@ -275,9 +275,11 @@ extern AssetData _SongTemplateAsset;
 extern AssetData _ThemeAAsset;
 extern AssetData _ThemeBAsset;
 extern AssetData _ThemeCAsset;
+extern AssetData _ThemeC_BattleAsset;
+extern AssetData _ThemeC_PeaceAsset;
 AssetData *assetsList[] = {
-	&_SongTemplateAsset, &_ThemeAAsset, &_ThemeBAsset, &_ThemeCAsset
+	&_SongTemplateAsset, &_ThemeAAsset, &_ThemeBAsset, &_ThemeCAsset, &_ThemeC_BattleAsset, &_ThemeC_PeaceAsset
 };
 
-cu16 numAssets = 4;
+cu16 numAssets = 6;
 

@@ -1,7 +1,7 @@
 //the most DMA channels that can be playing at the same time.
 //Increasing this value will greatly reduce performance.
 #ifndef MAX_DMA_CHANNELS
-	#define MAX_DMA_CHANNELS 12
+	#define MAX_DMA_CHANNELS 10
 #endif
 
 //the number of songs that can be playing at the same time.

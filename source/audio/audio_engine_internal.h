@@ -242,6 +242,9 @@ typedef struct CurrentAssetSettings{
 	u16 delayTicks; //the number of extra ticks to play this row
 	u16 leftoverSamples; //the number of samples leftover in this tick after a frame is done processing
 	u8 priority; //the priority of this asset. higher number means higher priority.
+	u8 mixVolume; //program-controlled mix volume of each asset
+	u8 volumeSlideAmount; //the magnitude to change volume by each tick
+	u8 finalVolume; //the desired volume after a volume slide has concluded
 	CurrentChannelSettings channelSettings[MAX_DMA_CHANNELS]; //the data for the channels of this asset
 }CurrentAssetSettings;
 
