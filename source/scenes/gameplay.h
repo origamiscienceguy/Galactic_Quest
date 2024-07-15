@@ -25,9 +25,13 @@
 #define CURSOR_SPRITE 1
 #define CURSOR_GFX (SELECTED_SHIP_GFX + SELECTED_SHIP_GFX_SIZE)
 #define CURSOR_GFX_SIZE 32
-#define MINIMAP_SPRITE 2
+#define MINIMAP1_SPRITE 6
 #define MINIMAP_GFX (CURSOR_GFX + CURSOR_GFX_SIZE)
 #define MINIMAP_GFX_SIZE 64
+#define MINIMAP2_SPRITE 7
+#define MINIMAP_CURSOR_SPRITE 2
+#define MINIMAP_CURSOR_GFX (MINIMAP_GFX + MINIMAP_GFX_SIZE)
+#define MINIMAP_CURSOR_GFX_SIZE 1
 
 #define CYCLE_PAN_SPEED 20
 #define SHIP_MOVE_SPEED 32
@@ -43,6 +47,8 @@
 #define CYCLE_GFX_START (GRID_GFX_START + 4)
 #define GRID_GFX_START 1
 #define SHIP_ACC 5
+#define MINIMAP_MOVE_FRAMES 4
+#define MINIMAP_YPOS 48
 
 //enums
 enum ShipType{
@@ -153,6 +159,7 @@ typedef struct MinimapData{
 	enum MinimapState state;
 	u8 actionTimer;
 	u8 actionTarget;
+	u8 updateRequest;
 }MinimapData;
 
 typedef struct MapData{
@@ -187,6 +194,8 @@ extern const unsigned short ships_selectedMap[];
 extern const unsigned short cursorTiles[512];
 extern const unsigned short HighlightTiles[192];
 extern const unsigned short HighlightMap[512];
+extern const unsigned short minimap_cursorTiles[16];
+extern const u8 minimapPositions[];
 
 //local functions
 void gameplayInitialize();
@@ -202,6 +211,7 @@ void drawSelectedShip(OBJ_ATTR *);
 void drawCursor();
 void drawHighlight(u16 *);
 void drawMinimap();
+void updateMinimap();
 void nextPlayer();
 void nextTurn();
 void turnStartState();
@@ -227,7 +237,6 @@ u8 arctan2(s16, s16);
 void checkCycleButtons();
 void revealMinimap();
 void hideMinimap();
-void initMinimapMove();
 
 //temp function
 void initMap();
