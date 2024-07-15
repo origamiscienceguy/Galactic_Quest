@@ -310,13 +310,14 @@ cu16 numSamples = 50;
 extern AssetData _SongTemplateAsset;
 extern AssetData _ThemeAAsset;
 extern AssetData _ThemeBAsset;
+extern AssetData _ThemeB_BattleAsset;
 extern AssetData _ThemeCAsset;
 extern AssetData _ThemeC_BattleAsset;
 extern AssetData _ThemeC_PeaceAsset;
 extern AssetData _ThemeDAsset;
 AssetData *assetsList[] = {
-	&_SongTemplateAsset, &_ThemeAAsset, &_ThemeBAsset, &_ThemeCAsset, &_ThemeC_BattleAsset, &_ThemeC_PeaceAsset, &_ThemeDAsset
+	&_SongTemplateAsset, &_ThemeAAsset, &_ThemeBAsset, &_ThemeB_BattleAsset, &_ThemeCAsset, &_ThemeC_BattleAsset, &_ThemeC_PeaceAsset, &_ThemeDAsset
 };
 
-cu16 numAssets = 7;
+cu16 numAssets = 8;
 
