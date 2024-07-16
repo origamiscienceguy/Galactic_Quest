@@ -471,29 +471,41 @@ void drawMinimap(){
 	
 	//draw the cursor that goes on top of the sprite
 	if(currentScene.sceneCounter & 32){
-		u32 cursorXPos = mapData.camera.xPos >> (4 + xShiftAmount);
-		u32 cursorYPos = mapData.camera.yPos >> (4 + yShiftAmount);
-		spriteBuffer[MINIMAP_CURSOR_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE |  ATTR0_Y(minimap1YPos + cursorYPos);
-		spriteBuffer[MINIMAP_CURSOR_SPRITE].attr1 = ATTR1_SIZE_8 | ATTR1_X(minimap1XPos + cursorXPos);
+		s32 cursorXPos = mapData.camera.xPos >> (4 + xShiftAmount);
+		if(cursorXPos < 0){
+			cursorXPos = 512 + cursorXPos;
+		}
+		s32 cursorYPos = mapData.camera.yPos >> (4 + yShiftAmount);
+		spriteBuffer[MINIMAP_CURSOR_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE |  ATTR0_Y((minimap1YPos + cursorYPos) % 256);
+		spriteBuffer[MINIMAP_CURSOR_SPRITE].attr1 = ATTR1_SIZE_8 | ATTR1_X((minimap1XPos + cursorXPos) % 512);
 		spriteBuffer[MINIMAP_CURSOR_SPRITE].attr2 = ATTR2_ID(MINIMAP_CURSOR_GFX) | ATTR2_PRIO(0) | ATTR2_PALBANK(4);
 		
 		cursorXPos = ((mapData.camera.xPos + 240) >> (4 + xShiftAmount)) - 7;
+		if(cursorXPos < 0){
+			cursorXPos = 512 + cursorXPos;
+		}
 		cursorYPos = ((mapData.camera.yPos + 160) >> (4 + yShiftAmount)) - 7;
-		spriteBuffer[MINIMAP_CURSOR_SPRITE + 1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE |  ATTR0_Y(minimap1YPos + cursorYPos);
-		spriteBuffer[MINIMAP_CURSOR_SPRITE + 1].attr1 = ATTR1_SIZE_8 | ATTR1_X(minimap1XPos + cursorXPos) | ATTR1_HFLIP | ATTR1_VFLIP;
+		spriteBuffer[MINIMAP_CURSOR_SPRITE + 1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE |  ATTR0_Y((minimap1YPos + cursorYPos) % 256);
+		spriteBuffer[MINIMAP_CURSOR_SPRITE + 1].attr1 = ATTR1_SIZE_8 | ATTR1_X((minimap1XPos + cursorXPos) % 512) | ATTR1_HFLIP | ATTR1_VFLIP;
 		spriteBuffer[MINIMAP_CURSOR_SPRITE + 1].attr2 = ATTR2_ID(MINIMAP_CURSOR_GFX) | ATTR2_PRIO(0) | ATTR2_PALBANK(4);
 	}
 	else{
-		u32 cursorXPos = mapData.camera.xPos >> (4 + xShiftAmount);
-		u32 cursorYPos = ((mapData.camera.yPos + 160) >> (4 + yShiftAmount)) - 7;
-		spriteBuffer[MINIMAP_CURSOR_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE |  ATTR0_Y(minimap1YPos + cursorYPos);
-		spriteBuffer[MINIMAP_CURSOR_SPRITE].attr1 = ATTR1_SIZE_8 | ATTR1_X(minimap1XPos + cursorXPos) | ATTR1_VFLIP;
+		s32 cursorXPos = mapData.camera.xPos >> (4 + xShiftAmount);
+		if(cursorXPos < 0){
+			cursorXPos = 512 + cursorXPos;
+		}
+		s32 cursorYPos = ((mapData.camera.yPos + 160) >> (4 + yShiftAmount)) - 7;
+		spriteBuffer[MINIMAP_CURSOR_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE |  ATTR0_Y((minimap1YPos + cursorYPos) % 256);
+		spriteBuffer[MINIMAP_CURSOR_SPRITE].attr1 = ATTR1_SIZE_8 | ATTR1_X((minimap1XPos + cursorXPos) % 512) | ATTR1_VFLIP;
 		spriteBuffer[MINIMAP_CURSOR_SPRITE].attr2 = ATTR2_ID(MINIMAP_CURSOR_GFX) | ATTR2_PRIO(0) | ATTR2_PALBANK(4);
 		
 		cursorXPos = ((mapData.camera.xPos + 240) >> (4 + xShiftAmount)) - 7;
+		if(cursorXPos < 0){
+			cursorXPos = 512 + cursorXPos;
+		}
 		cursorYPos = mapData.camera.yPos >> (4 + yShiftAmount);
-		spriteBuffer[MINIMAP_CURSOR_SPRITE + 1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE |  ATTR0_Y(minimap1YPos + cursorYPos);
-		spriteBuffer[MINIMAP_CURSOR_SPRITE + 1].attr1 = ATTR1_SIZE_8 | ATTR1_X(minimap1XPos + cursorXPos) | ATTR1_HFLIP;
+		spriteBuffer[MINIMAP_CURSOR_SPRITE + 1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE |  ATTR0_Y((minimap1YPos + cursorYPos) % 256);
+		spriteBuffer[MINIMAP_CURSOR_SPRITE + 1].attr1 = ATTR1_SIZE_8 | ATTR1_X((minimap1XPos + cursorXPos) % 512) | ATTR1_HFLIP;
 		spriteBuffer[MINIMAP_CURSOR_SPRITE + 1].attr2 = ATTR2_ID(MINIMAP_CURSOR_GFX) | ATTR2_PRIO(0) | ATTR2_PALBANK(4);
 	}
 }
@@ -1120,21 +1132,9 @@ void processCamera(){
 	}
 	
 	//bounds check the cursor
-	if((mapData.cursor.state != CUR_HIDDEN) && (mapData.camera.state == CAM_STILL)){
-		if((mapData.cursor.xPos - mapData.camera.xPos) < 40){
-			mapData.camera.xPos = mapData.cursor.xPos - 40;
-		}
-		else if((mapData.cursor.xPos - mapData.camera.xPos) > 168){
-			mapData.camera.xPos = mapData.cursor.xPos - 168;
-		}
-		if((mapData.cursor.yPos - mapData.camera.yPos) < 24){
-			mapData.camera.yPos = mapData.cursor.yPos - 24;
-		}
-		else if((mapData.cursor.yPos - mapData.camera.yPos) > 104){
-			mapData.camera.yPos = mapData.cursor.yPos - 104;
-		}
-	}
-	
+	cursorBoundsCheck();
+
+	//bounds check the camera
 	cameraBoundsCheck(&mapData.camera.xPos, &mapData.camera.yPos);
 	
 	//update the tilemap with the new position
@@ -1802,6 +1802,49 @@ void hideMinimap(){
 	mapData.minimap.actionTimer = 0;
 }
 
+void cursorBoundsCheck(){
+	if((mapData.cursor.state == CUR_HIDDEN) || (mapData.camera.state != CAM_STILL)){
+		return;
+	}
+	
+	//bounds when there is no minimap
+	if(mapData.minimap.state != MINIMAP_STILL_LEFT && mapData.minimap.state != MINIMAP_STILL_RIGHT){
+		if((mapData.cursor.xPos - mapData.camera.xPos) < 40){
+			mapData.camera.xPos = mapData.cursor.xPos - 40;
+		}
+		else if((mapData.cursor.xPos - mapData.camera.xPos) > 168){
+			mapData.camera.xPos = mapData.cursor.xPos - 168;
+		}
+	}
+	
+	//x bounds when the minimap is on the left
+	else if(mapData.minimap.state == MINIMAP_STILL_LEFT){
+		if((mapData.cursor.xPos - mapData.camera.xPos) < 88){
+			mapData.camera.xPos = mapData.cursor.xPos - 88;
+		}
+		else if((mapData.cursor.xPos - mapData.camera.xPos) > 168){
+			mapData.camera.xPos = mapData.cursor.xPos - 168;
+		}
+	}
+	
+	//x bounds when the minimap is on the right
+	else if(mapData.minimap.state == MINIMAP_STILL_RIGHT){
+		if((mapData.cursor.xPos - mapData.camera.xPos) < 40){
+			mapData.camera.xPos = mapData.cursor.xPos - 40;
+		}
+		else if((mapData.cursor.xPos - mapData.camera.xPos) > 120){
+			mapData.camera.xPos = mapData.cursor.xPos - 120;
+		}
+	}
+	
+	//y bounds
+	if((mapData.cursor.yPos - mapData.camera.yPos) < 24){
+		mapData.camera.yPos = mapData.cursor.yPos - 24;
+	}
+	else if((mapData.cursor.yPos - mapData.camera.yPos) > 104){
+		mapData.camera.yPos = mapData.cursor.yPos - 104;
+	}
+}
 //a temprary function to initialize a test map.
 void initMap(){
 	u8 index = 0;
