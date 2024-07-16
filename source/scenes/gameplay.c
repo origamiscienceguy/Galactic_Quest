@@ -75,8 +75,8 @@ void gameplayInitialize(){
 	
 	//send the graphics for the minimap cursor
 	characterData[3].size = sizeof(minimap_cursorTiles) >> 2;
-	characterData[2].buffer = (void *)minimap_cursorTiles;
-	characterData[2].position = &tile_mem_obj[0][MINIMAP_CURSOR_GFX];
+	characterData[3].buffer = (void *)minimap_cursorTiles;
+	characterData[3].position = &tile_mem_obj[0][MINIMAP_CURSOR_GFX];
 	
 	mapData.camera.xPos = 0;
 	mapData.camera.yPos = 0;
