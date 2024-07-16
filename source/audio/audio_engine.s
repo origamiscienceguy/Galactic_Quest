@@ -282,7 +282,7 @@ sum4Samples:
 	ldr		r2, [r13]							@load the number of samples needed
 	mul		r11, r2, r7							@multiply the number of channels by the number of samples needed
 	add		r11, r13, r11, lsl #1				@set the write pointer to the top of the allocated stack space
-	add		r0, r11, #8							@correct for the initial stack position
+	add		r0, r11, #4							@correct for the initial stack position
 	sub		r0, r0, r7, lsl #2					@move the pointer to the other channel
 	b		mix4Samples							@branch back in
 
