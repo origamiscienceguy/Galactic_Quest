@@ -237,6 +237,7 @@ u8 arctan2(s16, s16);
 void checkCycleButtons();
 void revealMinimap();
 void hideMinimap();
+void cursorBoundsCheck();
 
 //temp function
 void initMap();
