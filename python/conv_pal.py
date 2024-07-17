@@ -1,3 +1,5 @@
+import sys
+
 def convert_jasc_pal_to_clrx(input_file, output_file):
     try:
         with open(input_file, 'r') as f:
@@ -58,8 +60,6 @@ def convert_jasc_pal_to_clrx(input_file, output_file):
         print(f"Error: File {input_file} not found.")
     except ValueError as ve:
         print(f"Error: {ve}")
-
-import sys
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
