@@ -115,9 +115,9 @@ AudioSample _rave_lead = {
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
-extern cu8 _StringsHard_data[];
-AudioSample _StringsHard = {
-	.sampleStart = _StringsHard_data, .sampleLength = 25712, .loopEnd = 25712, .loopStart = 3342, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 31827,
+extern cu8 _string_ens_gm_data[];
+AudioSample _string_ens_gm = {
+	.sampleStart = _string_ens_gm_data, .sampleLength = 25892, .loopEnd = 25892, .loopStart = 36, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 31827,
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
@@ -295,6 +295,12 @@ AudioSample _strEns3 = {
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
+extern cu8 _StringsHard_data[];
+AudioSample _StringsHard = {
+	.sampleStart = _StringsHard_data, .sampleLength = 25712, .loopEnd = 25712, .loopStart = 3342, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 31827,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
 extern cu8 _untitled_data[];
 AudioSample _untitled = {
 	.sampleStart = _untitled_data, .sampleLength = 0, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 8363,
@@ -302,10 +308,10 @@ AudioSample _untitled = {
 };
 
 AudioSample *sampleList[] = {
-	&_12_5pulse, &_25pulse, &_50pulse, &_tri_lo, &_tri_hi, &_vsaw0, &_edmkick, &_edmsnare, &_SnareAcoustic3, &_hihat, &_cym_crash_orch, &_fm_bass, &_FM_Bass2, &_FM_Bell1, &_FM_EPianoBell, &_FM_Wavetable2, &_horn, &_piano_hi, &_rave_lead, &_StringsHard, &_FM_Wavetable1, &_string_ensemble2, &_pipe_organ, &_FM_SlapBass2, &_power_snare, &_KickRockVerb, &_wavetable_bass, &_beat_loop, &_sine_hi, &_acdBassEnv1, &_acdBassEnv2, &_acdBassEnv3, &_acdBassEnv4, &_acdBassEnv5, &_acdBassEnv6, &_acdBassEnv7, &_acdBassEnv8, &_acdBassEnv9, &_acdBassEnv10, &_acdBassEnv11, &_acdBassEnv12, &_acdBassEnv13, &_acdBassEnv14, &_acdBassEnv15, &_acdBassEnv16, &_acdBassEnv17, &_gpiano_c3, &_gpiano_c5, &_strEns3, &_untitled
+	&_12_5pulse, &_25pulse, &_50pulse, &_tri_lo, &_tri_hi, &_vsaw0, &_edmkick, &_edmsnare, &_SnareAcoustic3, &_hihat, &_cym_crash_orch, &_fm_bass, &_FM_Bass2, &_FM_Bell1, &_FM_EPianoBell, &_FM_Wavetable2, &_horn, &_piano_hi, &_rave_lead, &_string_ens_gm, &_FM_Wavetable1, &_string_ensemble2, &_pipe_organ, &_FM_SlapBass2, &_power_snare, &_KickRockVerb, &_wavetable_bass, &_beat_loop, &_sine_hi, &_acdBassEnv1, &_acdBassEnv2, &_acdBassEnv3, &_acdBassEnv4, &_acdBassEnv5, &_acdBassEnv6, &_acdBassEnv7, &_acdBassEnv8, &_acdBassEnv9, &_acdBassEnv10, &_acdBassEnv11, &_acdBassEnv12, &_acdBassEnv13, &_acdBassEnv14, &_acdBassEnv15, &_acdBassEnv16, &_acdBassEnv17, &_gpiano_c3, &_gpiano_c5, &_strEns3, &_StringsHard, &_untitled
 };
 
-cu16 numSamples = 50;
+cu16 numSamples = 51;
 
 extern AssetData _SongTemplateAsset;
 extern AssetData _ThemeAAsset;
