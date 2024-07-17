@@ -22,26 +22,35 @@ Scene gameplayScene = {
 };
 
 void gameplayInitialize(){
-	REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ | DCNT_OBJ_1D;
+	REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_BG3 | DCNT_OBJ | DCNT_OBJ_1D;
 	REG_BG0CNT = BG_4BPP | BG_SBB(BG_0_TILEMAP) | BG_CBB(BG_0_CHARDATA) | BG_PRIO(2); //grid layer
 	REG_BG1CNT = BG_4BPP | BG_SBB(BG_1_TILEMAP) | BG_CBB(BG_1_CHARDATA) | BG_PRIO(0); //ship layer
 	REG_BG2CNT = BG_4BPP | BG_SBB(BG_2_TILEMAP) | BG_CBB(BG_2_CHARDATA) | BG_PRIO(1); //highlight layer
+	REG_BG3CNT = BG_4BPP | BG_SBB(BG_3_TILEMAP) | BG_CBB(BG_3_CHARDATA) | BG_PRIO(3) | BG_REG_64x64; //starry background layer
 	REG_BLDCNT = BLD_TOP(BLD_BG2) | BLD_BOT(BLD_BG0 | BLD_BACKDROP) | BLD_STD;
 	REG_BLDALPHA = BLD_EVA(8) | BLD_EVB(8);
 	
 	//queue the palette to be sent
-	paletteData[0].size = sizeof(bgGfxPal) >> 2;
+	paletteData[0].size = 96;
 	paletteData[0].buffer = (void *)bgGfxPal;
 	paletteData[0].position = pal_bg_mem;
 	
-	paletteData[1].size = sizeof(bgGfxPal) >> 2;
+	paletteData[1].size = 96;
 	paletteData[1].buffer = (void *)bgGfxPal;
 	paletteData[1].position = pal_obj_mem;
+	
+	paletteData[2].size = 32;
+	paletteData[2].buffer = (void *)startfield_samplePal;
+	paletteData[2].position = &pal_bg_mem[192];
 	
 	//queue the tiles to be sent
 	characterData[0].size = sizeof(bgGfxTiles) >> 2;
 	characterData[0].buffer = (void *)bgGfxTiles;
 	characterData[0].position = &tile8_mem[BG_0_CHARDATA];
+	
+	characterData[4].size = sizeof(startfield_sampleTiles) >> 2;
+	characterData[4].buffer = (void *)startfield_sampleTiles;
+	characterData[4].position = &tile8_mem[BG_3_CHARDATA];
 	
 	//queue the tilemap for layer 0 to be sent
 	tilemapData[0].size = 512;
@@ -63,6 +72,10 @@ void gameplayInitialize(){
 		}
 	}
 	
+	tilemapData[2].size = sizeof(startfield_sampleMetaTiles) >> 2;
+	tilemapData[2].buffer = (void *)startfield_sampleMetaTiles;
+	tilemapData[2].position = &se_mem[BG_3_TILEMAP];
+	
 	//send the graphics for the cursor
 	characterData[1].size = sizeof(cursorTiles) >> 2;
 	characterData[1].buffer = (void *)cursorTiles;
@@ -71,7 +84,7 @@ void gameplayInitialize(){
 	//send the graphics for the highlights
 	characterData[2].size = sizeof(HighlightTiles) >> 2;
 	characterData[2].buffer = (void *)HighlightTiles;
-	characterData[2].position = &tile_mem[BG_3_CHARDATA][HIGHLIGHT_OFFSET];
+	characterData[2].position = &tile_mem[BG_2_CHARDATA][HIGHLIGHT_OFFSET];
 	
 	//send the graphics for the minimap cursor
 	characterData[3].size = sizeof(minimap_cursorTiles) >> 2;
@@ -1190,6 +1203,8 @@ void processCamera(){
 	IOBuffer[3] = mapData.camera.yPos % 512;
 	IOBuffer[4] = mapData.camera.xPos % 16;
 	IOBuffer[5] = mapData.camera.yPos % 16;
+	IOBuffer[6] = mapData.camera.xPos >> 6;
+	IOBuffer[7] = mapData.camera.yPos >> 6;
 }
 
 void processCameraPan(){

@@ -6,7 +6,7 @@ volatile enum GameLoopState gameLoopState;
 vu8 gameState;
 SceneStatus currentScene;
 VideoData tilemapData[4] EWRAM_DATA;
-VideoData characterData[4] EWRAM_DATA;
+VideoData characterData[16] EWRAM_DATA;
 VideoData paletteData[16] EWRAM_DATA;
 VideoData OAMData[16] EWRAM_DATA;
 VideoData IOData[16] EWRAM_DATA;
@@ -164,7 +164,7 @@ void updateGraphics(){
 	}
 	
 	//update the character data
-	for(u32 layer = 0; layer < 4; layer++){
+	for(u32 layer = 0; layer < 16; layer++){
 		u16 size = characterData[layer].size;
 		void *dest = characterData[layer].position;
 		void *src = characterData[layer].buffer;
