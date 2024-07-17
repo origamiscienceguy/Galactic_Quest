@@ -29,7 +29,7 @@ def convert_jasc_pal_to_clrx(input_file, output_file):
             b = int(rgb_values[2])
 
             # Convert RGB values to CLRX format (0x00bbggrr)
-            clrx_color = bytearray(f"0x00{b:02x}{g:02x}{r:02x}".encode())  # Hex in uppercase
+            clrx_color = bytearray(f"0x00{b:02x}{g:02x}{r:02x}".encode())
 
             # Append delimiter "20" (space) in hex
             clrx_lines.append(clrx_color)
