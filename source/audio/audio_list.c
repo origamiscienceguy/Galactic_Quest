@@ -117,7 +117,7 @@ AudioSample _rave_lead = {
 
 extern cu8 _string_ens_gm_data[];
 AudioSample _string_ens_gm = {
-	.sampleStart = _string_ens_gm_data, .sampleLength = 25892, .loopEnd = 25892, .loopStart = 36, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 31827,
+	.sampleStart = _string_ens_gm_data, .sampleLength = 28432, .loopEnd = 28354, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 31827,
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
