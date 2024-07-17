@@ -13,11 +13,11 @@
 #define BG_0_CHARDATA 0
 #define BG_1_CHARDATA 0
 #define BG_2_CHARDATA 0
-#define BG_3_CHARDATA 0
+#define BG_3_CHARDATA 1
 #define BG_0_TILEMAP 31
 #define BG_1_TILEMAP 30
 #define BG_2_TILEMAP 29
-#define BG_3_TILEMAP 28
+#define BG_3_TILEMAP 25
 #define SELECTED_SHIP_SPRITE 0
 #define SELECTED_SHIP_GFX 0
 #define SELECTED_SHIP_GFX_SIZE 16
@@ -195,6 +195,10 @@ extern const unsigned short cursorTiles[512];
 extern const unsigned short HighlightTiles[192];
 extern const unsigned short HighlightMap[512];
 extern const unsigned short minimap_cursorTiles[16];
+extern const unsigned short startfield_samplePal[64];
+extern const unsigned short startfield_sampleMap[1600];
+extern const unsigned short startfield_sampleTiles[1168];
+extern const unsigned short startfield_sampleMetaTiles[4096];
 extern const u8 minimapPositions[];
 
 //local functions
