@@ -199,6 +199,10 @@ extern const unsigned short startfield_samplePal[64];
 extern const unsigned short startfield_sampleMap[1600];
 extern const unsigned short startfield_sampleTiles[1168];
 extern const unsigned short startfield_sampleMetaTiles[4096];
+extern const unsigned short QuickStarMapTiles[688];
+extern const unsigned short QuickStarMapMetaTiles[4096];
+extern const unsigned short QuickStarMapMap[4096];
+extern const unsigned short QuickStarMapPal[64];
 extern const u8 minimapPositions[];
 
 //local functions

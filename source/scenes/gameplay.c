@@ -40,7 +40,7 @@ void gameplayInitialize(){
 	paletteData[1].position = pal_obj_mem;
 	
 	paletteData[2].size = 32;
-	paletteData[2].buffer = (void *)startfield_samplePal;
+	paletteData[2].buffer = (void *)QuickStarMapPal;
 	paletteData[2].position = &pal_bg_mem[192];
 	
 	//queue the tiles to be sent
@@ -48,8 +48,8 @@ void gameplayInitialize(){
 	characterData[0].buffer = (void *)bgGfxTiles;
 	characterData[0].position = &tile8_mem[BG_0_CHARDATA];
 	
-	characterData[4].size = sizeof(startfield_sampleTiles) >> 2;
-	characterData[4].buffer = (void *)startfield_sampleTiles;
+	characterData[4].size = sizeof(QuickStarMapTiles) >> 2;
+	characterData[4].buffer = (void *)QuickStarMapTiles;
 	characterData[4].position = &tile8_mem[BG_3_CHARDATA];
 	
 	//queue the tilemap for layer 0 to be sent
@@ -72,8 +72,8 @@ void gameplayInitialize(){
 		}
 	}
 	
-	tilemapData[2].size = sizeof(startfield_sampleMetaTiles) >> 2;
-	tilemapData[2].buffer = (void *)startfield_sampleMetaTiles;
+	tilemapData[2].size = sizeof(QuickStarMapMetaTiles) >> 2;
+	tilemapData[2].buffer = (void *)QuickStarMapMetaTiles;
 	tilemapData[2].position = &se_mem[BG_3_TILEMAP];
 	
 	//send the graphics for the cursor
@@ -1203,8 +1203,8 @@ void processCamera(){
 	IOBuffer[3] = mapData.camera.yPos % 512;
 	IOBuffer[4] = mapData.camera.xPos % 16;
 	IOBuffer[5] = mapData.camera.yPos % 16;
-	IOBuffer[6] = mapData.camera.xPos >> 6;
-	IOBuffer[7] = mapData.camera.yPos >> 6;
+	IOBuffer[6] = mapData.camera.xPos >> 3;
+	IOBuffer[7] = mapData.camera.yPos >> 3;
 }
 
 void processCameraPan(){
