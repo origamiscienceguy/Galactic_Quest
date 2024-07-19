@@ -31,8 +31,8 @@ void gameplayInitialize(){
 	REG_BLDALPHA = BLD_EVA(8) | BLD_EVB(8);
 	
 	//queue the palette to be sent
-	paletteData[0].size = 96;
-	paletteData[0].buffer = (void *)bgGfxPal;
+	paletteData[0].size = 128;
+	paletteData[0].buffer = (void *)bg_shipsPal;
 	paletteData[0].position = pal_bg_mem;
 	
 	paletteData[1].size = 96;
@@ -43,14 +43,35 @@ void gameplayInitialize(){
 	paletteData[2].buffer = (void *)QuickStarMapPal;
 	paletteData[2].position = &pal_bg_mem[192];
 	
-	//queue the tiles to be sent
-	characterData[0].size = sizeof(bgGfxTiles) >> 2;
+	//send the tiles for the grid
+	/*characterData[0].size = sizeof(bgGfxTiles) >> 2;
 	characterData[0].buffer = (void *)bgGfxTiles;
-	characterData[0].position = &tile8_mem[BG_0_CHARDATA];
+	characterData[0].position = &tile_mem[BG_0_CHARDATA][GRID_GFX_START];*/
 	
+	//send the graphics for the cursor
+	characterData[1].size = sizeof(cursorTiles) >> 2;
+	characterData[1].buffer = (void *)cursorTiles;
+	characterData[1].position = &tile_mem_obj[0][CURSOR_GFX];
+	
+	//send the graphics for the highlights
+	characterData[2].size = sizeof(HighlightTiles) >> 2;
+	characterData[2].buffer = (void *)HighlightTiles;
+	characterData[2].position = &tile_mem[BG_2_CHARDATA][HIGHLIGHT_GFX_START];
+	
+	//send the graphics for the minimap cursor
+	characterData[3].size = sizeof(minimap_cursorTiles) >> 2;
+	characterData[3].buffer = (void *)minimap_cursorTiles;
+	characterData[3].position = &tile_mem_obj[0][MINIMAP_CURSOR_GFX];
+	
+	//send the graphics for the starry background
 	characterData[4].size = sizeof(QuickStarMapTiles) >> 2;
 	characterData[4].buffer = (void *)QuickStarMapTiles;
-	characterData[4].position = &tile8_mem[BG_3_CHARDATA];
+	characterData[4].position = &tile_mem[BG_3_CHARDATA];
+	
+	//send the graphics for the bg ships
+	characterData[5].size = sizeof(bg_shipsTiles) >> 2;
+	characterData[5].buffer = (void *)bg_shipsTiles;
+	characterData[5].position = &tile_mem[BG_1_CHARDATA][SHIP_GFX_START];
 	
 	//queue the tilemap for layer 0 to be sent
 	tilemapData[0].size = 512;
@@ -75,21 +96,6 @@ void gameplayInitialize(){
 	tilemapData[2].size = sizeof(QuickStarMapMetaTiles) >> 2;
 	tilemapData[2].buffer = (void *)QuickStarMapMetaTiles;
 	tilemapData[2].position = &se_mem[BG_3_TILEMAP];
-	
-	//send the graphics for the cursor
-	characterData[1].size = sizeof(cursorTiles) >> 2;
-	characterData[1].buffer = (void *)cursorTiles;
-	characterData[1].position = &tile_mem_obj[0][CURSOR_GFX];
-	
-	//send the graphics for the highlights
-	characterData[2].size = sizeof(HighlightTiles) >> 2;
-	characterData[2].buffer = (void *)HighlightTiles;
-	characterData[2].position = &tile_mem[BG_2_CHARDATA][HIGHLIGHT_OFFSET];
-	
-	//send the graphics for the minimap cursor
-	characterData[3].size = sizeof(minimap_cursorTiles) >> 2;
-	characterData[3].buffer = (void *)minimap_cursorTiles;
-	characterData[3].position = &tile_mem_obj[0][MINIMAP_CURSOR_GFX];
 	
 	mapData.camera.xPos = 0;
 	mapData.camera.yPos = 0;
@@ -204,18 +210,19 @@ void createShipTilemap(u16 *tilemapBuffer){
 		//if we are in the cycling animation
 		if(((currentScene.sceneCounter & 0xFF) >= 0xF6) && (mapData.ships[shipIndex].sameTileLink != shipIndex) && 
 		(shipXPos >= mapXPos) && (shipXPos < mapXPos + 16) && (shipYPos >= mapYPos) && (shipYPos < mapYPos + 16)){
-			u16 baseIndex = (shipXPos % 16) * 2 + (shipYPos % 16) * 64;
+			/*u16 baseIndex = (shipXPos % 16) * 2 + (shipYPos % 16) * 64;
 			u16 tilemapBase = (CYCLE_GFX_START << 2) + (((currentScene.sceneCounter & 0xFF) - 0xF6) >> 1) * 4;
 			tilemapBuffer[baseIndex] = bgGfxMap[tilemapBase];
 			tilemapBuffer[baseIndex + 1] = bgGfxMap[tilemapBase + 1];
 			tilemapBuffer[baseIndex + 32] = bgGfxMap[tilemapBase + 2];
-			tilemapBuffer[baseIndex + 33] = bgGfxMap[tilemapBase + 3];
+			tilemapBuffer[baseIndex + 33] = bgGfxMap[tilemapBase + 3];*/
 			continue;
 		}
 		
 		s8 shipXVel = mapData.ships[shipIndex].xVel;
 		s8 shipYVel = mapData.ships[shipIndex].yVel;
 		u8 shipDirection; //0: right, 1: up, 2: left, 3: down
+		u8 palette = mapData.ships[shipIndex].team;
 		
 		if(ABS(shipXVel) > ABS(shipYVel)){
 			if(shipXVel > 0){
@@ -234,14 +241,24 @@ void createShipTilemap(u16 *tilemapBuffer){
 			}
 		}
 		
+		if(mapData.ships[shipIndex].state == FINISHED_VISIBLE){
+			palette += 4;
+		}
+		
 		//if this particular ship is in one of the update regions
 		if((shipXPos >= mapXPos) && (shipXPos < mapXPos + 16) && (shipYPos >= mapYPos) && (shipYPos < mapYPos + 16)){
 			u16 baseIndex = (shipXPos % 16) * 2 + (shipYPos % 16) * 64;
 			u16 tilemapBase = ((mapData.ships[shipIndex].type + SHIP_GFX_START) * 4) + (globalIdleCounter * IDLE_CYCLE_OFFSET) + (shipDirection * DIRECTION_OFFSET);
-			tilemapBuffer[baseIndex] = bgGfxMap[tilemapBase] | SE_PALBANK(mapData.ships[shipIndex].team);
-			tilemapBuffer[baseIndex + 1] = bgGfxMap[tilemapBase + 1] | SE_PALBANK(mapData.ships[shipIndex].team);
-			tilemapBuffer[baseIndex + 32] = bgGfxMap[tilemapBase + 2] | SE_PALBANK(mapData.ships[shipIndex].team);
-			tilemapBuffer[baseIndex + 33] = bgGfxMap[tilemapBase + 3] | SE_PALBANK(mapData.ships[shipIndex].team);
+			tilemapBuffer[baseIndex] = bg_shipsMap[tilemapBase] | SE_PALBANK(palette);
+			tilemapBuffer[baseIndex + 1] = bg_shipsMap[tilemapBase + 1] | SE_PALBANK(palette);
+			tilemapBuffer[baseIndex + 32] = bg_shipsMap[tilemapBase + 2] | SE_PALBANK(palette);
+			tilemapBuffer[baseIndex + 33] = bg_shipsMap[tilemapBase + 3] | SE_PALBANK(palette);
+			
+			//for demonstration purposes only
+			tilemapBuffer[baseIndex + 448] = bg_shipsMap[tilemapBase] | SE_PALBANK(palette + 4);
+			tilemapBuffer[baseIndex + 449] = bg_shipsMap[tilemapBase + 1] | SE_PALBANK(palette + 4);
+			tilemapBuffer[baseIndex + 480] = bg_shipsMap[tilemapBase + 2] | SE_PALBANK(palette + 4);
+			tilemapBuffer[baseIndex + 481] = bg_shipsMap[tilemapBase + 3] | SE_PALBANK(palette + 4);
 		}
 	}
 }
@@ -252,15 +269,15 @@ void createGridTilemap(u16 *tilemapBuffer){
 	u32 mapYPos = (mapData.camera.yPos >> 4); 
 	
 	//clear the tilemap
-	for(u32 i = 0; i < 16; i++){
+	/*for(u32 i = 0; i < 16; i++){
 		memset32(tilemapBuffer + (i * 64), bgGfxMap[GRID_GFX_START * 4 + 12] | (bgGfxMap[GRID_GFX_START * 4 + 13] << 16), 16);
 		memset32(tilemapBuffer + (i * 64) + 32, bgGfxMap[GRID_GFX_START * 4 + 14] | (bgGfxMap[GRID_GFX_START * 4 + 15] << 16), 16);
-	}
+	}*/
 	
 	u32 cycle = currentScene.sceneCounter % 256;
 	
 	//draw the diagonal
-	for(u32 i = (mapXPos % 128); i < ((mapXPos % 128) + 16); i++){
+	/*for(u32 i = (mapXPos % 128); i < ((mapXPos % 128) + 16); i++){
 		u32 xPos = i;
 		u32 yPos = ((cycle >> 1) - i) % 128;
 		
@@ -277,7 +294,7 @@ void createGridTilemap(u16 *tilemapBuffer){
 			tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 32] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 2) + 2) * 4 + 2];
 			tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 33] = bgGfxMap[GRID_GFX_START * 4 + ((cycle % 2) + 2) * 4 + 3];
 		}
-	}
+	}*/
 }
 void drawSelectedShip(OBJ_ATTR *spriteBuffer){
 	if(mapData.ships[mapData.selectedShip.index].state != SELECTED){
@@ -685,10 +702,10 @@ void drawHighlight(u16 *tilemapBuffer){
 				}
 				tilemapBase *= 4;
 				
-				tilemapBuffer[baseIndex] = (HighlightMap[tilemapBase] + HIGHLIGHT_OFFSET) | SE_PALBANK(4);
-				tilemapBuffer[baseIndex + 1] = (HighlightMap[tilemapBase + 1] + HIGHLIGHT_OFFSET) | SE_PALBANK(4);
-				tilemapBuffer[baseIndex + 32] = (HighlightMap[tilemapBase + 2] + HIGHLIGHT_OFFSET) | SE_PALBANK(4);
-				tilemapBuffer[baseIndex + 33] = (HighlightMap[tilemapBase + 3] + HIGHLIGHT_OFFSET) | SE_PALBANK(4);
+				tilemapBuffer[baseIndex] = (HighlightMap[tilemapBase] + HIGHLIGHT_GFX_START) | SE_PALBANK(4);
+				tilemapBuffer[baseIndex + 1] = (HighlightMap[tilemapBase + 1] + HIGHLIGHT_GFX_START) | SE_PALBANK(4);
+				tilemapBuffer[baseIndex + 32] = (HighlightMap[tilemapBase + 2] + HIGHLIGHT_GFX_START) | SE_PALBANK(4);
+				tilemapBuffer[baseIndex + 33] = (HighlightMap[tilemapBase + 3] + HIGHLIGHT_GFX_START) | SE_PALBANK(4);
 			}
 		}
 	}
@@ -1863,67 +1880,73 @@ void cursorBoundsCheck(){
 //a temprary function to initialize a test map.
 void initMap(){
 	u8 index = 0;
-	u32 yPos = 8;
-	u32 xPos = 10;
 	
 	for(u32 team = 0; team < NUM_TEAMS; team++){
+		u32 yPos = 32;
+		u32 xPos = 32 + team * 4;
 		for(u32 type = 0; type <= CARRIER; type++){
-			xPos = (xPos * 1103515245) + 12345;
-			yPos = (yPos * 1103515245) + 12345;
+			/*xPos = (xPos * 1103515245) + 12345;
+			yPos = (yPos * 1103515245) + 12345;*/
 			
 			mapData.ships[index].type = type;
 			mapData.ships[index].state = READY_VISIBLE;
 			mapData.ships[index].team = team;
 			mapData.ships[index].health = 100;
-			mapData.ships[index].xPos = (xPos >> 16) % 256;
-			mapData.ships[index].yPos = (yPos >> 16) % 256;
+			mapData.ships[index].xPos = xPos;//(xPos >> 16) % 256;
+			mapData.ships[index].yPos = yPos;//(yPos >> 16) % 256;
 			mapData.ships[index].xVel = team + 1;
 			mapData.ships[index].yVel = 0;
 			
 			index++;
-			xPos = (xPos * 1103515245) + 12345;
-			yPos = (yPos * 1103515245) + 12345;
+			/*xPos = (xPos * 1103515245) + 12345;
+			yPos = (yPos * 1103515245) + 12345;*/
+			xPos++;
 			
 			mapData.ships[index].type = type;
 			mapData.ships[index].state = READY_VISIBLE;
 			mapData.ships[index].team = team;
 			mapData.ships[index].health = 100;
-			mapData.ships[index].xPos = (xPos >> 16) % 256;
-			mapData.ships[index].yPos = (yPos >> 16) % 256;
+			mapData.ships[index].xPos = xPos;//(xPos >> 16) % 256;
+			mapData.ships[index].yPos = yPos;//(yPos >> 16) % 256;
 			mapData.ships[index].xVel = 0;
 			mapData.ships[index].yVel = -team - 1;
 			
 			index++;
-			xPos = (xPos * 1103515245) + 12345;
-			yPos = (yPos * 1103515245) + 12345;
+			/*xPos = (xPos * 1103515245) + 12345;
+			yPos = (yPos * 1103515245) + 12345;*/
+			xPos++;
 			
 			mapData.ships[index].type = type;
 			mapData.ships[index].state = READY_VISIBLE;
 			mapData.ships[index].team = team;
 			mapData.ships[index].health = 100;
-			mapData.ships[index].xPos = (xPos >> 16) % 256;
-			mapData.ships[index].yPos = (yPos >> 16) % 256;
+			mapData.ships[index].xPos = xPos;//(xPos >> 16) % 256;
+			mapData.ships[index].yPos = yPos;//(yPos >> 16) % 256;
 			mapData.ships[index].xVel = -team - 1;
 			mapData.ships[index].yVel = 0;
 			
 			index++;
-			xPos = (xPos * 1103515245) + 12345;
-			yPos = (yPos * 1103515245) + 12345;
+			/*xPos = (xPos * 1103515245) + 12345;
+			yPos = (yPos * 1103515245) + 12345;*/
+			xPos++;
 			
 			mapData.ships[index].type = type;
 			mapData.ships[index].state = READY_VISIBLE;
 			mapData.ships[index].team = team;
 			mapData.ships[index].health = 100;
-			mapData.ships[index].xPos = (xPos >> 16) % 256;
-			mapData.ships[index].yPos = (yPos >> 16) % 256;
+			mapData.ships[index].xPos = xPos;//(xPos >> 16) % 256;
+			mapData.ships[index].yPos = yPos;//(yPos >> 16) % 256;
 			mapData.ships[index].xVel = 0;
 			mapData.ships[index].yVel = team + 1;
 			
 			index++;
-			xPos = (xPos * 1103515245) + 12345;
-			yPos = (yPos * 1103515245) + 12345;
+			/*xPos = (xPos * 1103515245) + 12345;
+			yPos = (yPos * 1103515245) + 12345;*/
+			xPos -= 3;
+			yPos++;
 		}
 	}
+	
 	
 	for(u32 i = index; i < MAX_SHIPS; i++){
 		mapData.ships[i].state = NOT_PARTICIPATING;

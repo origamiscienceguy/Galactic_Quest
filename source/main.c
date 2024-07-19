@@ -194,6 +194,7 @@ void updateGraphics(){
 		//mark this transfer as completed
 		paletteData[layer].size = 0;
 	}
+	*(vu16 *)0x5000000 = 0;
 	
 	//update any video IO registers
 	for(u32 layer = 0; layer < 16; layer++){

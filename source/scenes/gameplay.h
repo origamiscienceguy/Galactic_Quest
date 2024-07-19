@@ -42,10 +42,13 @@
 
 #define IDLE_CYCLE_OFFSET 112
 #define DIRECTION_OFFSET 28
-#define HIGHLIGHT_OFFSET 240
-#define SHIP_GFX_START (CYCLE_GFX_START + 5)
-#define CYCLE_GFX_START (GRID_GFX_START + 4)
-#define GRID_GFX_START 1
+#define SHIP_GFX_START 0
+#define SHIP_GFX_SIZE 231
+#define CYCLE_GFX_START (SHIP_GFX_START + SHIP_GFX_SIZE)
+#define CYCLE_GFX_SIZE 0
+#define GRID_GFX_START (CYCLE_GFX_START + CYCLE_GFX_SIZE)
+#define GRID_GFX_SIZE 0
+#define HIGHLIGHT_GFX_START (GRID_GFX_START + GRID_GFX_SIZE)
 #define SHIP_ACC 5
 #define MINIMAP_MOVE_FRAMES 4
 #define MINIMAP_YPOS 48
@@ -203,6 +206,10 @@ extern const unsigned short QuickStarMapTiles[688];
 extern const unsigned short QuickStarMapMetaTiles[4096];
 extern const unsigned short QuickStarMapMap[4096];
 extern const unsigned short QuickStarMapPal[64];
+extern const unsigned short bg_shipsTiles[3696];
+extern const unsigned short bg_shipsMap[336];
+extern const unsigned short bg_shipsPal[128];
+
 extern const u8 minimapPositions[];
 
 //local functions
