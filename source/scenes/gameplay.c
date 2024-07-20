@@ -1,13 +1,6 @@
 #include "gameplay.h"
 
-u16 tilemapBuffer0[1024];
-u16 tilemapBuffer1[1024];
-u16 tilemapBuffer2[1024];
-u16 tilemapBuffer3[1024];
-u16 characterBuffer0[1024];
-u16 characterBuffer1[1024];
-OBJ_ATTR spriteBuffer[128];
-u16 IOBuffer[30];
+
 
 MapData mapData;
 
@@ -30,18 +23,19 @@ void gameplayInitialize(){
 	REG_BLDCNT = BLD_TOP(BLD_BG2) | BLD_BOT(BLD_BG0 | BLD_BACKDROP) | BLD_STD;
 	REG_BLDALPHA = BLD_EVA(8) | BLD_EVB(8);
 	
-	//queue the palette to be sent
-	paletteData[0].size = 128;
-	paletteData[0].buffer = (void *)bg_shipsPal;
+	//queue the palette to be sent	
+	memcpy32(paletteBufferbg, bg_shipsPal, 64);
+	memcpy32(&paletteBufferbg[128], QuickStarMapPal, 32);
+	
+	paletteData[0].size = sizeof(paletteBufferbg) >> 2;
+	paletteData[0].buffer = (void *)paletteBufferbg;
 	paletteData[0].position = pal_bg_mem;
 	
-	paletteData[1].size = 96;
-	paletteData[1].buffer = (void *)bgGfxPal;
-	paletteData[1].position = pal_obj_mem;
+	memcpy32(paletteBufferobj, bgGfxPal, 64);
 	
-	paletteData[2].size = 32;
-	paletteData[2].buffer = (void *)QuickStarMapPal;
-	paletteData[2].position = &pal_bg_mem[192];
+	paletteData[1].size = sizeof(paletteBufferobj) >> 2;
+	paletteData[1].buffer = (void *)paletteBufferobj;
+	paletteData[1].position = pal_obj_mem;
 	
 	//send the tiles for the grid
 	/*characterData[0].size = sizeof(bgGfxTiles) >> 2;

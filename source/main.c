@@ -6,10 +6,25 @@ volatile enum GameLoopState gameLoopState;
 vu8 gameState;
 SceneStatus currentScene;
 VideoData tilemapData[4] EWRAM_DATA;
-VideoData characterData[16] EWRAM_DATA;
-VideoData paletteData[16] EWRAM_DATA;
-VideoData OAMData[16] EWRAM_DATA;
-VideoData IOData[16] EWRAM_DATA;
+VideoData characterData[6] EWRAM_DATA;
+VideoData paletteData[2] EWRAM_DATA;
+VideoData OAMData EWRAM_DATA;
+VideoData IOData EWRAM_DATA;
+
+u16 tilemapBuffer0[0x1000] EWRAM_DATA;
+u16 tilemapBuffer1[0x1000] EWRAM_DATA;
+u16 tilemapBuffer2[0x1000] EWRAM_DATA;
+u16 tilemapBuffer3[0x1000] EWRAM_DATA;
+u8 characterBuffer0[0x4000] EWRAM_DATA;
+u8 characterBuffer1[0x4000] EWRAM_DATA;
+u8 characterBuffer2[0x4000] EWRAM_DATA;
+u8 characterBuffer3[0x4000] EWRAM_DATA;
+u8 characterBuffer4[0x4000] EWRAM_DATA;
+u8 characterBuffer5[0x4000] EWRAM_DATA;
+u16 paletteBufferbg[0x100] EWRAM_DATA;
+u16 paletteBufferobj[0x100] EWRAM_DATA;
+OBJ_ATTR spriteBuffer[128] EWRAM_DATA;
+u16 IOBuffer[0x200] EWRAM_DATA;
 
 int main(){
 	globalInitialize();
@@ -48,7 +63,7 @@ void globalInitialize(){
 
 __attribute__ ((noreturn)) void gameLoop(){
 	gameLoopState = WAITING_FOR_VBLANK;
-	currentScene.scenePointer = sceneList[GAMEPLAY];
+	currentScene.scenePointer = sceneList[INTRO];
 	currentScene.state = INITIALIZE;
 	
 	while(1){
@@ -147,11 +162,15 @@ void sceneManager(){
 };
 
 void updateGraphics(){
+	u16 size = 0;
+	void *dest = 0;
+	void *src = 0;
+	
 	//update the tilemaps
 	for(u32 layer = 0; layer < 4; layer++){
-		u16 size = tilemapData[layer].size;
-		void *dest = tilemapData[layer].position;
-		void *src = tilemapData[layer].buffer;
+		size = tilemapData[layer].size;
+		dest = tilemapData[layer].position;
+		src = tilemapData[layer].buffer;
 		
 		if(size == 0){
 			continue;
@@ -164,10 +183,10 @@ void updateGraphics(){
 	}
 	
 	//update the character data
-	for(u32 layer = 0; layer < 16; layer++){
-		u16 size = characterData[layer].size;
-		void *dest = characterData[layer].position;
-		void *src = characterData[layer].buffer;
+	for(u32 layer = 0; layer < 6; layer++){
+		size = characterData[layer].size;
+		dest = characterData[layer].position;
+		src = characterData[layer].buffer;
 		
 		if(size == 0){
 			continue;
@@ -180,10 +199,10 @@ void updateGraphics(){
 	}
 	
 	//update the palette data
-	for(u32 layer = 0; layer < 16; layer++){
-		u16 size = paletteData[layer].size;
-		void *dest = paletteData[layer].position;
-		void *src = paletteData[layer].buffer;
+	for(u32 layer = 0; layer < 2; layer++){
+		size = paletteData[layer].size;
+		dest = paletteData[layer].position;
+		src = paletteData[layer].buffer;
 		
 		if(size == 0){
 			continue;
@@ -194,39 +213,28 @@ void updateGraphics(){
 		//mark this transfer as completed
 		paletteData[layer].size = 0;
 	}
-	*(vu16 *)0x5000000 = 0;
 	
 	//update any video IO registers
-	for(u32 layer = 0; layer < 16; layer++){
-		u16 size = IOData[layer].size;
-		void *dest = IOData[layer].position;
-		void *src = IOData[layer].buffer;
-		
-		if(size == 0){
-			continue;
-		}
-		else{
-			memcpy32(dest, src, size);
-		}
-		//mark this transfer as completed
-		IOData[layer].size = 0;
+	size = IOData.size;
+	dest = IOData.position;
+	src = IOData.buffer;
+	
+	if(size != 0){
+		memcpy32(dest, src, size);
 	}
+	//mark this transfer as completed
+	IOData.size = 0;
 	
 	//update any OAM entries
-	for(u32 layer = 0; layer < 16; layer++){
-		u16 size = OAMData[layer].size;
-		void *dest = OAMData[layer].position;
-		void *src = OAMData[layer].buffer;
-		
-		if(size == 0){
-			continue;
-		}
-		else{
-			memcpy32(dest, src, size);
-		}
-		//mark this transfer as completed
-		OAMData[layer].size = 0;
+	size = OAMData.size;
+	dest = OAMData.position;
+	src = OAMData.buffer;
+	
+	if(size != 0){
+		memcpy32(dest, src, size);
 	}
+	//mark this transfer as completed
+	OAMData.size = 0;
 }
 
 
