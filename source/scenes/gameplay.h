@@ -10,28 +10,63 @@
 #define MAX_MAP_SIZE 256
 #define NUM_TEAMS 4
 
-#define BG_0_CHARDATA 0
-#define BG_1_CHARDATA 0
-#define BG_2_CHARDATA 0
-#define BG_3_CHARDATA 1
-#define BG_0_TILEMAP 31
-#define BG_1_TILEMAP 30
-#define BG_2_TILEMAP 29
-#define BG_3_TILEMAP 25
-#define SELECTED_SHIP_SPRITE 0
-#define SELECTED_SHIP_GFX 0
-#define SELECTED_SHIP_GFX_SIZE 16
-#define SELECTED_SHIP_AFFINE_MAT 0
-#define CURSOR_SPRITE 1
-#define CURSOR_GFX (SELECTED_SHIP_GFX + SELECTED_SHIP_GFX_SIZE)
-#define CURSOR_GFX_SIZE 32
-#define MINIMAP1_SPRITE 6
-#define MINIMAP_GFX (CURSOR_GFX + CURSOR_GFX_SIZE)
-#define MINIMAP_GFX_SIZE 64
-#define MINIMAP2_SPRITE 7
-#define MINIMAP_CURSOR_SPRITE 2
-#define MINIMAP_CURSOR_GFX (MINIMAP_GFX + MINIMAP_GFX_SIZE)
-#define MINIMAP_CURSOR_GFX_SIZE 1
+#define BG_SHIPS_CHARDATA 0
+#define BG_GRID_HIGHLIGHT_CHARDATA 0
+#define BG_STARRY_IMAGE_CHARDATA 1
+#define BG_HEALTH_SQUARES_CHARDATA 0
+#define OBJ_SPRITE_CHARDATA 0
+#define BG_SHIPS_TILEMAP 31
+#define BG_GRID_HIGHLIGHT_TILEMAP 30
+#define BG_STARRY_IMAGE_TILEMAP 26
+#define BG_HEALTH_SQUARES_TILEMAP 25
+
+#define BG_SHIPS_PAL_START 0
+#define BG_SHIPS_PAL_SIZE 8
+#define BG_SHIPS_GFX_START 0
+#define BG_SHIPS_GFX_SIZE 231
+#define BG_SHIPS_ROTATION_OFFSET 28
+#define BG_SHIPS_ANIMATION_OFFSET 112
+
+#define BG_GRID_HIGHLIGHT_PAL_START (BG_SHIPS_PAL_START + BG_SHIPS_PAL_SIZE)
+#define BG_GRID_HIGHLIGHT_PAL_SIZE 1
+#define BG_GRID_HIGHLIGHT_GFX_START (BG_SHIPS_GFX_START + BG_SHIPS_GFX_SIZE)
+#define BG_GRID_HIGHLIGHT_GFX_SIZE 48
+#define BG_GRID_HIGHLIGHT_GRID_OFF_OFFSET 0
+#define BG_GRID_HIGHLIGHT_GRID_ON_OFFSET 5
+
+#define BG_CYCLE_ANIMATION_PAL_START (BG_GRID_HIGHLIGHT_PAL_START + BG_GRID_HIGHLIGHT_PAL_SIZE)
+#define BG_CYCLE_ANIMATION_PAL_SIZE 1
+#define BG_CYCLE_ANIMATION_GFX_START (BG_GRID_HIGHLIGHT_GFX_START + BG_GRID_HIGHLIGHT_GFX_SIZE)
+#define BG_CYCLE_ANIMATION_GFX_SIZE 19
+
+#define BG_STARRY_IMAGE_PAL_START 12
+#define BG_STARRY_IMAGE_PAL_SIZE 1
+#define BG_STARRY_IMAGE_GFX_START 0
+#define BG_STARRY_IMAGE_GFX_SIZE 73
+
+#define OBJ_SELECTED_SHIP_SPRITE 0
+#define OBJ_SELECTED_SHIP_GFX 0
+#define OBJ_SELECTED_SHIP_GFX_SIZE 16
+#define OBJ_SELECTED_SHIP_AFFINE_MAT 0
+#define OBJ_SELECTED_SHIP_PAL_START 0
+#define OBJ_SELECTED_SHIP_PAL_SIZE 4
+
+#define OBJ_MINIMAP1_SPRITE 6
+#define OBJ_MINIMAP2_SPRITE 7
+#define OBJ_MINIMAP_GFX (OBJ_SELECTED_SHIP_GFX + OBJ_SELECTED_SHIP_GFX_SIZE)
+#define OBJ_MINIMAP_GFX_SIZE 64
+
+#define OBJ_MINIMAP_CURSOR_SPRITE 2
+#define OBJ_MINIMAP_CURSOR_GFX (OBJ_MINIMAP_GFX + OBJ_MINIMAP_GFX_SIZE)
+#define OBJ_MINIMAP_CURSOR_GFX_SIZE 1
+#define OBJ_MINIMAP_CURSOR_PAL_START (OBJ_SELECTED_SHIP_PAL_START + OBJ_SELECTED_SHIP_PAL_SIZE)
+#define OBJ_MINIMAP_CURSOR_PAN_SIZE 1
+
+#define OBJ_CURSOR_SPRITE 1
+#define OBJ_CURSOR_GFX (OBJ_MINIMAP_CURSOR_GFX + OBJ_MINIMAP_CURSOR_GFX_SIZE)
+#define OBJ_CURSOR_GFX_SIZE 32
+
+
 
 #define CYCLE_PAN_SPEED 20
 #define SHIP_MOVE_SPEED 32
@@ -40,15 +75,6 @@
 #define CURSOR_SLOW_SPEED_2 8
 #define CURSOR_FAST_SPEED 16
 
-#define IDLE_CYCLE_OFFSET 112
-#define DIRECTION_OFFSET 28
-#define SHIP_GFX_START 0
-#define SHIP_GFX_SIZE 231
-#define CYCLE_GFX_START (SHIP_GFX_START + SHIP_GFX_SIZE)
-#define CYCLE_GFX_SIZE 0
-#define GRID_GFX_START (CYCLE_GFX_START + CYCLE_GFX_SIZE)
-#define GRID_GFX_SIZE 0
-#define HIGHLIGHT_GFX_START (GRID_GFX_START + GRID_GFX_SIZE)
 #define SHIP_ACC 5
 #define MINIMAP_MOVE_FRAMES 4
 #define MINIMAP_YPOS 48
@@ -189,15 +215,12 @@ extern const u16 inverseTime[];
 extern const s16 sinTable[];
 extern const u8 arctanTable1[];
 extern const u8 arctanTable2[];
-extern const unsigned short bgGfxTiles[3840];
-extern const unsigned short bgGfxMap[376];
-extern const unsigned short bgGfxPal[256];
 extern const unsigned short ships_selectedTiles[];
 extern const unsigned short ships_selectedMap[];
+extern const unsigned short ships_selectedPal[64];
 extern const unsigned short cursorTiles[512];
-extern const unsigned short HighlightTiles[192];
-extern const unsigned short HighlightMap[512];
 extern const unsigned short minimap_cursorTiles[16];
+extern const unsigned short minimap_cursorPal[16];
 extern const unsigned short startfield_samplePal[64];
 extern const unsigned short startfield_sampleMap[1600];
 extern const unsigned short startfield_sampleTiles[1168];
@@ -209,6 +232,12 @@ extern const unsigned short QuickStarMapPal[64];
 extern const unsigned short bg_shipsTiles[3696];
 extern const unsigned short bg_shipsMap[336];
 extern const unsigned short bg_shipsPal[128];
+extern const unsigned short bg_grid_highlightTiles[768];
+extern const unsigned short bg_grid_highlightMap[100];
+extern const unsigned short bg_grid_highlightPal[16];
+extern const unsigned short bg_cycle_animTiles[304];
+extern const unsigned short bg_cycle_animMap[36];
+extern const unsigned short bg_cycle_animPal[16];
 
 extern const u8 minimapPositions[];
 
@@ -222,11 +251,11 @@ void gameplayEnd();
 void shipListInit();
 void createShipTilemap(u16 *);
 void createGridTilemap(u16 *);
-void drawSelectedShip(OBJ_ATTR *);
-void drawCursor();
-void drawHighlight(u16 *);
-void drawMinimap();
-void updateMinimap();
+void drawSelectedShip(OBJ_ATTR *, u8 *);
+void drawCursor(OBJ_ATTR *);
+void drawHighlight(u32 *);
+void drawMinimap(OBJ_ATTR *, u8 *);
+void updateMinimap(u8 *);
 void nextPlayer();
 void nextTurn();
 void turnStartState();

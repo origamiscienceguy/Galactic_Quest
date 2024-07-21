@@ -21,9 +21,9 @@ u8 characterBuffer2[0x4000] EWRAM_DATA;
 u8 characterBuffer3[0x4000] EWRAM_DATA;
 u8 characterBuffer4[0x4000] EWRAM_DATA;
 u8 characterBuffer5[0x4000] EWRAM_DATA;
-u16 paletteBufferbg[0x100] EWRAM_DATA;
-u16 paletteBufferobj[0x100] EWRAM_DATA;
-OBJ_ATTR spriteBuffer[128] EWRAM_DATA;
+u16 paletteBufferBg[0x100] EWRAM_DATA;
+u16 paletteBufferObj[0x100] EWRAM_DATA;
+OBJ_ATTR objectBuffer[128] EWRAM_DATA;
 u16 IOBuffer[0x200] EWRAM_DATA;
 
 int main(){
@@ -213,6 +213,7 @@ void updateGraphics(){
 		//mark this transfer as completed
 		paletteData[layer].size = 0;
 	}
+	*(vu16 *)0x5000000 = 0;
 	
 	//update any video IO registers
 	size = IOData.size;

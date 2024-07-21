@@ -12,7 +12,7 @@ Scene introScene = {
 void introInitialize(){
 	
 	//disable every sprite
-	
+	currentScene.state = END;
 }
 
 void introNormal(){

@@ -57,9 +57,9 @@ extern u8 characterBuffer2[0x4000] EWRAM_DATA;
 extern u8 characterBuffer3[0x4000] EWRAM_DATA;
 extern u8 characterBuffer4[0x4000] EWRAM_DATA;
 extern u8 characterBuffer5[0x4000] EWRAM_DATA;
-extern u16 paletteBufferbg[0x100] EWRAM_DATA;
-extern u16 paletteBufferobj[0x100] EWRAM_DATA;
-extern OBJ_ATTR spriteBuffer[128] EWRAM_DATA;
+extern u16 paletteBufferBg[0x100] EWRAM_DATA;
+extern u16 paletteBufferObj[0x100] EWRAM_DATA;
+extern OBJ_ATTR objectBuffer[128] EWRAM_DATA;
 extern u16 IOBuffer[0x200] EWRAM_DATA;
 
 //local functions
