@@ -7,7 +7,7 @@ cwd = os.getcwd()
 print("current working directory is " + cwd)
 
 #navigate to the directory containing the original assets data
-originalAssetDir = os.path.join(cwd, os.pardir, 'data', 'audio', 'assets_original')
+originalAssetDir = os.path.join(cwd, os.pardir, 'resources', 'audio')
 print("the original assets directory is " + originalAssetDir)
 
 #navigate to the directory containing the processed assets data
@@ -32,7 +32,7 @@ print("the audio assets enum file is " + audioAssetsPath + "\n")
 
 #count how many files are in the raw sample folder
 assetsList = os.listdir(originalAssetDir)
-print("There are " + str(len(assetsList)) + " files in assetss_original.")
+print("There are " + str(len(assetsList)) + " files in assets_original.")
 print()
 
 #setup the global lists
@@ -93,7 +93,7 @@ for currentOriginalAssetFile in assetsList:
 	print("Now working on " + currentOriginalAssetFile)
 	print()
 		
-	#append this assets to the list of all assetss
+	#append this assets to the list of all assets
 	processedAssetList.append(currentAssetFileName)
 		
 	#check if this file already exists in the processed folder
@@ -520,6 +520,6 @@ audioAssets.write("\n};\n\n#endif")
 
 audioAssets.close()
 audioList.close()
-print("All assetss processed. Press enter to close.")
+print("All assets processed. Press enter to close.")
 input()
 
