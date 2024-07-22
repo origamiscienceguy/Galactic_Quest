@@ -224,7 +224,7 @@ void createShipTilemap(u16 *tilemapBuffer){
 		//if this particular ship is on screen
 		if((shipXPos >= mapXPos) && (shipXPos < mapXPos + 16) && (shipYPos >= mapYPos) && (shipYPos < mapYPos + 16)){
 			u16 baseIndex = (shipXPos % 16) * 2 + (shipYPos % 16) * 64;
-			u16 tilemapBase = (globalIdleCounter * BG_SHIPS_ANIMATION_OFFSET) + (shipDirection * BG_SHIPS_ROTATION_OFFSET);
+			u16 tilemapBase = (globalIdleCounter * BG_SHIPS_ANIMATION_OFFSET) + (shipDirection * BG_SHIPS_ROTATION_OFFSET) + mapData.ships[shipIndex].type * 4;
 			tilemapBuffer[baseIndex] = bg_shipsMap[tilemapBase] | SE_PALBANK(palette);
 			tilemapBuffer[baseIndex + 1] = bg_shipsMap[tilemapBase + 1] | SE_PALBANK(palette);
 			tilemapBuffer[baseIndex + 32] = bg_shipsMap[tilemapBase + 2] | SE_PALBANK(palette);
@@ -238,7 +238,8 @@ void createGridTilemap(u16 *tilemapBuffer){
 	u32 mapXPos = (mapData.camera.xPos >> 4);
 	u32 mapYPos = (mapData.camera.yPos >> 4); 
 	u32 gridOn = 1;
-	u32 highlightDrawBuffer[236];
+	u32 highlightDrawBuffer[256];
+	u32 tilemapIndexBuffer[256];
 	
 	//record which squares have a highlight
 	drawHighlight(highlightDrawBuffer);
@@ -246,13 +247,7 @@ void createGridTilemap(u16 *tilemapBuffer){
 	//if the grid is enabled
 	if(gridOn == 1){
 		//fill the screen with the base grid graphics
-		for(u32 i = 0; i < 16; i++){
-			u32 baseIndex = BG_GRID_HIGHLIGHT_GRID_ON_OFFSET * 4;
-			u32 value = (bg_grid_highlightMap[baseIndex] + BG_GRID_HIGHLIGHT_GFX_START) | ((bg_grid_highlightMap[baseIndex + 1] + BG_GRID_HIGHLIGHT_GFX_START) << 16);
-			memset32(tilemapBuffer + (i * 64), value, 16);
-			value = (bg_grid_highlightMap[baseIndex + 2] + BG_GRID_HIGHLIGHT_GFX_START) | ((bg_grid_highlightMap[baseIndex + 3] + BG_GRID_HIGHLIGHT_GFX_START) << 16);
-			memset32(tilemapBuffer + (i * 64) + 32,value , 16);
-		}
+		memset32(tilemapIndexBuffer, BG_GRID_HIGHLIGHT_GRID_ON_OFFSET, 256);
 		
 		u32 cycle = currentScene.sceneCounter % 256;
 		
@@ -262,23 +257,14 @@ void createGridTilemap(u16 *tilemapBuffer){
 			u32 yPos = ((cycle >> 1) - i) % 128;
 			
 			if(((yPos - mapYPos) % 128) < 16){
-				u32 baseIndex = BG_GRID_HIGHLIGHT_GRID_ON_OFFSET * 4 + (cycle % 2) * 4;
-				tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64] = bg_grid_highlightMap[baseIndex] + BG_GRID_HIGHLIGHT_GFX_START;
-				tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 1] = bg_grid_highlightMap[baseIndex + 1] + BG_GRID_HIGHLIGHT_GFX_START;
-				tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 32] = bg_grid_highlightMap[baseIndex + 2] + BG_GRID_HIGHLIGHT_GFX_START;
-				tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 33] = bg_grid_highlightMap[baseIndex + 3] + BG_GRID_HIGHLIGHT_GFX_START;
+				tilemapIndexBuffer[(xPos % 16) + (yPos % 16) * 16] = BG_GRID_HIGHLIGHT_GRID_ON_OFFSET + (cycle % 2);
 				
 				xPos--;
-				baseIndex = BG_GRID_HIGHLIGHT_GRID_ON_OFFSET * 4 + ((cycle % 2) + 2) * 4;
-				
-				tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64] = bg_grid_highlightMap[baseIndex] + BG_GRID_HIGHLIGHT_GFX_START;
-				tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 1] = bg_grid_highlightMap[baseIndex + 1] + BG_GRID_HIGHLIGHT_GFX_START;
-				tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 32] = bg_grid_highlightMap[baseIndex + 2] + BG_GRID_HIGHLIGHT_GFX_START;
-				tilemapBuffer[(xPos % 16) * 2 + (yPos % 16) * 64 + 33] = bg_grid_highlightMap[baseIndex + 3] + BG_GRID_HIGHLIGHT_GFX_START;
+				tilemapIndexBuffer[(xPos % 16) + (yPos % 16) * 16] = BG_GRID_HIGHLIGHT_GRID_ON_OFFSET + (cycle % 2) + 2;
 			}
 		}
 		//send the highlight tiles to the buffer if this tile is in range.
-		for(u32 i = 0; i < 16; i++){
+		/*for(u32 i = 0; i < 16; i++){
 			for(u32 j = 0; j < 11; j++){
 				if(highlightDrawBuffer[(i + 1) + (j + 1) * 18] == 1){
 					u32 baseIndex = (i % 16) * 2 + (j % 16) * 64;
@@ -298,6 +284,16 @@ void createGridTilemap(u16 *tilemapBuffer){
 					tilemapBuffer[baseIndex + 32] = tilemapBuffer[baseIndex + 2] + tilemapOffset;
 					tilemapBuffer[baseIndex + 33] = tilemapBuffer[baseIndex + 3] + tilemapOffset;
 				}
+			}
+		}*/
+		
+		for(u32 i = 0; i < 16; i++){
+			for(u32 j = 0; j < 16; j++){
+				u32 tilemapIndex = tilemapIndexBuffer[i + j * 16];
+				tilemapBuffer[i * 2 + j * 64] = bg_grid_highlightMap[tilemapIndex * 4] + BG_GRID_HIGHLIGHT_GFX_START;
+				tilemapBuffer[i * 2 + j * 64 + 1] = bg_grid_highlightMap[tilemapIndex * 4 + 1] + BG_GRID_HIGHLIGHT_GFX_START;
+				tilemapBuffer[i * 2 + j * 64 + 32] = bg_grid_highlightMap[tilemapIndex * 4 + 2] + BG_GRID_HIGHLIGHT_GFX_START;
+				tilemapBuffer[i * 2 + j * 64 + 33] = bg_grid_highlightMap[tilemapIndex * 4 + 3] + BG_GRID_HIGHLIGHT_GFX_START;
 			}
 		}
 	}
