@@ -13,7 +13,7 @@ enum SceneState{
 };
 
 enum SceneIndex{
-	GAMEPLAY
+	GAMEPLAY, INDEX
 };
 
 //structs
@@ -42,10 +42,25 @@ typedef struct VideoData{
 extern const Scene *sceneList[];
 extern SceneStatus currentScene;
 extern VideoData tilemapData[4] EWRAM_DATA;
-extern VideoData characterData[16] EWRAM_DATA;
-extern VideoData paletteData[16] EWRAM_DATA;
-extern VideoData IOData[16] EWRAM_DATA;
-extern VideoData OAMData[16] EWRAM_DATA;
+extern VideoData characterData[6] EWRAM_DATA;
+extern VideoData paletteData[2] EWRAM_DATA;
+extern VideoData IOData EWRAM_DATA;
+extern VideoData OAMData EWRAM_DATA;
+
+extern u16 tilemapBuffer0[0x1000] EWRAM_DATA;
+extern u16 tilemapBuffer1[0x1000] EWRAM_DATA;
+extern u16 tilemapBuffer2[0x1000] EWRAM_DATA;
+extern u16 tilemapBuffer3[0x1000] EWRAM_DATA;
+extern u8 characterBuffer0[0x4000] EWRAM_DATA;
+extern u8 characterBuffer1[0x4000] EWRAM_DATA;
+extern u8 characterBuffer2[0x4000] EWRAM_DATA;
+extern u8 characterBuffer3[0x4000] EWRAM_DATA;
+extern u8 characterBuffer4[0x4000] EWRAM_DATA;
+extern u8 characterBuffer5[0x4000] EWRAM_DATA;
+extern u16 paletteBufferBg[0x100] EWRAM_DATA;
+extern u16 paletteBufferObj[0x100] EWRAM_DATA;
+extern OBJ_ATTR objectBuffer[128] EWRAM_DATA;
+extern u16 IOBuffer[0x200] EWRAM_DATA;
 
 //local functions
 
