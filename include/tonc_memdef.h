@@ -293,7 +293,7 @@
 
 #define BLDY_MASK		0x001F
 #define BLDY_SHIFT		 0
-#define BLDY(n)		((n)<<BLD_EY_SHIFT)
+#define BLDY(n)		((n)<<BLDY_SHIFT)
 
 #define BLDY_BUILD(ey)				\
 	( (ey)&31 )

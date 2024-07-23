@@ -188,10 +188,10 @@ void createShipTilemap(u16 *tilemapBuffer){
 		(shipXPos >= mapXPos) && (shipXPos < mapXPos + 16) && (shipYPos >= mapYPos) && (shipYPos < mapYPos + 16)){
 			u16 baseIndex = (shipXPos % 16) * 2 + (shipYPos % 16) * 64;
 			u16 tilemapBase = ((currentScene.sceneCounter & 0xFF) - 0xF7) * 4;
-			tilemapBuffer[baseIndex] = bg_cycle_animMap[tilemapBase];
-			tilemapBuffer[baseIndex + 1] = bg_cycle_animMap[tilemapBase + 1];
-			tilemapBuffer[baseIndex + 32] = bg_cycle_animMap[tilemapBase + 2];
-			tilemapBuffer[baseIndex + 33] = bg_cycle_animMap[tilemapBase + 3];
+			tilemapBuffer[baseIndex] = bg_cycle_animMap[tilemapBase] + BG_CYCLE_ANIMATION_GFX_START;
+			tilemapBuffer[baseIndex + 1] = bg_cycle_animMap[tilemapBase + 1] + BG_CYCLE_ANIMATION_GFX_START;
+			tilemapBuffer[baseIndex + 32] = bg_cycle_animMap[tilemapBase + 2] + BG_CYCLE_ANIMATION_GFX_START;
+			tilemapBuffer[baseIndex + 33] = bg_cycle_animMap[tilemapBase + 3] + BG_CYCLE_ANIMATION_GFX_START;
 			continue;
 		}
 		
