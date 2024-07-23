@@ -9,7 +9,7 @@
 //	+ regular map (flat), not compressed, 2x50 
 //	Total size: 32 + 1536 + 200 = 1768
 //
-//	Time-stamp: 2024-07-20, 18:21:13
+//	Time-stamp: 2024-07-23, 01:38:34
 //	Exported by Cearn's GBA Image Transmogrifier, v0.8.3
 //	( http://www.coranac.com/projects/#grit )
 //
@@ -146,7 +146,7 @@ const unsigned short bg_grid_highlightMap[100] __attribute__((aligned(4)))=
 
 const unsigned short bg_grid_highlightPal[16] __attribute__((aligned(4)))=
 {
-	0x7C1F,0x090A,0x094C,0x0D8F,0x0DD1,0x1214,0x5C11,0x540F,
+	0x7C1F,0x0E34,0x1277,0x16FB,0x1B3D,0x1F5F,0x7C17,0x6C15,
 	0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,
 };
 

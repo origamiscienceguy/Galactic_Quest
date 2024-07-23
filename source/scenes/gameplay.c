@@ -13,11 +13,11 @@ Scene gameplayScene = {
 
 void gameplayInitialize(){
 	REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_BG3 | DCNT_OBJ | DCNT_OBJ_1D;
-	REG_BG0CNT = BG_4BPP | BG_SBB(BG_GRID_HIGHLIGHT_TILEMAP) | BG_CBB(BG_GRID_HIGHLIGHT_CHARDATA) | BG_PRIO(2); //grid/highlight layer
-	REG_BG1CNT = BG_4BPP | BG_SBB(BG_SHIPS_TILEMAP) | BG_CBB(BG_SHIPS_CHARDATA) | BG_PRIO(0); //ship layer
-	//REG_BG2CNT = BG_4BPP | BG_SBB(BG__TILEMAP) | BG_CBB(BG_2_CHARDATA) | BG_PRIO(1); //health box layer
+	REG_BG0CNT = BG_4BPP | BG_SBB(BG_GRID_HIGHLIGHT_TILEMAP) | BG_CBB(BG_GRID_HIGHLIGHT_CHARDATA) | BG_PRIO(1); //ships layer
+	REG_BG1CNT = BG_4BPP | BG_SBB(BG_SHIPS_TILEMAP) | BG_CBB(BG_SHIPS_CHARDATA) | BG_PRIO(2); //grid/highlight layer	
+	//REG_BG2CNT = BG_4BPP | BG_SBB(BG__TILEMAP) | BG_CBB(BG_2_CHARDATA) | BG_PRIO(0); //health box layer
 	REG_BG3CNT = BG_4BPP | BG_SBB(BG_STARRY_IMAGE_TILEMAP) | BG_CBB(BG_STARRY_IMAGE_CHARDATA) | BG_PRIO(3) | BG_REG_64x64; //starry background layer
-	REG_BLDCNT = BLD_TOP(BLD_BG2) | BLD_BOT(BLD_BG0 | BLD_BACKDROP) | BLD_STD;
+	REG_BLDCNT = BLD_TOP(BLD_BG1) | BLD_BOT(BLD_BG3 | BLD_BACKDROP) | BLD_STD;
 	REG_BLDALPHA = BLD_EVA(8) | BLD_EVB(8);
 	
 	//queue the palettes to be sent	
@@ -264,28 +264,26 @@ void createGridTilemap(u16 *tilemapBuffer){
 			}
 		}
 		//send the highlight tiles to the buffer if this tile is in range.
-		/*for(u32 i = 0; i < 16; i++){
-			for(u32 j = 0; j < 11; j++){
-				if(highlightDrawBuffer[(i + 1) + (j + 1) * 18] == 1){
-					u32 baseIndex = (i % 16) * 2 + (j % 16) * 64;
-					//figure out which edges are touching
-					u32 tilemapOffset = 16;
-					//above
-					if(highlightDrawBuffer[(i + 1) + (j) * 18]){
-						tilemapOffset += 16;
+		if(mapData.highlight.state != NO_HIGHLIGHT){
+			for(u32 i = 0; i < 16; i++){
+				for(u32 j = 0; j < 16; j++){
+					if(highlightDrawBuffer[i + j * 16] == 1){
+						u32 baseIndex = (i % 16) + (j % 16) * 16;
+						//figure out which edges are touching
+						u32 tilemapOffset = 4;
+						//above
+						if(highlightDrawBuffer[i + ((j - 1) % 16) * 16]){
+							tilemapOffset += 4;
+						}
+						//left
+						if(highlightDrawBuffer[((i - 1) % 16) + j * 16]){
+							tilemapOffset += 8;
+						}
+						tilemapIndexBuffer[baseIndex] = tilemapIndexBuffer[baseIndex] + tilemapOffset;
 					}
-					//left
-					if(highlightDrawBuffer[(i) + (j + 1) * 18]){
-						tilemapOffset += 32;
-					}
-					
-					tilemapBuffer[baseIndex] = tilemapBuffer[baseIndex] + tilemapOffset;
-					tilemapBuffer[baseIndex + 1] = tilemapBuffer[baseIndex + 1] + tilemapOffset;
-					tilemapBuffer[baseIndex + 32] = tilemapBuffer[baseIndex + 2] + tilemapOffset;
-					tilemapBuffer[baseIndex + 33] = tilemapBuffer[baseIndex + 3] + tilemapOffset;
 				}
 			}
-		}*/
+		}
 		
 		for(u32 i = 0; i < 16; i++){
 			for(u32 j = 0; j < 16; j++){
@@ -623,40 +621,40 @@ void drawHighlight(u32 *drawBuffer){
 	}
 	
 	//clear drawBuffer
-	memset32(drawBuffer, 0, 236);
+	memset32(drawBuffer, 0, 256);
 	
 	//draw the movement range of one ship
 	if(mapData.highlight.state == MOVEMENT_RANGE_HIGHLIGHT){
 		//designate bottom portion of ship movement range
 		for(s32 i = 1; i <= SHIP_ACC; i++){
-			if(((yTarget + i) < (mapYPos - 1)) || ((yTarget + i) >= (mapYPos + 11))){
+			if(((yTarget + i) < mapYPos) || ((yTarget + i) >= (mapYPos + 16))){
 				continue;
 			}
 			for(s32 j = -(SHIP_ACC - i); j <= (SHIP_ACC - i); j++){
 				//if this highlight region is in range of the camera
-				if(((xTarget + j) >= (mapXPos - 1)) && ((xTarget + j) < (mapXPos + 17))){
-					drawBuffer[((xTarget - mapXPos) + j + 1) + (((yTarget - mapYPos) + i + 1) * 18)] = 1;
+				if(((xTarget + j) >= mapXPos) && ((xTarget + j) < (mapXPos + 16))){
+					drawBuffer[((xTarget + j) % 16) + (((yTarget + i) % 16) * 16)] = 1;
 				}
 			}
 		}
 		//designate the top portion of ship movement range
 		for(s32 i = -1; i >= -SHIP_ACC; i--){
-			if(((yTarget + i) < (mapYPos - 1)) || ((yTarget + i) >= (mapYPos + 11))){
+			if(((yTarget + i) < mapYPos) || ((yTarget + i) >= (mapYPos + 16))){
 				continue;
 			}
 			for(s32 j = -(SHIP_ACC + i); j <= (SHIP_ACC + i); j++){
 				//if this highlight region is in range of the camera
-				if(((xTarget + j) >= (mapXPos - 1)) && ((xTarget + j) < (mapXPos + 17))){
-					drawBuffer[((xTarget - mapXPos) + j + 1) + (((yTarget - mapYPos) + i + 1) * 18)] = 1;
+				if(((xTarget + j) >= mapXPos) && ((xTarget + j) < (mapXPos + 16))){
+					drawBuffer[((xTarget + j) % 16) + (((yTarget + i) % 16) * 16)] = 1;
 				}
 			}
 		}
 		//designate the middle strip of ship movement range
-		if(((yTarget) >= (mapYPos - 1)) && ((yTarget) < (mapYPos + 11))){
+		if(((yTarget) >= mapYPos) && ((yTarget) < (mapYPos + 16))){
 			for(s32 j = -SHIP_ACC; j <= SHIP_ACC; j++){
 				//if this highlight region is in range of the camera
-				if(((xTarget + j) >= (mapXPos - 1)) && ((xTarget + j) < (mapXPos + 17))){
-					drawBuffer[((xTarget - mapXPos) + j + 1) + (((yTarget - mapYPos) + 1) * 18)] = 1;
+				if(((xTarget + j) >= mapXPos) && ((xTarget + j) < (mapXPos + 16))){
+					drawBuffer[((xTarget + j) % 16) + ((yTarget % 16) * 16)] = 1;
 				}
 			}
 		}
@@ -1526,6 +1524,11 @@ void moveCursor(){
 	else if(mapData.cursor.counter >= CURSOR_WAIT_FRAMES){
 		mapData.cursor.state = CUR_MOVE_SLOW_1;
 		squaresMoved = 1;
+	}
+	
+	//make sure the counter doesn't overflow
+	if(mapData.cursor.counter >= CURSOR_WAIT_FRAMES){
+		mapData.cursor.counter = CURSOR_WAIT_FRAMES;
 	}
 	
 	u32 vel;
