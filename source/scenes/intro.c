@@ -133,12 +133,17 @@ void introNormal(){
 		break;
 	}
 	
+	if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
+		currentScene.scenePointer = sceneList[MAIN_MENU];
+		currentScene.state = INITIALIZE;
+	}
+	
 	IOData.position = (void *)&REG_BLDY;
 	IOData.buffer = IOBuffer;
 	IOData.size = 1;
 }
 
 void introEnd(){
-	currentScene.scenePointer = sceneList[GAMEPLAY];
+	currentScene.scenePointer = sceneList[MAIN_MENU];
 	currentScene.state = INITIALIZE;
 }
