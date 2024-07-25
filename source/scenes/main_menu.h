@@ -11,7 +11,14 @@
 #define STARRY_IMAGE_PAL_START 0
 #define STARRY_IMAGE_PAL_SIZE 1
 #define STARRY_IMAGE_GFX_START 0
-#define STARRY_IMAGE_GFX_SIZE 584
+#define STARRY_IMAGE_GFX_SIZE 73
+
+#define TITLE_CARD_CHARDATA 1
+#define TITLE_CARD_TILEMAP 27
+#define TITLE_CARD_PAL_START (STARRY_IMAGE_PAL_START + STARRY_IMAGE_PAL_SIZE)
+#define TITLE_CARD_PAL_SIZE 1
+#define TITLE_CARD_GFX_START 0
+#define TITLE_CARD_GFX_SIZE 95
 
 //enums
 enum MainMenuState{
@@ -31,6 +38,10 @@ typedef struct MainMenuData{
 extern const unsigned short startfield_sampleTiles[1168];
 extern const unsigned short startfield_sampleMetaTiles[4096];
 extern const unsigned short startfield_samplePal[16];
+extern const unsigned short sprTitleLogoTiles[1520];
+extern const unsigned short sprTitleLogoMap[256];
+extern const unsigned short shootingStarTiles[8192];
+extern const unsigned short shootingStarPal[16];
 
 //local functions
 void mainMenuInitialize();

@@ -13,26 +13,47 @@ Scene mainMenuScene = {
 
 void mainMenuInitialize(){
 	REG_DISPCNT = DCNT_MODE0; //black screen
-	REG_BG0CNT = BG_4BPP | BG_SBB(STARRY_IMAGE_TILEMAP) | BG_CBB(STARRY_IMAGE_CHARDATA) | BG_PRIO(3); //starry background layer
+	REG_BG0CNT = BG_4BPP | BG_SBB(STARRY_IMAGE_TILEMAP) | BG_CBB(STARRY_IMAGE_CHARDATA) | BG_PRIO(3) | BG_REG_64x64; //starry background layer
+	REG_BG1CNT = BG_4BPP | BG_SBB(TITLE_CARD_TILEMAP) | BG_CBB(TITLE_CARD_CHARDATA) | BG_PRIO(2) | BG_REG_32x32; //title screen layer
 	REG_BLDCNT = BLD_TOP(BLD_BG2 | BLD_BACKDROP) | BLD_WHITE;
 	REG_BLDY = BLDY(0);
+	REG_BG0HOFS = 40;
+	REG_BG0VOFS = 100;
+	REG_BG1HOFS = 512 - 15;
+	REG_BG1VOFS = 512 - 43;
 	
 	//send the palettes
 	memcpy32(&paletteBufferBg[STARRY_IMAGE_PAL_START << 4], startfield_samplePal, sizeof(startfield_samplePal) >> 2);
+	memcpy32(&paletteBufferBg[TITLE_CARD_PAL_START << 4], sprTitleLogoPal, sizeof(sprTitleLogoPal) >> 2);
 
-	paletteData[0].size = 16 >> 2;
+	paletteData[0].size = 16;
 	paletteData[0].position = pal_bg_mem;
 	paletteData[0].buffer = paletteBufferBg;
 	
-	//send the background tiles
-	characterData[0].position = tile_mem[STARRY_IMAGE_CHARDATA];
-	characterData[0].buffer = (void *)startfield_sampleTiles;
-	characterData[0].size = sizeof(startfield_sampleTiles) >> 2;
+	paletteData[1].size = 8;
+	paletteData[1].position = pal_obj_mem;
+	paletteData[1].buffer = shootingStarPal;
 	
-	//send the tilemap
+	//send the background tiles
+	memcpy32(&characterBuffer0[STARRY_IMAGE_GFX_START << 5], startfield_sampleTiles, sizeof(startfield_sampleTiles) >> 2);
+	characterData[0].position = tile_mem[STARRY_IMAGE_CHARDATA];
+	characterData[0].buffer = (void *)characterBuffer0;
+	characterData[0].size = sizeof(characterBuffer0) >> 2;
+	
+	memcpy32(&characterBuffer1[TITLE_CARD_GFX_START << 5], sprTitleLogoTiles, sizeof(sprTitleLogoTiles) >> 2);
+	characterData[1].position = tile_mem[TITLE_CARD_CHARDATA];
+	characterData[1].buffer = (void *)characterBuffer1;
+	characterData[1].size = sizeof(characterBuffer1) >> 2;
+	
+	//send the tilemaps;
+	
 	tilemapData[0].position = &se_mem[STARRY_IMAGE_TILEMAP];
 	tilemapData[0].buffer = (void *)startfield_sampleMetaTiles;
 	tilemapData[0].size = sizeof(startfield_sampleMetaTiles) >> 2;
+	
+	tilemapData[1].position = &se_mem[TITLE_CARD_TILEMAP];
+	tilemapData[1].buffer = (void *)sprTitleLogoMap;
+	tilemapData[1].size = sizeof(sprTitleLogoMap) >> 2;
 	
 	mainMenuData.actionTarget = 32;
 	mainMenuData.actionTimer = 0;
