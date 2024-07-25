@@ -6,6 +6,9 @@
 #include "audio_engine_external.h"
 
 //constants
+#define GBAJAM_WAIT_FRAMES 200
+#define AUDIO_BY_WAIT_FRAMES 200
+#define PIXEL_PLAY_STUDIOS_WAIT_FRAMES 200
 
 //enums
 enum IntroState{
@@ -15,8 +18,8 @@ enum IntroState{
 //structs
 typedef struct IntroData{
 	enum IntroState state;
-	u8 actionTimer;
-	u8 actionTarget;
+	u16 actionTimer;
+	u16 actionTarget;
 }IntroData;
 
 //globals

@@ -33,7 +33,7 @@ void introNormal(){
 		if(introData.actionTimer == introData.actionTarget){
 			introData.state = GBAJAM_HOLD;
 			introData.actionTimer = 0;
-			introData.actionTarget = 200;
+			introData.actionTarget = GBAJAM_WAIT_FRAMES;
 		}
 		else{
 			IOBuffer[0] = 16 - introData.actionTimer;
@@ -67,7 +67,7 @@ void introNormal(){
 		if(introData.actionTimer == introData.actionTarget){
 			introData.state = AUDIO_ENGINE_HOLD;
 			introData.actionTimer = 0;
-			introData.actionTarget = 200;
+			introData.actionTarget = AUDIO_BY_WAIT_FRAMES;
 		}
 		else{
 			IOBuffer[0] = 16 - introData.actionTimer;
@@ -101,7 +101,7 @@ void introNormal(){
 		if(introData.actionTimer == introData.actionTarget){
 			introData.state = STUDIO_HOLD;
 			introData.actionTimer = 0;
-			introData.actionTarget = 200;
+			introData.actionTarget = PIXEL_PLAY_STUDIOS_WAIT_FRAMES;
 		}
 		else{
 			IOBuffer[0] = 16 - introData.actionTimer;
