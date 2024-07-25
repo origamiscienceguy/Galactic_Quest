@@ -63,7 +63,7 @@ void globalInitialize(){
 
 __attribute__ ((noreturn)) void gameLoop(){
 	gameLoopState = WAITING_FOR_VBLANK;
-	currentScene.scenePointer = sceneList[INTRO];
+	currentScene.scenePointer = sceneList[INTRO_SCENE];
 	currentScene.state = INITIALIZE;
 	
 	while(1){

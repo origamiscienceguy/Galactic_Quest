@@ -13,7 +13,7 @@ enum SceneState{
 };
 
 enum SceneIndex{
-	GAMEPLAY, INDEX
+	GAMEPLAY, INTRO_SCENE, MAIN_MENU
 };
 
 //structs
