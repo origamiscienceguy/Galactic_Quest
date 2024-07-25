@@ -6,3 +6,4 @@ data/audio/assets_processed/*
 !data/audio/songs_processed/.gitkeep
 *.pnproj
 *.pnps
+*.lnk
