@@ -36,7 +36,7 @@ extern const unsigned short startfield_samplePal[16];
 void mainMenuInitialize();
 void mainMenuNormal();
 void mainMenuEnd();
-void processCamera();
+void processCameraMainMenu();
 
 //external functions
 #endif

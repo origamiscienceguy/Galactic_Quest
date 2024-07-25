@@ -79,6 +79,6 @@ void mainMenuEnd(){
 
 }
 
-void processCamera(){
+void processCameraMainMenu(){
 
 }
