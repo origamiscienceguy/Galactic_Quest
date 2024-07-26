@@ -345,7 +345,7 @@ AudioSample _whitenoisehi = {
 
 extern cu8 _recordscratch1_data[];
 AudioSample _recordscratch1 = {
-	.sampleStart = _recordscratch1_data, .sampleLength = 51684, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
+	.sampleStart = _recordscratch1_data, .sampleLength = 21250, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
 	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
