@@ -32,7 +32,7 @@ void mainMenuInitialize(){
 	
 	paletteData[1].size = 8;
 	paletteData[1].position = pal_obj_mem;
-	paletteData[1].buffer = shootingStarPal;
+	paletteData[1].buffer = (void *)shootingStarPal;
 	
 	//send the background tiles
 	memcpy32(&characterBuffer0[STARRY_IMAGE_GFX_START << 5], startfield_sampleTiles, sizeof(startfield_sampleTiles) >> 2);
@@ -44,6 +44,11 @@ void mainMenuInitialize(){
 	characterData[1].position = tile_mem[TITLE_CARD_CHARDATA];
 	characterData[1].buffer = (void *)characterBuffer1;
 	characterData[1].size = sizeof(characterBuffer1) >> 2;
+	
+	memcpy32(&characterBuffer4[SHOOTING_STAR_GFX_START << 5], shootingStarTiles, sizeof(shootingStarTiles) >> 2);
+	characterData[4].position = tile_mem[SHOOTING_STAR_CHARDATA];
+	characterData[4].buffer = (void *)characterBuffer4;
+	characterData[4].size = sizeof(shootingStarTiles) >> 2;
 	
 	//send the tilemaps;
 	
@@ -81,6 +86,8 @@ void mainMenuNormal(){
 	case FADE_TO_TITLE:
 		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
 			mainMenuData.state = TITLE_COMET_ANIMATION;
+			mainMenuData.actionTarget = 32;
+			mainMenuData.actionTimer = 0;
 		}
 		else{
 			mainMenuData.actionTimer++;
@@ -90,6 +97,21 @@ void mainMenuNormal(){
 		IOData.buffer = IOBuffer;
 		IOData.size = 1;
 		break;
+	case TITLE_COMET_ANIMATION:
+		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
+			mainMenuData.state = TITLE_HOLD;
+		}
+		else{
+			mainMenuData.actionTimer++;
+			u8 starFrame = mainMenuData.actionTimer >> 2;
+			objectBuffer[SHOOTING_STAR_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(shootingStarYPos[starFrame]);
+			objectBuffer[SHOOTING_STAR_SPRITE].attr1 = ATTR1_SIZE_64 | ATTR1_X(shootingStarXPos[starFrame]);
+			objectBuffer[SHOOTING_STAR_SPRITE].attr2 = ATTR2_ID(starFrame << 5) | ATTR2_PRIO(0) | ATTR2_PALBANK(0);
+			
+			OAMData.position = (void *)oam_mem;
+			OAMData.buffer = objectBuffer;
+			OAMData.size = sizeof(objectBuffer) >> 2;
+		}
 	default:
 		break;
 	}
