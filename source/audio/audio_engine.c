@@ -601,7 +601,9 @@ void processSampledChannel(CurrentChannelSettings *channelPointer, ChannelData *
 	u16 offset = 0;
 	
 	//process any volume commands
-	processVolume(channelPointer);
+	if(channelPointer->triggerState != DELAY_TRIGGER){
+		processVolume(channelPointer);
+	}
 	
 	//process any new note data in the pattern
 	if((channelPointer->pitchState == NEW_PITCH) && (channelPointer->triggerState != DELAY_TRIGGER)){
