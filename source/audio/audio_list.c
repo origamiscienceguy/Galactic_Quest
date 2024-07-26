@@ -309,7 +309,7 @@ AudioSample _strEns3 = {
 
 extern cu8 _HipHopKick_data[];
 AudioSample _HipHopKick = {
-	.sampleStart = _HipHopKick_data, .sampleLength = 104270, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
+	.sampleStart = _HipHopKick_data, .sampleLength = 11890, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
 	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
@@ -321,7 +321,7 @@ AudioSample _Syn_Bass_2 = {
 
 extern cu8 _alto_sax_data[];
 AudioSample _alto_sax = {
-	.sampleStart = _alto_sax_data, .sampleLength = 1764, .loopEnd = 1764, .loopStart = 1581, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 47913,
+	.sampleStart = _alto_sax_data, .sampleLength = 1763, .loopEnd = 1763, .loopStart = 1580, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 47913,
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
@@ -337,11 +337,23 @@ AudioSample _Tambourine = {
 	.sampleType = 0, .globalVolume = 61, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
-AudioSample *sampleList[] = {
-	&_12_5pulse, &_25pulse, &_50pulse, &_tri_lo, &_tri_hi, &_vsaw0, &_edmkick, &_edmsnare, &_SnareAcoustic3, &_hihat, &_cym_crash_orch, &_fm_bass, &_FM_Bass2, &_FM_Bell1, &_FM_EPianoBell, &_horn, &_piano_hi, &_rave_lead, &_StringsHard, &_FM_Wavetable1, &_string_ensemble2, &_pipe_organ, &_FM_SlapBass2, &_power_snare, &_KickRockVerb, &_untitled, &_FM_Wavetable2, &_string_ens_gm, &_wavetable_bass, &_beat_loop, &_sine_hi, &_acdBassEnv1, &_acdBassEnv2, &_acdBassEnv3, &_acdBassEnv4, &_acdBassEnv5, &_acdBassEnv6, &_acdBassEnv7, &_acdBassEnv8, &_acdBassEnv9, &_acdBassEnv10, &_acdBassEnv11, &_acdBassEnv12, &_acdBassEnv13, &_acdBassEnv14, &_acdBassEnv15, &_acdBassEnv16, &_acdBassEnv17, &_gpiano_c3, &_gpiano_c5, &_strEns3, &_HipHopKick, &_Syn_Bass_2, &_alto_sax, &_SnareHiphop, &_Tambourine
+extern cu8 _whitenoisehi_data[];
+AudioSample _whitenoisehi = {
+	.sampleStart = _whitenoisehi_data, .sampleLength = 104043, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
+	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
-cu16 numSamples = 56;
+extern cu8 _recordscratch1_data[];
+AudioSample _recordscratch1 = {
+	.sampleStart = _recordscratch1_data, .sampleLength = 51684, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
+	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+AudioSample *sampleList[] = {
+	&_12_5pulse, &_25pulse, &_50pulse, &_tri_lo, &_tri_hi, &_vsaw0, &_edmkick, &_edmsnare, &_SnareAcoustic3, &_hihat, &_cym_crash_orch, &_fm_bass, &_FM_Bass2, &_FM_Bell1, &_FM_EPianoBell, &_horn, &_piano_hi, &_rave_lead, &_StringsHard, &_FM_Wavetable1, &_string_ensemble2, &_pipe_organ, &_FM_SlapBass2, &_power_snare, &_KickRockVerb, &_untitled, &_FM_Wavetable2, &_string_ens_gm, &_wavetable_bass, &_beat_loop, &_sine_hi, &_acdBassEnv1, &_acdBassEnv2, &_acdBassEnv3, &_acdBassEnv4, &_acdBassEnv5, &_acdBassEnv6, &_acdBassEnv7, &_acdBassEnv8, &_acdBassEnv9, &_acdBassEnv10, &_acdBassEnv11, &_acdBassEnv12, &_acdBassEnv13, &_acdBassEnv14, &_acdBassEnv15, &_acdBassEnv16, &_acdBassEnv17, &_gpiano_c3, &_gpiano_c5, &_strEns3, &_HipHopKick, &_Syn_Bass_2, &_alto_sax, &_SnareHiphop, &_Tambourine, &_whitenoisehi, &_recordscratch1
+};
+
+cu16 numSamples = 58;
 
 extern AssetData _MainMenuAsset;
 extern AssetData _SongTemplateAsset;
