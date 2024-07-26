@@ -17,6 +17,15 @@ void introInitialize(){
 	REG_BLDCNT = BLD_TOP(BLD_BG2 | BLD_BACKDROP) | BLD_BLACK;
 	REG_BLDY = BLDY(16);
 	
+	//disable every sprite
+	for(u32 i = 0; i < 128; i++){
+		objectBuffer[i].attr0 = ATTR0_HIDE;
+	}
+	
+	OAMData.position = (void *)oam_mem;
+	OAMData.buffer = objectBuffer;
+	OAMData.size = sizeof(objectBuffer) >> 2;
+	
 	memcpy32(pal_bg_mem, Intro_GBAJamPal, sizeof(Intro_GBAJamPal) >> 2);
 	memcpy32(m4_mem, Intro_GBAJamBitmap, sizeof(Intro_GBAJamBitmap) >> 2);
 	
