@@ -177,7 +177,7 @@ AudioSample _wavetable_bass = {
 
 extern cu8 _psg_dt_112_data[];
 AudioSample _psg_dt_112 = {
-	.sampleStart = _psg_dt_112_data, .sampleLength = 2889, .loopEnd = 2889, .loopStart = 2721, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
+	.sampleStart = _psg_dt_112_data, .sampleLength = 2889, .loopEnd = 2889, .loopStart = 2721, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 43862,
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
