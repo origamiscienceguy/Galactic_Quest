@@ -175,9 +175,9 @@ AudioSample _wavetable_bass = {
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
-extern cu8 _psg_dt_221_data[];
-AudioSample _psg_dt_221 = {
-	.sampleStart = _psg_dt_221_data, .sampleLength = 2468, .loopEnd = 2468, .loopStart = 2299, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
+extern cu8 _sampl_data[];
+AudioSample _sampl = {
+	.sampleStart = _sampl_data, .sampleLength = 2131, .loopEnd = 2131, .loopStart = 1962, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44229,
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
@@ -362,7 +362,7 @@ AudioSample _recordscratch1 = {
 };
 
 AudioSample *sampleList[] = {
-	&_12_5pulse, &_25pulse, &_50pulse, &_tri_lo, &_tri_hi, &_vsaw0, &_edmkick, &_edmsnare, &_SnareAcoustic3, &_hihat, &_cym_crash_orch, &_fm_bass, &_FM_Bass2, &_FM_Bell1, &_FM_EPianoBell, &_horn, &_piano_hi, &_rave_lead, &_StringsHard, &_FM_Wavetable1, &_string_ensemble2, &_pipe_organ, &_FM_SlapBass2, &_power_snare, &_KickRockVerb, &_untitled, &_FM_Wavetable2, &_string_ens_gm, &_wavetable_bass, &_psg_dt_221, &_psg_wt_trbass, &_beat_loop, &_sine_hi, &_acdBassEnv1, &_acdBassEnv2, &_acdBassEnv3, &_acdBassEnv4, &_acdBassEnv5, &_acdBassEnv6, &_acdBassEnv7, &_acdBassEnv8, &_acdBassEnv9, &_acdBassEnv10, &_acdBassEnv11, &_acdBassEnv12, &_acdBassEnv13, &_acdBassEnv14, &_acdBassEnv15, &_acdBassEnv16, &_acdBassEnv17, &_gpiano_c3, &_gpiano_c5, &_strEns3, &_HipHopKick, &_Syn_Bass_2, &_alto_sax, &_SnareHiphop, &_Tambourine, &_whitenoisehi, &_recordscratch1
+	&_12_5pulse, &_25pulse, &_50pulse, &_tri_lo, &_tri_hi, &_vsaw0, &_edmkick, &_edmsnare, &_SnareAcoustic3, &_hihat, &_cym_crash_orch, &_fm_bass, &_FM_Bass2, &_FM_Bell1, &_FM_EPianoBell, &_horn, &_piano_hi, &_rave_lead, &_StringsHard, &_FM_Wavetable1, &_string_ensemble2, &_pipe_organ, &_FM_SlapBass2, &_power_snare, &_KickRockVerb, &_untitled, &_FM_Wavetable2, &_string_ens_gm, &_wavetable_bass, &_sampl, &_psg_wt_trbass, &_beat_loop, &_sine_hi, &_acdBassEnv1, &_acdBassEnv2, &_acdBassEnv3, &_acdBassEnv4, &_acdBassEnv5, &_acdBassEnv6, &_acdBassEnv7, &_acdBassEnv8, &_acdBassEnv9, &_acdBassEnv10, &_acdBassEnv11, &_acdBassEnv12, &_acdBassEnv13, &_acdBassEnv14, &_acdBassEnv15, &_acdBassEnv16, &_acdBassEnv17, &_gpiano_c3, &_gpiano_c5, &_strEns3, &_HipHopKick, &_Syn_Bass_2, &_alto_sax, &_SnareHiphop, &_Tambourine, &_whitenoisehi, &_recordscratch1
 };
 
 cu16 numSamples = 60;
