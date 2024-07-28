@@ -253,7 +253,7 @@ void createShipTilemap(u16 *);
 void createGridTilemap(u16 *);
 void drawSelectedShip(OBJ_ATTR *, u8 *);
 void drawCursor(OBJ_ATTR *);
-void drawHighlight(u32 *);
+void drawHighlight(u8 *);
 void drawMinimap(OBJ_ATTR *, u8 *);
 void updateMinimap(u8 *);
 void nextPlayer();
