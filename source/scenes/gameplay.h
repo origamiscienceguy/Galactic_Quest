@@ -122,6 +122,10 @@ enum MinimapState{
 	MINIMAP_EMERGING_LEFT, MINIMAP_EMERGING_RIGHT
 };
 
+enum GridState{
+	NO_GRID, GRID_ON
+};
+
 //structs
 typedef struct ShipData{
 	enum ShipType type; //the type of ship this one is
@@ -182,6 +186,7 @@ typedef struct CursorData{
 
 typedef struct HighlightData{
 	enum HighlightState state;
+	enum GridState gridState;
 }HighlightData;
 
 typedef struct MinimapData{
