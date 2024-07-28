@@ -133,7 +133,7 @@ void gameplayEnd(){
 
 }
 
-void createShipTilemap(u16 *tilemapBuffer){	
+IWRAM_CODE void createShipTilemap(u16 *tilemapBuffer){	
 	//convert pixel coordinates to map cell coordinates
 	u8 mapXPos = mapData.camera.xPos >> 4;
 	u8 mapYPos = mapData.camera.yPos >> 4; 
@@ -198,7 +198,7 @@ void createShipTilemap(u16 *tilemapBuffer){
 		s8 shipXVel = mapData.ships[shipIndex].xVel;
 		s8 shipYVel = mapData.ships[shipIndex].yVel;
 		u8 shipDirection; //0: right, 1: up, 2: left, 3: down
-		u8 palette = mapData.ships[shipIndex].team;
+		u32 palette = mapData.ships[shipIndex].team;
 		
 		if(ABS(shipXVel) > ABS(shipYVel)){
 			if(shipXVel > 0){
@@ -221,24 +221,32 @@ void createShipTilemap(u16 *tilemapBuffer){
 			palette += 4;
 		}
 		
+		palette = palette | palette << 16;
+		
 		//if this particular ship is on screen
+		u32 *tilemapPointer1 = (u32 *)tilemapBuffer;
+		u32 *tilemapPointer2 = (u32 *)(tilemapBuffer + 32);
 		if((shipXPos >= mapXPos) && (shipXPos < mapXPos + 16) && (shipYPos >= mapYPos) && (shipYPos < mapYPos + 16)){
-			u16 baseIndex = (shipXPos % 16) * 2 + (shipYPos % 16) * 64;
-			u16 tilemapBase = (globalIdleCounter * BG_SHIPS_ANIMATION_OFFSET) + (shipDirection * BG_SHIPS_ROTATION_OFFSET) + mapData.ships[shipIndex].type * 4;
-			tilemapBuffer[baseIndex] = bg_shipsMap[tilemapBase] | SE_PALBANK(palette);
-			tilemapBuffer[baseIndex + 1] = bg_shipsMap[tilemapBase + 1] | SE_PALBANK(palette);
-			tilemapBuffer[baseIndex + 32] = bg_shipsMap[tilemapBase + 2] | SE_PALBANK(palette);
-			tilemapBuffer[baseIndex + 33] = bg_shipsMap[tilemapBase + 3] | SE_PALBANK(palette);
+			//u16 baseIndex = (shipXPos % 16) * 2 + (shipYPos % 16) * 64;
+			tilemapPointer1 = (u32 *)tilemapBuffer + (shipXPos % 16) + (shipYPos % 16) * 32;
+			tilemapPointer2 = (u32 *)tilemapBuffer + (shipXPos % 16) + (shipYPos % 16) * 32 + 16;
+			u16 tilemapBase = (globalIdleCounter * (BG_SHIPS_ANIMATION_OFFSET / 2)) + (shipDirection * (BG_SHIPS_ROTATION_OFFSET / 2)) + mapData.ships[shipIndex].type * 2;
+			*tilemapPointer1 = ((u32 *)bg_shipsMap)[tilemapBase] | SE_PALBANK(palette);
+			*tilemapPointer2 = ((u32 *)bg_shipsMap)[tilemapBase + 1] | SE_PALBANK(palette);
+			//tilemapBuffer[baseIndex] = bg_shipsMap[tilemapBase] | SE_PALBANK(palette);
+			//tilemapBuffer[baseIndex + 1] = bg_shipsMap[tilemapBase + 1] | SE_PALBANK(palette);
+			//tilemapBuffer[baseIndex + 32] = bg_shipsMap[tilemapBase + 2] | SE_PALBANK(palette);
+			//tilemapBuffer[baseIndex + 33] = bg_shipsMap[tilemapBase + 3] | SE_PALBANK(palette);
 		}
 	}
 }
 
-void createGridTilemap(u16 *tilemapBuffer){
+IWRAM_CODE void createGridTilemap(u16 *tilemapBuffer){
 	//convert pixel coordinates to map cell coordinates
 	u32 mapXPos = (mapData.camera.xPos >> 4);
 	u32 mapYPos = (mapData.camera.yPos >> 4); 
 	u32 gridOn = 1;
-	u32 highlightDrawBuffer[256];
+	u8 highlightDrawBuffer[256];
 	u32 tilemapIndexBuffer[256];
 	
 	//record which squares have a highlight
@@ -247,7 +255,7 @@ void createGridTilemap(u16 *tilemapBuffer){
 	//if the grid is enabled
 	if(gridOn == 1){
 		//fill the screen with the base grid graphics
-		memset32(tilemapIndexBuffer, BG_GRID_HIGHLIGHT_GRID_ON_OFFSET, 256);
+		memset32(tilemapIndexBuffer, BG_GRID_HIGHLIGHT_GRID_ON_OFFSET, sizeof(tilemapIndexBuffer) >> 2);
 		
 		u32 cycle = currentScene.sceneCounter % 256;
 		
@@ -262,38 +270,49 @@ void createGridTilemap(u16 *tilemapBuffer){
 				xPos--;
 				tilemapIndexBuffer[(xPos % 16) + (yPos % 16) * 16] = BG_GRID_HIGHLIGHT_GRID_ON_OFFSET + (cycle % 2) + 2;
 			}
-		}
-		//send the highlight tiles to the buffer if this tile is in range.
-		if(mapData.highlight.state != NO_HIGHLIGHT){
-			for(u32 i = 0; i < 16; i++){
-				for(u32 j = 0; j < 16; j++){
-					if(highlightDrawBuffer[i + j * 16] == 1){
-						u32 baseIndex = (i % 16) + (j % 16) * 16;
-						//figure out which edges are touching
-						u32 tilemapOffset = 4;
-						//above
-						if(highlightDrawBuffer[i + ((j - 1) % 16) * 16]){
-							tilemapOffset += 4;
-						}
-						//left
-						if(highlightDrawBuffer[((i - 1) % 16) + j * 16]){
-							tilemapOffset += 8;
-						}
-						tilemapIndexBuffer[baseIndex] = tilemapIndexBuffer[baseIndex] + tilemapOffset;
+		}		
+	}
+	//if the grid is turned off
+	else{
+		//fill the screen with blank tiles
+		memset32(tilemapIndexBuffer, 0, sizeof(tilemapIndexBuffer) >> 2);
+	}
+	
+	//send the highlight tiles to the buffer if this tile is in range.
+	if(mapData.highlight.state != NO_HIGHLIGHT){
+		for(u32 i = 0; i < 16; i++){
+			for(u32 j = 0; j < 16; j++){
+				if(highlightDrawBuffer[i + j * 16] == 1){
+					u32 baseIndex = (i % 16) + (j % 16) * 16;
+					//figure out which edges are touching
+					u32 tilemapOffset = 4;
+					//above
+					if(highlightDrawBuffer[i + ((j - 1) % 16) * 16]){
+						tilemapOffset += 4;
 					}
+					//left
+					if(highlightDrawBuffer[((i - 1) % 16) + j * 16]){
+						tilemapOffset += 8;
+					}
+					tilemapIndexBuffer[baseIndex] = tilemapIndexBuffer[baseIndex] + tilemapOffset;
 				}
 			}
 		}
-		
-		for(u32 i = 0; i < 16; i++){
-			for(u32 j = 0; j < 16; j++){
-				u32 tilemapIndex = tilemapIndexBuffer[i + j * 16];
-				tilemapBuffer[i * 2 + j * 64] = bg_grid_highlightMap[tilemapIndex * 4] + BG_GRID_HIGHLIGHT_GFX_START;
-				tilemapBuffer[i * 2 + j * 64 + 1] = bg_grid_highlightMap[tilemapIndex * 4 + 1] + BG_GRID_HIGHLIGHT_GFX_START;
-				tilemapBuffer[i * 2 + j * 64 + 32] = bg_grid_highlightMap[tilemapIndex * 4 + 2] + BG_GRID_HIGHLIGHT_GFX_START;
-				tilemapBuffer[i * 2 + j * 64 + 33] = bg_grid_highlightMap[tilemapIndex * 4 + 3] + BG_GRID_HIGHLIGHT_GFX_START;
-			}
+	}
+	
+	//apply the selected graphics
+	u32 *tilemapPointer1 = (u32 *)tilemapBuffer;
+	u32 *tilemapPointer2 = ((u32 *)(tilemapBuffer + 32));
+	for(u32 i = 0; i < 16; i++){
+		for(u32 j = 0; j < 16; j++){
+			u32 tilemapIndex = tilemapIndexBuffer[j + i * 16];
+			*tilemapPointer1 = ((u32 *)bg_grid_highlightMap)[tilemapIndex * 2] + BG_GRID_HIGHLIGHT_GFX_START + (BG_GRID_HIGHLIGHT_GFX_START << 16);
+			*tilemapPointer2 = ((u32 *)bg_grid_highlightMap)[tilemapIndex * 2 + 1] + BG_GRID_HIGHLIGHT_GFX_START + (BG_GRID_HIGHLIGHT_GFX_START << 16);
+			tilemapPointer1++;
+			tilemapPointer2++;
 		}
+		tilemapPointer1 += 16;
+		tilemapPointer2 += 16;
 	}
 }
 void drawSelectedShip(OBJ_ATTR *spriteBuffer, u8 *characterBuffer){
@@ -606,7 +625,7 @@ void updateMinimap(u8 *characterBuffer){
 	}
 }
 
-void drawHighlight(u32 *drawBuffer){
+void drawHighlight(u8 *drawBuffer){
 
 	//convert pixel coordinates to map cell coordinates
 	s32 mapXPos = mapData.camera.xPos >> 4;
@@ -621,7 +640,7 @@ void drawHighlight(u32 *drawBuffer){
 	}
 	
 	//clear drawBuffer
-	memset32(drawBuffer, 0, 256);
+	memset32(drawBuffer, 0, 64);
 	
 	//draw the movement range of one ship
 	if(mapData.highlight.state == MOVEMENT_RANGE_HIGHLIGHT){
