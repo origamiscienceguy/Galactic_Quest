@@ -169,6 +169,168 @@ AudioSample _string_ens_gm = {
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
+extern cu8 _psgp_12_5_Oct02_data[];
+AudioSample _psgp_12_5_Oct02 = {
+	.sampleStart = _psgp_12_5_Oct02_data, .sampleLength = 6500, .loopEnd = 6500, .loopStart = 3802, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 352800,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psgp_25_Oct01_data[];
+AudioSample _psgp_25_Oct01 = {
+	.sampleStart = _psgp_25_Oct01_data, .sampleLength = 5992, .loopEnd = 5992, .loopStart = 3970, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 352800,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psgp_12_5_Oct03_data[];
+AudioSample _psgp_12_5_Oct03 = {
+	.sampleStart = _psgp_12_5_Oct03_data, .sampleLength = 5024, .loopEnd = 5024, .loopStart = 2662, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 176400,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psgp_12_5_Oct04_data[];
+AudioSample _psgp_12_5_Oct04 = {
+	.sampleStart = _psgp_12_5_Oct04_data, .sampleLength = 3984, .loopEnd = 3984, .loopStart = 2470, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psgp_12_5_Oct05_data[];
+AudioSample _psgp_12_5_Oct05 = {
+	.sampleStart = _psgp_12_5_Oct05_data, .sampleLength = 5183, .loopEnd = 5183, .loopStart = 3711, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 22050,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psgp_12_5_Oct06_data[];
+AudioSample _psgp_12_5_Oct06 = {
+	.sampleStart = _psgp_12_5_Oct06_data, .sampleLength = 3178, .loopEnd = 3178, .loopStart = 2309, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 11025,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psgp_12_5_Oct07_data[];
+AudioSample _psgp_12_5_Oct07 = {
+	.sampleStart = _psgp_12_5_Oct07_data, .sampleLength = 1836, .loopEnd = 1836, .loopStart = 1690, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 5513,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psgp_25_Oct02_data[];
+AudioSample _psgp_25_Oct02 = {
+	.sampleStart = _psgp_25_Oct02_data, .sampleLength = 2791, .loopEnd = 2791, .loopStart = 1442, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 176400,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psgp_25_Oct03_data[];
+AudioSample _psgp_25_Oct03 = {
+	.sampleStart = _psgp_25_Oct03_data, .sampleLength = 2369, .loopEnd = 2369, .loopStart = 1526, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 88200,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psgp_25_Oct04_data[];
+AudioSample _psgp_25_Oct04 = {
+	.sampleStart = _psgp_25_Oct04_data, .sampleLength = 1312, .loopEnd = 1312, .loopStart = 976, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psgp_25_Oct05_data[];
+AudioSample _psgp_25_Oct05 = {
+	.sampleStart = _psgp_25_Oct05_data, .sampleLength = 860, .loopEnd = 860, .loopStart = 692, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 22050,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psgp_25_Oct06_data[];
+AudioSample _psgp_25_Oct06 = {
+	.sampleStart = _psgp_25_Oct06_data, .sampleLength = 6447, .loopEnd = 6447, .loopStart = 3946, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 11025,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psgp_25_Oct07_data[];
+AudioSample _psgp_25_Oct07 = {
+	.sampleStart = _psgp_25_Oct07_data, .sampleLength = 2414, .loopEnd = 2414, .loopStart = 1830, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 5513,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psgp_50_Oct01_data[];
+AudioSample _psgp_50_Oct01 = {
+	.sampleStart = _psgp_50_Oct01_data, .sampleLength = 5316, .loopEnd = 5316, .loopStart = 2616, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 352800,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psgp_50_Oct02_data[];
+AudioSample _psgp_50_Oct02 = {
+	.sampleStart = _psgp_50_Oct02_data, .sampleLength = 3799, .loopEnd = 3799, .loopStart = 1102, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 176400,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psgp_50_Oct03_data[];
+AudioSample _psgp_50_Oct03 = {
+	.sampleStart = _psgp_50_Oct03_data, .sampleLength = 2874, .loopEnd = 2874, .loopStart = 1693, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 88200,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psgp_50_Oct04_data[];
+AudioSample _psgp_50_Oct04 = {
+	.sampleStart = _psgp_50_Oct04_data, .sampleLength = 2069, .loopEnd = 2069, .loopStart = 1312, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psgp_50_Oct05_data[];
+AudioSample _psgp_50_Oct05 = {
+	.sampleStart = _psgp_50_Oct05_data, .sampleLength = 1742, .loopEnd = 1742, .loopStart = 985, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 22050,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psgp_50_Oct06_data[];
+AudioSample _psgp_50_Oct06 = {
+	.sampleStart = _psgp_50_Oct06_data, .sampleLength = 2037, .loopEnd = 2037, .loopStart = 1168, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 11025,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psgp_50_Oct07_data[];
+AudioSample _psgp_50_Oct07 = {
+	.sampleStart = _psgp_50_Oct07_data, .sampleLength = 1212, .loopEnd = 1212, .loopStart = 1066, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 5513,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psg_wt_trbass_data[];
+AudioSample _psg_wt_trbass = {
+	.sampleStart = _psg_wt_trbass_data, .sampleLength = 2405, .loopEnd = 2405, .loopStart = 1731, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44020,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psg_ns_clhat_data[];
+AudioSample _psg_ns_clhat = {
+	.sampleStart = _psg_ns_clhat_data, .sampleLength = 10493, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
+	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psg_wt_kick_data[];
+AudioSample _psg_wt_kick = {
+	.sampleStart = _psg_wt_kick_data, .sampleLength = 7993, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
+	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psg_wt_bass2_data[];
+AudioSample _psg_wt_bass2 = {
+	.sampleStart = _psg_wt_bass2_data, .sampleLength = 2185, .loopEnd = 2180, .loopStart = 1506, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psg_ns_ophat_data[];
+AudioSample _psg_ns_ophat = {
+	.sampleStart = _psg_ns_ophat_data, .sampleLength = 32160, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
+	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psg_ns_snare_data[];
+AudioSample _psg_ns_snare = {
+	.sampleStart = _psg_ns_snare_data, .sampleLength = 21614, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
+	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psg_ns_crash_data[];
+AudioSample _psg_ns_crash = {
+	.sampleStart = _psg_ns_crash_data, .sampleLength = 31936, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
+	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
 extern cu8 _wavetable_bass_data[];
 AudioSample _wavetable_bass = {
 	.sampleStart = _wavetable_bass_data, .sampleLength = 674, .loopEnd = 674, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
@@ -178,12 +340,6 @@ AudioSample _wavetable_bass = {
 extern cu8 _sampl_data[];
 AudioSample _sampl = {
 	.sampleStart = _sampl_data, .sampleLength = 2131, .loopEnd = 2131, .loopStart = 1962, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44229,
-	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
-};
-
-extern cu8 _psg_wt_trbass_data[];
-AudioSample _psg_wt_trbass = {
-	.sampleStart = _psg_wt_trbass_data, .sampleLength = 2405, .loopEnd = 2405, .loopStart = 1731, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44020,
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
@@ -362,14 +518,15 @@ AudioSample _recordscratch1 = {
 };
 
 AudioSample *sampleList[] = {
-	&_12_5pulse, &_25pulse, &_50pulse, &_tri_lo, &_tri_hi, &_vsaw0, &_edmkick, &_edmsnare, &_SnareAcoustic3, &_hihat, &_cym_crash_orch, &_fm_bass, &_FM_Bass2, &_FM_Bell1, &_FM_EPianoBell, &_horn, &_piano_hi, &_rave_lead, &_StringsHard, &_FM_Wavetable1, &_string_ensemble2, &_pipe_organ, &_FM_SlapBass2, &_power_snare, &_KickRockVerb, &_untitled, &_FM_Wavetable2, &_string_ens_gm, &_wavetable_bass, &_sampl, &_psg_wt_trbass, &_beat_loop, &_sine_hi, &_acdBassEnv1, &_acdBassEnv2, &_acdBassEnv3, &_acdBassEnv4, &_acdBassEnv5, &_acdBassEnv6, &_acdBassEnv7, &_acdBassEnv8, &_acdBassEnv9, &_acdBassEnv10, &_acdBassEnv11, &_acdBassEnv12, &_acdBassEnv13, &_acdBassEnv14, &_acdBassEnv15, &_acdBassEnv16, &_acdBassEnv17, &_gpiano_c3, &_gpiano_c5, &_strEns3, &_HipHopKick, &_Syn_Bass_2, &_alto_sax, &_SnareHiphop, &_Tambourine, &_whitenoisehi, &_recordscratch1
+	&_12_5pulse, &_25pulse, &_50pulse, &_tri_lo, &_tri_hi, &_vsaw0, &_edmkick, &_edmsnare, &_SnareAcoustic3, &_hihat, &_cym_crash_orch, &_fm_bass, &_FM_Bass2, &_FM_Bell1, &_FM_EPianoBell, &_horn, &_piano_hi, &_rave_lead, &_StringsHard, &_FM_Wavetable1, &_string_ensemble2, &_pipe_organ, &_FM_SlapBass2, &_power_snare, &_KickRockVerb, &_untitled, &_FM_Wavetable2, &_string_ens_gm, &_psgp_12_5_Oct02, &_psgp_25_Oct01, &_psgp_12_5_Oct03, &_psgp_12_5_Oct04, &_psgp_12_5_Oct05, &_psgp_12_5_Oct06, &_psgp_12_5_Oct07, &_psgp_25_Oct02, &_psgp_25_Oct03, &_psgp_25_Oct04, &_psgp_25_Oct05, &_psgp_25_Oct06, &_psgp_25_Oct07, &_psgp_50_Oct01, &_psgp_50_Oct02, &_psgp_50_Oct03, &_psgp_50_Oct04, &_psgp_50_Oct05, &_psgp_50_Oct06, &_psgp_50_Oct07, &_psg_wt_trbass, &_psg_ns_clhat, &_psg_wt_kick, &_psg_wt_bass2, &_psg_ns_ophat, &_psg_ns_snare, &_psg_ns_crash, &_wavetable_bass, &_sampl, &_beat_loop, &_sine_hi, &_acdBassEnv1, &_acdBassEnv2, &_acdBassEnv3, &_acdBassEnv4, &_acdBassEnv5, &_acdBassEnv6, &_acdBassEnv7, &_acdBassEnv8, &_acdBassEnv9, &_acdBassEnv10, &_acdBassEnv11, &_acdBassEnv12, &_acdBassEnv13, &_acdBassEnv14, &_acdBassEnv15, &_acdBassEnv16, &_acdBassEnv17, &_gpiano_c3, &_gpiano_c5, &_strEns3, &_HipHopKick, &_Syn_Bass_2, &_alto_sax, &_SnareHiphop, &_Tambourine, &_whitenoisehi, &_recordscratch1
 };
 
-cu16 numSamples = 60;
+cu16 numSamples = 86;
 
 extern AssetData _MainMenuAsset;
 extern AssetData _SongTemplateAsset;
 extern AssetData _ThemeAAsset;
+extern AssetData _ThemeANewIdeaAsset;
 extern AssetData _ThemeBAsset;
 extern AssetData _ThemeB_BattleAsset;
 extern AssetData _ThemeCAsset;
@@ -377,8 +534,8 @@ extern AssetData _ThemeC_BattleAsset;
 extern AssetData _ThemeC_PeaceAsset;
 extern AssetData _ThemeDAsset;
 AssetData *assetsList[] = {
-	&_MainMenuAsset, &_SongTemplateAsset, &_ThemeAAsset, &_ThemeBAsset, &_ThemeB_BattleAsset, &_ThemeCAsset, &_ThemeC_BattleAsset, &_ThemeC_PeaceAsset, &_ThemeDAsset
+	&_MainMenuAsset, &_SongTemplateAsset, &_ThemeAAsset, &_ThemeANewIdeaAsset, &_ThemeBAsset, &_ThemeB_BattleAsset, &_ThemeCAsset, &_ThemeC_BattleAsset, &_ThemeC_PeaceAsset, &_ThemeDAsset
 };
 
-cu16 numAssets = 9;
+cu16 numAssets = 10;
 
