@@ -1,0 +1,13 @@
+TOP_LEFT,
+TOP_MIDDLE,
+TOP_RIGHT,
+MIDDLE_LEFT/CENTER/MIDDLE_RIGHT/BOTTOM_MIDDLE, // A pure white 8x8 tile
+BOTTOM_LEFT,
+BOTTOM_RIGHT
+
+
+2D_Array {
+    0, 1, 2,
+    3, 3, 3,
+    4, 3, 5
+}
