@@ -17,13 +17,15 @@ void mainMenuInitialize(){
 	REG_BG1CNT = BG_4BPP | BG_SBB(TITLE_CARD_TILEMAP) | BG_CBB(TITLE_CARD_CHARDATA) | BG_PRIO(2) | BG_REG_32x32; //title screen layer
 	REG_BLDCNT = BLD_TOP(BLD_BG2 | BLD_BACKDROP | BLD_OBJ) | BLD_WHITE;
 	REG_BLDY = BLDY(0);
-	REG_BG0HOFS = 512-16;
-	REG_BG0VOFS = 104;
+	mainMenuData.starryBG.xPos = 512 - 16;
+	REG_BG0HOFS = mainMenuData.starryBG.xPos;
+	mainMenuData.starryBG.yPos = 104;
+	REG_BG0VOFS = mainMenuData.starryBG.yPos;
 	REG_BG1HOFS = 512 - 15;
 	REG_BG1VOFS = 512 - 43;
 	
 	//send the palettes
-	memcpy32(&paletteBufferBg[STARRY_IMAGE_PAL_START << 4], startfield_samplePal, sizeof(startfield_samplePal) >> 2);
+	memcpy32(&paletteBufferBg[STARRY_IMAGE_PAL_START << 4], main_menu_starfieldPal, sizeof(main_menu_starfieldPal) >> 2);
 	memcpy32(&paletteBufferBg[TITLE_CARD_PAL_START << 4], sprTitleLogoPal, sizeof(sprTitleLogoPal) >> 2);
 
 	paletteData[0].size = 16;
@@ -38,7 +40,7 @@ void mainMenuInitialize(){
 	paletteData[1].buffer = (void *)paletteBufferObj;
 	
 	//send the background tiles
-	memcpy32(&characterBuffer0[STARRY_IMAGE_GFX_START << 5], startfield_sampleTiles, sizeof(startfield_sampleTiles) >> 2);
+	memcpy32(&characterBuffer0[STARRY_IMAGE_GFX_START << 5], main_menu_starfieldTiles, sizeof(main_menu_starfieldTiles) >> 2);
 	characterData[0].position = tile_mem[STARRY_IMAGE_CHARDATA];
 	characterData[0].buffer = (void *)characterBuffer0;
 	characterData[0].size = sizeof(characterBuffer0) >> 2;
@@ -60,8 +62,8 @@ void mainMenuInitialize(){
 	//send the tilemaps;
 	
 	tilemapData[0].position = &se_mem[STARRY_IMAGE_TILEMAP];
-	tilemapData[0].buffer = (void *)startfield_sampleMetaTiles;
-	tilemapData[0].size = sizeof(startfield_sampleMetaTiles) >> 2;
+	tilemapData[0].buffer = (void *)main_menu_starfieldMetaTiles;
+	tilemapData[0].size = sizeof(main_menu_starfieldMetaTiles) >> 2;
 	
 	tilemapData[1].position = &se_mem[TITLE_CARD_TILEMAP];
 	tilemapData[1].buffer = (void *)sprTitleLogoMap;
@@ -89,30 +91,30 @@ void mainMenuNormal(){
 			mainMenuData.actionTarget = 16;
 			mainMenuData.actionTimer = 0;
 			mainMenuData.state = FADE_TO_TITLE;
-			IOBuffer[0] = 16;
+			IOBuffer0[0] = 16;
 		}
 		else{
 			mainMenuData.actionTimer++;
-			IOBuffer[0] = mainMenuData.actionTimer >> 1;
+			IOBuffer0[0] = mainMenuData.actionTimer >> 1;
 		}
-		IOData.position = (void *)&REG_BLDY;
-		IOData.buffer = IOBuffer;
-		IOData.size = 1;
+		IOData[0].position = (void *)&REG_BLDY;
+		IOData[0].buffer = IOBuffer0;
+		IOData[0].size = 1;
 		break;
 	case FADE_TO_TITLE:
 		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
 			mainMenuData.state = TITLE_COMET_ANIMATION;
 			mainMenuData.actionTarget = 64;
 			mainMenuData.actionTimer = 0;
-			IOBuffer[0] = 0;
+			IOBuffer0[0] = 0;
 		}
 		else{
 			mainMenuData.actionTimer++;
-			IOBuffer[0] = 16 - mainMenuData.actionTimer;
+			IOBuffer0[0] = 16 - mainMenuData.actionTimer;
 		}
-		IOData.position = (void *)&REG_BLDY;
-		IOData.buffer = IOBuffer;
-		IOData.size = 1;
+		IOData[0].position = (void *)&REG_BLDY;
+		IOData[0].buffer = IOBuffer0;
+		IOData[0].size = 1;
 		break;
 	case TITLE_COMET_ANIMATION:
 		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
@@ -144,14 +146,19 @@ void mainMenuNormal(){
 		break;
 	case TITLE_HOLD:
 		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
-			currentScene.scenePointer = sceneList[GAMEPLAY];
-			currentScene.state = INITIALIZE;
+			mainMenuData.state = TITLE_FLY_OUT;
+			mainMenuData.actionTimer = 0;
+			mainMenuData.actionTarget = 32;
 			//hide "press start"
 			objectBuffer[PRESS_START_SPRITE1].attr0 = ATTR0_HIDE;
 			objectBuffer[PRESS_START_SPRITE2].attr0 = ATTR0_HIDE;
 			objectBuffer[PRESS_START_SPRITE3].attr0 = ATTR0_HIDE;
 		}
-		if(mainMenuData.actionTimer % 128 >= 64){
+		else{
+			mainMenuData.actionTimer++;
+		}
+		
+		if(mainMenuData.actionTimer % 128 < 64){
 			//display "press start"
 			objectBuffer[PRESS_START_SPRITE1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(121);
 			objectBuffer[PRESS_START_SPRITE1].attr1 = ATTR1_SIZE_32x8 | ATTR1_X(78);
@@ -170,11 +177,88 @@ void mainMenuNormal(){
 			objectBuffer[PRESS_START_SPRITE3].attr0 = ATTR0_HIDE;
 		}
 		
-		mainMenuData.actionTimer++;
+		
+		if(currentScene.sceneCounter % 8 <= 0){
+			mainMenuData.starryBG.xPos++;		
+		}
+		if(currentScene.sceneCounter % 8 <= 0){
+			mainMenuData.starryBG.yPos++;
+		}
+		IOBuffer0[0] = mainMenuData.starryBG.xPos;
+		IOBuffer0[1] = mainMenuData.starryBG.yPos;
 		
 		OAMData.position = (void *)oam_mem;
 		OAMData.buffer = objectBuffer;
 		OAMData.size = sizeof(objectBuffer) >> 2;
+		
+		IOData[0].position = (void *)(&REG_BG0HOFS);
+		IOData[0].buffer = IOBuffer0;
+		IOData[0].size = 1;
+		
+		break;
+		
+	case TITLE_FLY_OUT:
+		
+		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
+			mainMenuData.state = MAIN_MENU_FLY_IN;
+		}
+		else{
+			mainMenuData.actionTimer++;
+		}
+		
+		if(mainMenuData.actionTimer % 16 >= 8){
+			//display "press start"
+			objectBuffer[PRESS_START_SPRITE1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(121);
+			objectBuffer[PRESS_START_SPRITE1].attr1 = ATTR1_SIZE_32x8 | ATTR1_X(78);
+			objectBuffer[PRESS_START_SPRITE1].attr2 = ATTR2_ID(PRESS_START_GFX_START) | ATTR2_PRIO(0) | ATTR2_PALBANK(PRESS_START_PAL_START);
+			objectBuffer[PRESS_START_SPRITE2].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(121);
+			objectBuffer[PRESS_START_SPRITE2].attr1 = ATTR1_SIZE_32x8 | ATTR1_X(110);
+			objectBuffer[PRESS_START_SPRITE2].attr2 = ATTR2_ID(PRESS_START_GFX_START + 4) | ATTR2_PRIO(0) | ATTR2_PALBANK(PRESS_START_PAL_START);
+			objectBuffer[PRESS_START_SPRITE3].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(121);
+			objectBuffer[PRESS_START_SPRITE3].attr1 = ATTR1_SIZE_32x8 | ATTR1_X(142);
+			objectBuffer[PRESS_START_SPRITE3].attr2 = ATTR2_ID(PRESS_START_GFX_START + 8) | ATTR2_PRIO(0) | ATTR2_PALBANK(PRESS_START_PAL_START);
+		}
+		else{
+			//hide "press start"
+			objectBuffer[PRESS_START_SPRITE1].attr0 = ATTR0_HIDE;
+			objectBuffer[PRESS_START_SPRITE2].attr0 = ATTR0_HIDE;
+			objectBuffer[PRESS_START_SPRITE3].attr0 = ATTR0_HIDE;
+		}
+		
+		if(currentScene.sceneCounter % 8 <= 0){
+			mainMenuData.starryBG.xPos++;		
+		}
+		if(currentScene.sceneCounter % 8 <= 0){
+			mainMenuData.starryBG.yPos++;
+		}
+		IOBuffer0[0] = mainMenuData.starryBG.xPos;
+		IOBuffer0[1] = mainMenuData.starryBG.yPos;
+		IOBuffer0[2] = 512 - 15;
+		IOBuffer0[3] = titleFlyOutYLUT[mainMenuData.actionTimer];
+		
+		OAMData.position = (void *)oam_mem;
+		OAMData.buffer = objectBuffer;
+		OAMData.size = sizeof(objectBuffer) >> 2;
+		
+		IOData[0].position = (void *)(&REG_BG0HOFS);
+		IOData[0].buffer = IOBuffer0;
+		IOData[0].size = 2;
+		break;
+		
+	case MAIN_MENU_FLY_IN:
+		if(currentScene.sceneCounter % 8 <= 0){
+			mainMenuData.starryBG.xPos++;		
+		}
+		if(currentScene.sceneCounter % 8 <= 0){
+			mainMenuData.starryBG.yPos++;
+		}
+		IOBuffer0[0] = mainMenuData.starryBG.xPos;
+		IOBuffer0[1] = mainMenuData.starryBG.yPos;
+		
+		IOData[0].position = (void *)(&REG_BG0HOFS);
+		IOData[0].buffer = IOBuffer0;
+		IOData[0].size = 1;
+		
 		break;
 	default:
 		break;
@@ -186,6 +270,5 @@ void mainMenuEnd(){
 
 }
 
-void processCameraMainMenu(){
-
+void processStarryBG(){
 }
