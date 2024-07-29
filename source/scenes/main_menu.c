@@ -17,13 +17,15 @@ void mainMenuInitialize(){
 	REG_BG1CNT = BG_4BPP | BG_SBB(TITLE_CARD_TILEMAP) | BG_CBB(TITLE_CARD_CHARDATA) | BG_PRIO(2) | BG_REG_32x32; //title screen layer
 	REG_BLDCNT = BLD_TOP(BLD_BG2 | BLD_BACKDROP | BLD_OBJ) | BLD_WHITE;
 	REG_BLDY = BLDY(0);
-	REG_BG0HOFS = 512-16;
-	REG_BG0VOFS = 104;
+	mainMenuData.starryBG.xPos = 512 - 16;
+	REG_BG0HOFS = mainMenuData.starryBG.xPos;
+	mainMenuData.starryBG.yPos = 104;
+	REG_BG0VOFS = mainMenuData.starryBG.yPos;
 	REG_BG1HOFS = 512 - 15;
 	REG_BG1VOFS = 512 - 43;
 	
 	//send the palettes
-	memcpy32(&paletteBufferBg[STARRY_IMAGE_PAL_START << 4], startfield_samplePal, sizeof(startfield_samplePal) >> 2);
+	memcpy32(&paletteBufferBg[STARRY_IMAGE_PAL_START << 4], main_menu_starfieldPal, sizeof(main_menu_starfieldPal) >> 2);
 	memcpy32(&paletteBufferBg[TITLE_CARD_PAL_START << 4], sprTitleLogoPal, sizeof(sprTitleLogoPal) >> 2);
 
 	paletteData[0].size = 16;
@@ -38,7 +40,7 @@ void mainMenuInitialize(){
 	paletteData[1].buffer = (void *)paletteBufferObj;
 	
 	//send the background tiles
-	memcpy32(&characterBuffer0[STARRY_IMAGE_GFX_START << 5], startfield_sampleTiles, sizeof(startfield_sampleTiles) >> 2);
+	memcpy32(&characterBuffer0[STARRY_IMAGE_GFX_START << 5], main_menu_starfieldTiles, sizeof(main_menu_starfieldTiles) >> 2);
 	characterData[0].position = tile_mem[STARRY_IMAGE_CHARDATA];
 	characterData[0].buffer = (void *)characterBuffer0;
 	characterData[0].size = sizeof(characterBuffer0) >> 2;
@@ -60,8 +62,8 @@ void mainMenuInitialize(){
 	//send the tilemaps;
 	
 	tilemapData[0].position = &se_mem[STARRY_IMAGE_TILEMAP];
-	tilemapData[0].buffer = (void *)startfield_sampleMetaTiles;
-	tilemapData[0].size = sizeof(startfield_sampleMetaTiles) >> 2;
+	tilemapData[0].buffer = (void *)main_menu_starfieldMetaTiles;
+	tilemapData[0].size = sizeof(main_menu_starfieldMetaTiles) >> 2;
 	
 	tilemapData[1].position = &se_mem[TITLE_CARD_TILEMAP];
 	tilemapData[1].buffer = (void *)sprTitleLogoMap;
@@ -169,12 +171,25 @@ void mainMenuNormal(){
 			objectBuffer[PRESS_START_SPRITE2].attr0 = ATTR0_HIDE;
 			objectBuffer[PRESS_START_SPRITE3].attr0 = ATTR0_HIDE;
 		}
+		if(mainMenuData.actionTimer % 8 <= 0){
+			mainMenuData.starryBG.xPos++;		
+		}
+		if(mainMenuData.actionTimer % 8 <= 0){
+			mainMenuData.starryBG.yPos++;
+		}
+		IOBuffer[0] = mainMenuData.starryBG.xPos;
+		IOBuffer[1] = mainMenuData.starryBG.yPos;
 		
 		mainMenuData.actionTimer++;
 		
 		OAMData.position = (void *)oam_mem;
 		OAMData.buffer = objectBuffer;
 		OAMData.size = sizeof(objectBuffer) >> 2;
+		
+		IOData.position = (void *)(&REG_BG0HOFS);
+		IOData.buffer = IOBuffer;
+		IOData.size = 1;
+		
 		break;
 	default:
 		break;
@@ -186,6 +201,5 @@ void mainMenuEnd(){
 
 }
 
-void processCameraMainMenu(){
-
+void processStarryBG(){
 }

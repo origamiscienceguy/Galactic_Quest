@@ -43,14 +43,24 @@
 #define PRESS_START_GFX_START 0
 #define PRESS_START_GFX_SIZE 12
 
+#define STARRY_BG_MAX_VEL 
+
 //enums
 enum MainMenuState{
 	FLASH_WHITE, FADE_TO_TITLE, TITLE_COMET_ANIMATION, TITLE_HOLD, TITLE_TO_MAIN, MAIN_HOLD
 };
 
 //structs
+typedef struct StarryBGData{
+	u16 xPos;
+	u16 yPos;
+	s16 xVel;
+	s16 yVel;
+}StarryBGData;
+
 typedef struct MainMenuData{
 	enum MainMenuState state;
+	StarryBGData starryBG;
 	u16 actionTimer;
 	u16 actionTarget;
 	s16 xPos;
@@ -72,12 +82,15 @@ extern const unsigned short starBlockerTiles[256];
 extern const unsigned short starBlockerPal[16];
 extern const unsigned short sprTitlePressStartTextTiles[192];
 extern const unsigned short sprTitlePressStartTextPal[16];
+extern const unsigned short main_menu_starfieldTiles[1632];
+extern const unsigned short main_menu_starfieldMetaTiles[4096];
+extern const unsigned short main_menu_starfieldPal[16];
 
 //local functions
 void mainMenuInitialize();
 void mainMenuNormal();
 void mainMenuEnd();
-void processCameraMainMenu();
+void processStarryBG();
 
 //external functions
 #endif
