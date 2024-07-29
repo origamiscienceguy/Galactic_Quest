@@ -44,7 +44,7 @@ extern SceneStatus currentScene;
 extern VideoData tilemapData[4] EWRAM_DATA;
 extern VideoData characterData[6] EWRAM_DATA;
 extern VideoData paletteData[2] EWRAM_DATA;
-extern VideoData IOData EWRAM_DATA;
+extern VideoData IOData[8] EWRAM_DATA;
 extern VideoData OAMData EWRAM_DATA;
 
 extern u16 tilemapBuffer0[0x1000] EWRAM_DATA;
@@ -60,7 +60,14 @@ extern u8 characterBuffer5[0x4000] EWRAM_DATA;
 extern u16 paletteBufferBg[0x100] EWRAM_DATA;
 extern u16 paletteBufferObj[0x100] EWRAM_DATA;
 extern OBJ_ATTR objectBuffer[128] EWRAM_DATA;
-extern u16 IOBuffer[0x200] EWRAM_DATA;
+extern u16 IOBuffer0[0x200] EWRAM_DATA;
+extern u16 IOBuffer1[0x200] EWRAM_DATA;
+extern u16 IOBuffer2[0x200] EWRAM_DATA;
+extern u16 IOBuffer3[0x200] EWRAM_DATA;
+extern u16 IOBuffer4[0x200] EWRAM_DATA;
+extern u16 IOBuffer5[0x200] EWRAM_DATA;
+extern u16 IOBuffer6[0x200] EWRAM_DATA;
+extern u16 IOBuffer7[0x200] EWRAM_DATA;
 
 //local functions
 

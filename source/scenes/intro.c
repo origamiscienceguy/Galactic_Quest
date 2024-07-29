@@ -45,7 +45,7 @@ void introNormal(){
 			introData.actionTarget = GBAJAM_WAIT_FRAMES;
 		}
 		else{
-			IOBuffer[0] = 16 - introData.actionTimer;
+			IOBuffer0[0] = 16 - introData.actionTimer;
 			introData.actionTimer++;
 		}
 		break;
@@ -68,7 +68,7 @@ void introNormal(){
 			memcpy32(m4_mem, Intro_Audio_engineBitmap, sizeof(Intro_Audio_engineBitmap) >> 2);
 		}
 		else{
-			IOBuffer[0] = introData.actionTimer;
+			IOBuffer0[0] = introData.actionTimer;
 			introData.actionTimer++;
 		}
 		break;
@@ -79,7 +79,7 @@ void introNormal(){
 			introData.actionTarget = AUDIO_BY_WAIT_FRAMES;
 		}
 		else{
-			IOBuffer[0] = 16 - introData.actionTimer;
+			IOBuffer0[0] = 16 - introData.actionTimer;
 			introData.actionTimer++;
 		}
 		break;
@@ -102,7 +102,7 @@ void introNormal(){
 			memcpy32(m4_mem, Intro_studioBitmap, sizeof(Intro_studioBitmap) >> 2);
 		}
 		else{
-			IOBuffer[0] = introData.actionTimer;
+			IOBuffer0[0] = introData.actionTimer;
 			introData.actionTimer++;
 		}
 		break;
@@ -113,7 +113,7 @@ void introNormal(){
 			introData.actionTarget = PIXEL_PLAY_STUDIOS_WAIT_FRAMES;
 		}
 		else{
-			IOBuffer[0] = 16 - introData.actionTimer;
+			IOBuffer0[0] = 16 - introData.actionTimer;
 			introData.actionTimer++;
 		}
 		break;
@@ -136,7 +136,7 @@ void introNormal(){
 			memset32(m4_mem, 0, 8192);
 		}
 		else{
-			IOBuffer[0] = introData.actionTimer;
+			IOBuffer0[0] = introData.actionTimer;
 			introData.actionTimer++;
 		}
 		break;
@@ -147,9 +147,9 @@ void introNormal(){
 		currentScene.state = INITIALIZE;
 	}
 	
-	IOData.position = (void *)&REG_BLDY;
-	IOData.buffer = IOBuffer;
-	IOData.size = 1;
+	IOData[0].position = (void *)&REG_BLDY;
+	IOData[0].buffer = IOBuffer0;
+	IOData[0].size = 1;
 }
 
 void introEnd(){

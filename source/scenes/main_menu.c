@@ -91,30 +91,30 @@ void mainMenuNormal(){
 			mainMenuData.actionTarget = 16;
 			mainMenuData.actionTimer = 0;
 			mainMenuData.state = FADE_TO_TITLE;
-			IOBuffer[0] = 16;
+			IOBuffer0[0] = 16;
 		}
 		else{
 			mainMenuData.actionTimer++;
-			IOBuffer[0] = mainMenuData.actionTimer >> 1;
+			IOBuffer0[0] = mainMenuData.actionTimer >> 1;
 		}
-		IOData.position = (void *)&REG_BLDY;
-		IOData.buffer = IOBuffer;
-		IOData.size = 1;
+		IOData[0].position = (void *)&REG_BLDY;
+		IOData[0].buffer = IOBuffer0;
+		IOData[0].size = 1;
 		break;
 	case FADE_TO_TITLE:
 		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
 			mainMenuData.state = TITLE_COMET_ANIMATION;
 			mainMenuData.actionTarget = 64;
 			mainMenuData.actionTimer = 0;
-			IOBuffer[0] = 0;
+			IOBuffer0[0] = 0;
 		}
 		else{
 			mainMenuData.actionTimer++;
-			IOBuffer[0] = 16 - mainMenuData.actionTimer;
+			IOBuffer0[0] = 16 - mainMenuData.actionTimer;
 		}
-		IOData.position = (void *)&REG_BLDY;
-		IOData.buffer = IOBuffer;
-		IOData.size = 1;
+		IOData[0].position = (void *)&REG_BLDY;
+		IOData[0].buffer = IOBuffer0;
+		IOData[0].size = 1;
 		break;
 	case TITLE_COMET_ANIMATION:
 		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
@@ -146,14 +146,19 @@ void mainMenuNormal(){
 		break;
 	case TITLE_HOLD:
 		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
-			currentScene.scenePointer = sceneList[GAMEPLAY];
-			currentScene.state = INITIALIZE;
+			mainMenuData.state = TITLE_FLY_OUT;
+			mainMenuData.actionTimer = 0;
+			mainMenuData.actionTarget = 32;
 			//hide "press start"
 			objectBuffer[PRESS_START_SPRITE1].attr0 = ATTR0_HIDE;
 			objectBuffer[PRESS_START_SPRITE2].attr0 = ATTR0_HIDE;
 			objectBuffer[PRESS_START_SPRITE3].attr0 = ATTR0_HIDE;
 		}
-		if(mainMenuData.actionTimer % 128 >= 64){
+		else{
+			mainMenuData.actionTimer++;
+		}
+		
+		if(mainMenuData.actionTimer % 128 < 64){
 			//display "press start"
 			objectBuffer[PRESS_START_SPRITE1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(121);
 			objectBuffer[PRESS_START_SPRITE1].attr1 = ATTR1_SIZE_32x8 | ATTR1_X(78);
@@ -171,24 +176,88 @@ void mainMenuNormal(){
 			objectBuffer[PRESS_START_SPRITE2].attr0 = ATTR0_HIDE;
 			objectBuffer[PRESS_START_SPRITE3].attr0 = ATTR0_HIDE;
 		}
-		if(mainMenuData.actionTimer % 8 <= 0){
+		
+		
+		if(currentScene.sceneCounter % 8 <= 0){
 			mainMenuData.starryBG.xPos++;		
 		}
-		if(mainMenuData.actionTimer % 8 <= 0){
+		if(currentScene.sceneCounter % 8 <= 0){
 			mainMenuData.starryBG.yPos++;
 		}
-		IOBuffer[0] = mainMenuData.starryBG.xPos;
-		IOBuffer[1] = mainMenuData.starryBG.yPos;
-		
-		mainMenuData.actionTimer++;
+		IOBuffer0[0] = mainMenuData.starryBG.xPos;
+		IOBuffer0[1] = mainMenuData.starryBG.yPos;
 		
 		OAMData.position = (void *)oam_mem;
 		OAMData.buffer = objectBuffer;
 		OAMData.size = sizeof(objectBuffer) >> 2;
 		
-		IOData.position = (void *)(&REG_BG0HOFS);
-		IOData.buffer = IOBuffer;
-		IOData.size = 1;
+		IOData[0].position = (void *)(&REG_BG0HOFS);
+		IOData[0].buffer = IOBuffer0;
+		IOData[0].size = 1;
+		
+		break;
+		
+	case TITLE_FLY_OUT:
+		
+		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
+			mainMenuData.state = MAIN_MENU_FLY_IN;
+		}
+		else{
+			mainMenuData.actionTimer++;
+		}
+		
+		if(mainMenuData.actionTimer % 16 >= 8){
+			//display "press start"
+			objectBuffer[PRESS_START_SPRITE1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(121);
+			objectBuffer[PRESS_START_SPRITE1].attr1 = ATTR1_SIZE_32x8 | ATTR1_X(78);
+			objectBuffer[PRESS_START_SPRITE1].attr2 = ATTR2_ID(PRESS_START_GFX_START) | ATTR2_PRIO(0) | ATTR2_PALBANK(PRESS_START_PAL_START);
+			objectBuffer[PRESS_START_SPRITE2].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(121);
+			objectBuffer[PRESS_START_SPRITE2].attr1 = ATTR1_SIZE_32x8 | ATTR1_X(110);
+			objectBuffer[PRESS_START_SPRITE2].attr2 = ATTR2_ID(PRESS_START_GFX_START + 4) | ATTR2_PRIO(0) | ATTR2_PALBANK(PRESS_START_PAL_START);
+			objectBuffer[PRESS_START_SPRITE3].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(121);
+			objectBuffer[PRESS_START_SPRITE3].attr1 = ATTR1_SIZE_32x8 | ATTR1_X(142);
+			objectBuffer[PRESS_START_SPRITE3].attr2 = ATTR2_ID(PRESS_START_GFX_START + 8) | ATTR2_PRIO(0) | ATTR2_PALBANK(PRESS_START_PAL_START);
+		}
+		else{
+			//hide "press start"
+			objectBuffer[PRESS_START_SPRITE1].attr0 = ATTR0_HIDE;
+			objectBuffer[PRESS_START_SPRITE2].attr0 = ATTR0_HIDE;
+			objectBuffer[PRESS_START_SPRITE3].attr0 = ATTR0_HIDE;
+		}
+		
+		if(currentScene.sceneCounter % 8 <= 0){
+			mainMenuData.starryBG.xPos++;		
+		}
+		if(currentScene.sceneCounter % 8 <= 0){
+			mainMenuData.starryBG.yPos++;
+		}
+		IOBuffer0[0] = mainMenuData.starryBG.xPos;
+		IOBuffer0[1] = mainMenuData.starryBG.yPos;
+		IOBuffer0[2] = 512 - 15;
+		IOBuffer0[3] = titleFlyOutYLUT[mainMenuData.actionTimer];
+		
+		OAMData.position = (void *)oam_mem;
+		OAMData.buffer = objectBuffer;
+		OAMData.size = sizeof(objectBuffer) >> 2;
+		
+		IOData[0].position = (void *)(&REG_BG0HOFS);
+		IOData[0].buffer = IOBuffer0;
+		IOData[0].size = 2;
+		break;
+		
+	case MAIN_MENU_FLY_IN:
+		if(currentScene.sceneCounter % 8 <= 0){
+			mainMenuData.starryBG.xPos++;		
+		}
+		if(currentScene.sceneCounter % 8 <= 0){
+			mainMenuData.starryBG.yPos++;
+		}
+		IOBuffer0[0] = mainMenuData.starryBG.xPos;
+		IOBuffer0[1] = mainMenuData.starryBG.yPos;
+		
+		IOData[0].position = (void *)(&REG_BG0HOFS);
+		IOData[0].buffer = IOBuffer0;
+		IOData[0].size = 1;
 		
 		break;
 	default:

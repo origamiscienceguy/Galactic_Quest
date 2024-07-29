@@ -9,7 +9,7 @@ VideoData tilemapData[4] EWRAM_DATA;
 VideoData characterData[6] EWRAM_DATA;
 VideoData paletteData[2] EWRAM_DATA;
 VideoData OAMData EWRAM_DATA;
-VideoData IOData EWRAM_DATA;
+VideoData IOData[8] EWRAM_DATA;
 
 u16 tilemapBuffer0[0x1000] EWRAM_DATA;
 u16 tilemapBuffer1[0x1000] EWRAM_DATA;
@@ -24,7 +24,14 @@ u8 characterBuffer5[0x4000] EWRAM_DATA;
 u16 paletteBufferBg[0x100] EWRAM_DATA;
 u16 paletteBufferObj[0x100] EWRAM_DATA;
 OBJ_ATTR objectBuffer[128] EWRAM_DATA;
-u16 IOBuffer[0x200] EWRAM_DATA;
+u16 IOBuffer0[0x200] EWRAM_DATA;
+u16 IOBuffer1[0x200] EWRAM_DATA;
+u16 IOBuffer2[0x200] EWRAM_DATA;
+u16 IOBuffer3[0x200] EWRAM_DATA;
+u16 IOBuffer4[0x200] EWRAM_DATA;
+u16 IOBuffer5[0x200] EWRAM_DATA;
+u16 IOBuffer6[0x200] EWRAM_DATA;
+u16 IOBuffer7[0x200] EWRAM_DATA;
 
 int main(){
 	globalInitialize();
@@ -216,15 +223,20 @@ void updateGraphics(){
 	*(vu16 *)0x5000000 = 0;
 	
 	//update any video IO registers
-	size = IOData.size;
-	dest = IOData.position;
-	src = IOData.buffer;
-	
-	if(size != 0){
-		memcpy32(dest, src, size);
+	for(u32 layer = 0; layer < 8; layer++){
+		size = IOData[layer].size;
+		dest = IOData[layer].position;
+		src = IOData[layer].buffer;
+		
+		if(size == 0){
+			continue;
+		}
+		else{
+			memcpy32(dest, src, size);
+		}
+		//mark this transfer as completed
+		IOData[layer].size = 0;
 	}
-	//mark this transfer as completed
-	IOData.size = 0;
 	
 	//update any OAM entries
 	size = OAMData.size;

@@ -1174,17 +1174,17 @@ void processCamera(){
 	OAMData.size = sizeof(objectBuffer) >> 2;
 	
 	//queue the background scroll registers
-	IOData.position = (void *)&REG_BG0HOFS;
-	IOData.buffer = IOBuffer;
-	IOData.size = 4;
-	IOBuffer[0] = mapData.camera.xPos % 512;
-	IOBuffer[1] = mapData.camera.yPos % 512;
-	IOBuffer[2] = mapData.camera.xPos % 512;
-	IOBuffer[3] = mapData.camera.yPos % 512;
-	IOBuffer[4] = mapData.camera.xPos % 16;
-	IOBuffer[5] = mapData.camera.yPos % 16;
-	IOBuffer[6] = mapData.camera.xPos >> 3;
-	IOBuffer[7] = mapData.camera.yPos >> 3;
+	IOData[0].position = (void *)&REG_BG0HOFS;
+	IOData[0].buffer = IOBuffer0;
+	IOData[0].size = 4;
+	IOBuffer0[0] = mapData.camera.xPos % 512;
+	IOBuffer0[1] = mapData.camera.yPos % 512;
+	IOBuffer0[2] = mapData.camera.xPos % 512;
+	IOBuffer0[3] = mapData.camera.yPos % 512;
+	IOBuffer0[4] = mapData.camera.xPos % 16;
+	IOBuffer0[5] = mapData.camera.yPos % 16;
+	IOBuffer0[6] = mapData.camera.xPos >> 3;
+	IOBuffer0[7] = mapData.camera.yPos >> 3;
 }
 
 void processCameraPan(){

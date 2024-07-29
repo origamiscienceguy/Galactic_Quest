@@ -47,7 +47,7 @@
 
 //enums
 enum MainMenuState{
-	FLASH_WHITE, FADE_TO_TITLE, TITLE_COMET_ANIMATION, TITLE_HOLD, TITLE_TO_MAIN, MAIN_HOLD
+	FLASH_WHITE, FADE_TO_TITLE, TITLE_COMET_ANIMATION, TITLE_HOLD, TITLE_FLY_OUT, MAIN_MENU_FLY_IN, MAIN_MENU_FLY_OUT, 
 };
 
 //structs
@@ -85,6 +85,7 @@ extern const unsigned short sprTitlePressStartTextPal[16];
 extern const unsigned short main_menu_starfieldTiles[1632];
 extern const unsigned short main_menu_starfieldMetaTiles[4096];
 extern const unsigned short main_menu_starfieldPal[16];
+extern cu16 titleFlyOutYLUT[11];
 
 //local functions
 void mainMenuInitialize();
