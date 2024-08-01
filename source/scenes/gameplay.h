@@ -66,6 +66,9 @@
 #define OBJ_CURSOR_GFX (OBJ_MINIMAP_CURSOR_GFX + OBJ_MINIMAP_CURSOR_GFX_SIZE)
 #define OBJ_CURSOR_GFX_SIZE 32
 
+#define OBJ_SELECT_A_SHIP_SPRITES_START 8
+#define OBJ_SELECT_A_SHIP_SPRITES_NUM 30
+
 
 
 #define CYCLE_PAN_SPEED 20
@@ -79,6 +82,9 @@
 #define MINIMAP_MOVE_FRAMES 4
 #define MINIMAP_YPOS 48
 
+#define SELECT_A_SHIP_MOVE_FRAMES 4
+#define SELECT_A_SHIP_MAX_DISPLAYED_SHIPS 8
+
 //enums
 enum ShipType{
 	SCOUT, FIGHTER, BOMBER, DESTROYER, CRUISER, BATTLESHIP, CARRIER,
@@ -89,7 +95,7 @@ enum ShipState{
 };
 
 enum MapState{
-	TURN_START, OPEN_MAP, SHIP_SELECTED, SHIP_MOVEMENT_SELECT, SHIP_MOVING, BATTLE, TURN_END, TURN_END_MOVEMENT, TURN_REPLAY
+	TURN_START, OPEN_MAP, SELECT_A_SHIP, SHIP_SELECTED, SHIP_MOVEMENT_SELECT, SHIP_MOVING, BATTLE, TURN_END, TURN_END_MOVEMENT, TURN_REPLAY
 };
 
 enum TeamState{
@@ -116,14 +122,18 @@ enum HighlightState{
 	NO_HIGHLIGHT, MOVEMENT_RANGE_HIGHLIGHT, VISIBILITY_HIGHLIGHT, POTENTIAL_ENCOUNTERS_HIGHLIGHT
 };
 
-enum MinimapState{
-	MINIMAP_HIDDEN_LEFT, MINIMAP_HIDDEN_RIGHT, MINIMAP_STILL_LEFT, MINIMAP_STILL_RIGHT, 
-	MINIMAP_MOVING_LEFT, MINIMAP_MOVING_RIGHT, MINIMAP_HIDING_LEFT, MINIMAP_HIDING_RIGHT,
-	MINIMAP_EMERGING_LEFT, MINIMAP_EMERGING_RIGHT
+enum WidgetState{
+	WIDGET_HIDDEN_LEFT, WIDGET_HIDDEN_RIGHT, WIDGET_STILL_LEFT, WIDGET_STILL_RIGHT, 
+	WIDGET_MOVING_LEFT, WIDGET_MOVING_RIGHT, WIDGET_HIDING_LEFT, WIDGET_HIDING_RIGHT,
+	WIDGET_EMERGING_LEFT, WIDGET_EMERGING_RIGHT
 };
 
 enum GridState{
 	NO_GRID, GRID_ON
+};
+
+enum SelectAShipMenuState{
+	NO_SELECT_A_SHIP_MENU, SCROLLING_SELECT_A_SHIP_MENU, WAITING_SELECT_A_SHIP_MENU, SELECTING_SELECT_A_SHIP_MENU 
 };
 
 //structs
@@ -190,11 +200,22 @@ typedef struct HighlightData{
 }HighlightData;
 
 typedef struct MinimapData{
-	enum MinimapState state;
+	enum WidgetState widgetState;
 	u8 actionTimer;
 	u8 actionTarget;
 	u8 updateRequest;
 }MinimapData;
+
+typedef struct SelectAShipMenu{
+	enum SelectAShipMenuState state;
+	enum WidgetState widgetState;
+	u8 currentSelection;
+	u8 currentTopOption;
+	u8 xPos;
+	u8 yPos;
+	u8 actionTarget;
+	u8 actionTimer;
+}SelectAShipMenu;
 
 typedef struct MapData{
 	enum MapState state; //what is the stage of the game are we in
@@ -212,6 +233,7 @@ typedef struct MapData{
 	CursorData cursor; //the struct containing data about the cursor
 	HighlightData highlight; //the data about the highlight layer
 	MinimapData minimap; //the data about the minimap layer
+	SelectAShipMenu selectAShip;
 }MapData;
 
 //globals
@@ -243,6 +265,8 @@ extern const unsigned short bg_grid_highlightPal[16];
 extern const unsigned short bg_cycle_animTiles[304];
 extern const unsigned short bg_cycle_animMap[36];
 extern const unsigned short bg_cycle_animPal[16];
+extern const u8 *selectAShipYPos;
+extern const u8 *selectAShipXPos;
 
 extern const u8 minimapPositions[];
 
@@ -265,6 +289,7 @@ void nextPlayer();
 void nextTurn();
 void turnStartState();
 void openMapState();
+void selectAShipState();
 void shipSelectedState();
 void shipMovementSelectState();
 void shipMovingState();
@@ -287,6 +312,8 @@ void checkCycleButtons();
 void revealMinimap();
 void hideMinimap();
 void cursorBoundsCheck();
+u8 countSameTeam(u8, u8, u8 *);
+void drawSelectAShipMenu(u8 *, u8);
 
 //temp function
 void initMap();
