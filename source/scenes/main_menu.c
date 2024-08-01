@@ -246,6 +246,12 @@ void mainMenuNormal(){
 		break;
 		
 	case MAIN_MENU_FLY_IN:
+		
+		currentScene.scenePointer = sceneList[GAMEPLAY];
+		currentScene.state = INITIALIZE;
+		
+		
+		
 		if(currentScene.sceneCounter % 8 <= 0){
 			mainMenuData.starryBG.xPos++;		
 		}
