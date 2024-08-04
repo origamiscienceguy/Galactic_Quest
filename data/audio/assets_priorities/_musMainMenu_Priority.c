@@ -5,4 +5,4 @@
 cu8 _musMainMenu_Priority = 0;
 
 //type in the priority of each channel in this asset. Leave unused channels as blank, or set to 0
-cu8 _musMainMenu_ChannelPriority[MAX_DMA_CHANNELS] = {0, };
+cu8 _musMainMenu_ChannelPriority[MAX_DMA_CHANNELS] = {100, 100, 100, 100, 100, 100, 100, 100, 100, 100};
