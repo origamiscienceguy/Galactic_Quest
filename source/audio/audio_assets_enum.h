@@ -3,7 +3,7 @@
 #define audioAssetEnumh
 
 enum AudioAssetName{
-	_musMainMenu, _musThemeB, _musThemeB_Battle, _musThemeC, _musThemeC_Battle, _musThemeC_Peace, _musThemeD, 
+	_musMainMenu, _musThemeA, _musThemeB, _musThemeB_Battle, _musThemeC, _musThemeC_Battle, _musThemeC_Peace, _musThemeD, 
 };
 
 #endif
