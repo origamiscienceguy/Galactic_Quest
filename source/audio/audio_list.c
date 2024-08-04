@@ -417,6 +417,8 @@ cu16 numSamples = 68;
 
 extern AssetData _musMainMenuAsset;
 extern AssetData _musThemeAAsset;
+extern AssetData _musThemeA_BattleAsset;
+extern AssetData _musThemeA_PeaceAsset;
 extern AssetData _musThemeBAsset;
 extern AssetData _musThemeB_BattleAsset;
 extern AssetData _musThemeCAsset;
@@ -424,8 +426,8 @@ extern AssetData _musThemeC_BattleAsset;
 extern AssetData _musThemeC_PeaceAsset;
 extern AssetData _musThemeDAsset;
 AssetData *assetsList[] = {
-	&_musMainMenuAsset, &_musThemeAAsset, &_musThemeBAsset, &_musThemeB_BattleAsset, &_musThemeCAsset, &_musThemeC_BattleAsset, &_musThemeC_PeaceAsset, &_musThemeDAsset
+	&_musMainMenuAsset, &_musThemeAAsset, &_musThemeA_BattleAsset, &_musThemeA_PeaceAsset, &_musThemeBAsset, &_musThemeB_BattleAsset, &_musThemeCAsset, &_musThemeC_BattleAsset, &_musThemeC_PeaceAsset, &_musThemeDAsset
 };
 
-cu16 numAssets = 8;
+cu16 numAssets = 10;
 
