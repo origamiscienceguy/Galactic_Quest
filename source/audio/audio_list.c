@@ -61,9 +61,21 @@ AudioSample _whitenoisehi = {
 	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
-extern cu8 _12_5pulse_data[];
-AudioSample _12_5pulse = {
-	.sampleStart = _12_5pulse_data, .sampleLength = 5183, .loopEnd = 5183, .loopStart = 3711, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 11025,
+extern cu8 _SnareAcoustic3_data[];
+AudioSample _SnareAcoustic3 = {
+	.sampleStart = _SnareAcoustic3_data, .sampleLength = 5516, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 41625,
+	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _piano_bass_data[];
+AudioSample _piano_bass = {
+	.sampleStart = _piano_bass_data, .sampleLength = 13925, .loopEnd = 13925, .loopStart = 9571, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 47483,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _flute_data[];
+AudioSample _flute = {
+	.sampleStart = _flute_data, .sampleLength = 1808, .loopEnd = 1808, .loopStart = 1716, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 47655,
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
@@ -91,12 +103,6 @@ AudioSample _glacierSynth = {
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
-extern cu8 _psy_bass_data[];
-AudioSample _psy_bass = {
-	.sampleStart = _psy_bass_data, .sampleLength = 8432, .loopEnd = 8432, .loopStart = 7704, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
-	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
-};
-
 extern cu8 _spacePad_data[];
 AudioSample _spacePad = {
 	.sampleStart = _spacePad_data, .sampleLength = 63392, .loopEnd = 63392, .loopStart = 43040, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
@@ -109,12 +115,6 @@ AudioSample _rave_lead_2 = {
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
-extern cu8 _thATransition_data[];
-AudioSample _thATransition = {
-	.sampleStart = _thATransition_data, .sampleLength = 103230, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 32768,
-	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
-};
-
 extern cu8 _layeredLead1_data[];
 AudioSample _layeredLead1 = {
 	.sampleStart = _layeredLead1_data, .sampleLength = 9136, .loopEnd = 9136, .loopStart = 5120, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 47996,
@@ -124,6 +124,24 @@ AudioSample _layeredLead1 = {
 extern cu8 _trance_snare_data[];
 AudioSample _trance_snare = {
 	.sampleStart = _trance_snare_data, .sampleLength = 9280, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
+	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _12_5pulse_data[];
+AudioSample _12_5pulse = {
+	.sampleStart = _12_5pulse_data, .sampleLength = 5183, .loopEnd = 5183, .loopStart = 3711, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 11025,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _psy_bass_data[];
+AudioSample _psy_bass = {
+	.sampleStart = _psy_bass_data, .sampleLength = 8432, .loopEnd = 8432, .loopStart = 7704, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _thATransition_data[];
+AudioSample _thATransition = {
+	.sampleStart = _thATransition_data, .sampleLength = 103230, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 32768,
 	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
@@ -151,12 +169,6 @@ AudioSample _FM_Wavetable2 = {
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
-extern cu8 _SnareAcoustic3_data[];
-AudioSample _SnareAcoustic3 = {
-	.sampleStart = _SnareAcoustic3_data, .sampleLength = 5516, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 41625,
-	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
-};
-
 extern cu8 _wavetable_bass_data[];
 AudioSample _wavetable_bass = {
 	.sampleStart = _wavetable_bass_data, .sampleLength = 674, .loopEnd = 674, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
@@ -173,12 +185,6 @@ extern cu8 _beat_loop_data[];
 AudioSample _beat_loop = {
 	.sampleStart = _beat_loop_data, .sampleLength = 16858, .loopEnd = 16849, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 20000,
 	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
-};
-
-extern cu8 _sine_hi_data[];
-AudioSample _sine_hi = {
-	.sampleStart = _sine_hi_data, .sampleLength = 23, .loopEnd = 23, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48174,
-	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
 extern cu8 _acdBassEnv1_data[];
@@ -283,6 +289,12 @@ AudioSample _acdBassEnv17 = {
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
+extern cu8 _sine_hi_data[];
+AudioSample _sine_hi = {
+	.sampleStart = _sine_hi_data, .sampleLength = 23, .loopEnd = 23, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48174,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
 extern cu8 _gpiano_c3_data[];
 AudioSample _gpiano_c3 = {
 	.sampleStart = _gpiano_c3_data, .sampleLength = 23407, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 10000,
@@ -307,18 +319,6 @@ AudioSample _HipHopKick = {
 	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
-extern cu8 _Syn_Bass_2_data[];
-AudioSample _Syn_Bass_2 = {
-	.sampleStart = _Syn_Bass_2_data, .sampleLength = 5031, .loopEnd = 5031, .loopStart = 4786, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 31942,
-	.sampleType = 1, .globalVolume = 60, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
-};
-
-extern cu8 _alto_sax_data[];
-AudioSample _alto_sax = {
-	.sampleStart = _alto_sax_data, .sampleLength = 1763, .loopEnd = 1763, .loopStart = 1580, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 47913,
-	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
-};
-
 extern cu8 _SnareHiphop_data[];
 AudioSample _SnareHiphop = {
 	.sampleStart = _SnareHiphop_data, .sampleLength = 5456, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 44100,
@@ -331,33 +331,56 @@ AudioSample _Tambourine = {
 	.sampleType = 0, .globalVolume = 61, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
+extern cu8 _Syn_Bass_2_data[];
+AudioSample _Syn_Bass_2 = {
+	.sampleStart = _Syn_Bass_2_data, .sampleLength = 5031, .loopEnd = 5031, .loopStart = 4786, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 31942,
+	.sampleType = 1, .globalVolume = 60, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _alto_sax_data[];
+AudioSample _alto_sax = {
+	.sampleStart = _alto_sax_data, .sampleLength = 1763, .loopEnd = 1763, .loopStart = 1580, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 47913,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
 extern cu8 _recordscratch1_data[];
 AudioSample _recordscratch1 = {
 	.sampleStart = _recordscratch1_data, .sampleLength = 21250, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
 	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
-AudioSample *sampleList[] = {
-	&_25pulse, &_50pulse, &_edmkick, &_hihat, &_FM_Bass2, &_FM_EPianoBell, &_string_ens_gm, &_psg_wt_trbass, &_FM_BassSlap, &_whitenoisehi, &_12_5pulse, &_edmsnare, &_cym_crash_orch, &_perc_tri, &_glacierSynth, &_psy_bass, &_spacePad, &_rave_lead_2, &_thATransition, &_layeredLead1, &_trance_snare, &_horn, &_FM_Wavetable1, &_piano_hi, &_FM_Wavetable2, &_SnareAcoustic3, &_wavetable_bass, &_sampl, &_beat_loop, &_sine_hi, &_acdBassEnv1, &_acdBassEnv2, &_acdBassEnv3, &_acdBassEnv4, &_acdBassEnv5, &_acdBassEnv6, &_acdBassEnv7, &_acdBassEnv8, &_acdBassEnv9, &_acdBassEnv10, &_acdBassEnv11, &_acdBassEnv12, &_acdBassEnv13, &_acdBassEnv14, &_acdBassEnv15, &_acdBassEnv16, &_acdBassEnv17, &_gpiano_c3, &_gpiano_c5, &_strEns3, &_HipHopKick, &_Syn_Bass_2, &_alto_sax, &_SnareHiphop, &_Tambourine, &_recordscratch1
+extern cu8 _timpani_data[];
+AudioSample _timpani = {
+	.sampleStart = _timpani_data, .sampleLength = 5032, .loopEnd = 5032, .loopStart = 2912, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 10145,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
-cu16 numSamples = 56;
+extern cu8 _ns_sweep_data[];
+AudioSample _ns_sweep = {
+	.sampleStart = _ns_sweep_data, .sampleLength = 38333, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
+	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+AudioSample *sampleList[] = {
+	&_25pulse, &_50pulse, &_edmkick, &_hihat, &_FM_Bass2, &_FM_EPianoBell, &_string_ens_gm, &_psg_wt_trbass, &_FM_BassSlap, &_whitenoisehi, &_SnareAcoustic3, &_piano_bass, &_flute, &_edmsnare, &_cym_crash_orch, &_perc_tri, &_glacierSynth, &_spacePad, &_rave_lead_2, &_layeredLead1, &_trance_snare, &_12_5pulse, &_psy_bass, &_thATransition, &_horn, &_FM_Wavetable1, &_piano_hi, &_FM_Wavetable2, &_wavetable_bass, &_sampl, &_beat_loop, &_acdBassEnv1, &_acdBassEnv2, &_acdBassEnv3, &_acdBassEnv4, &_acdBassEnv5, &_acdBassEnv6, &_acdBassEnv7, &_acdBassEnv8, &_acdBassEnv9, &_acdBassEnv10, &_acdBassEnv11, &_acdBassEnv12, &_acdBassEnv13, &_acdBassEnv14, &_acdBassEnv15, &_acdBassEnv16, &_acdBassEnv17, &_sine_hi, &_gpiano_c3, &_gpiano_c5, &_strEns3, &_HipHopKick, &_SnareHiphop, &_Tambourine, &_Syn_Bass_2, &_alto_sax, &_recordscratch1, &_timpani, &_ns_sweep
+};
+
+cu16 numSamples = 60;
 
 extern AssetData _musMainMenuAsset;
-extern AssetData _musThemeAAsset;
+extern AssetData _musOpeningAsset;
 extern AssetData _musThemeA_BattleAsset;
 extern AssetData _musThemeA_PeaceAsset;
 extern AssetData _musThemeBAsset;
 extern AssetData _musThemeB_BattleAsset;
-extern AssetData _musThemeCAsset;
 extern AssetData _musThemeC_BattleAsset;
 extern AssetData _musThemeC_PeaceAsset;
-extern AssetData _musThemeDAsset;
 extern AssetData _musThemeD_BattleAsset;
 extern AssetData _musThemeD_PeaceAsset;
+extern AssetData _musTitleAsset;
 AssetData *assetsList[] = {
-	&_musMainMenuAsset, &_musThemeAAsset, &_musThemeA_BattleAsset, &_musThemeA_PeaceAsset, &_musThemeBAsset, &_musThemeB_BattleAsset, &_musThemeCAsset, &_musThemeC_BattleAsset, &_musThemeC_PeaceAsset, &_musThemeDAsset, &_musThemeD_BattleAsset, &_musThemeD_PeaceAsset
+	&_musMainMenuAsset, &_musOpeningAsset, &_musThemeA_BattleAsset, &_musThemeA_PeaceAsset, &_musThemeBAsset, &_musThemeB_BattleAsset, &_musThemeC_BattleAsset, &_musThemeC_PeaceAsset, &_musThemeD_BattleAsset, &_musThemeD_PeaceAsset, &_musTitleAsset
 };
 
-cu16 numAssets = 12;
+cu16 numAssets = 11;
 
