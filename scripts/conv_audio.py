@@ -1,5 +1,12 @@
 import os
 print("imported OS")
+
+def CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, data):
+	if (currentProcessedAsset == None):
+		exit
+	if (currentAssetFileName != "__TemplateSong"):
+		currentProcessedAsset.write(data)
+
 print()
 
 #get the directory of this script
@@ -37,6 +44,15 @@ print("the audio assets enum file is " + audioAssetsPath + "\n")
 assetsList = os.listdir(originalBGMAssetDir)
 print("There are " + str(len(assetsList)) + " files in assets_original.")
 print()
+
+# If it exists, move _TemplateSong.it to the very front of the processing list
+
+try:
+	index_to_move = assetsList.index('_TemplateSong.it')
+	musTemplate = assetsList.pop(index_to_move)
+	assetsList.insert(1, musTemplate)
+except ValueError:
+	pass
 
 #setup the global lists
 processedAssetList = []
@@ -84,29 +100,39 @@ for currentOriginalAssetFile in assetsList:
 		continue
 		
 	#check if a priority file already exists for this asset
-	if not os.path.exists(os.path.join(assetPriorityDir, (currentAssetFileName + "_Priority.c"))):
-		#write the priority file for this asset
-		assetPriorityFile = open(os.path.join(assetPriorityDir, (currentAssetFileName + "_Priority.c")), 'w')
-		assetPriorityFile.write("#include \"audio_engine_settings.h\"\n#include \"tonc.h\"\n\n//type in the priority of this asset. Higher number means higher priority\ncu8 " + \
-		currentAssetFileName + "_Priority = 0;\n\n//type in the priority of each channel in this asset. Leave unused channels as blank, or set to 0\ncu8 " + \
-		currentAssetFileName + "_ChannelPriority[MAX_DMA_CHANNELS] = {0, };")
-		
+	if currentAssetFileName != "__TemplateSong":
+		if not os.path.exists(os.path.join(assetPriorityDir, (currentAssetFileName + "_Priority.c"))):
+			#write the priority file for this asset
+			assetPriorityFile = open(os.path.join(assetPriorityDir, (currentAssetFileName + "_Priority.c")), 'w')
+			assetPriorityFile.write("#include \"audio_engine_settings.h\"\n#include \"tonc.h\"\n\n//type in the priority of this asset. Higher number means higher priority\ncu8 " + \
+			currentAssetFileName + "_Priority = 0;\n\n//type in the priority of each channel in this asset. Leave unused channels as blank, or set to 0\ncu8 " + \
+			currentAssetFileName + "_ChannelPriority[MAX_DMA_CHANNELS] = {0, };")
+	else:
+		print("Skipping _Template.it Priority file generation...")
+	
 	#open this IT file
 	currentOriginalAsset = open(currentOriginalAssetPath, "rb")
 	print("Now working on " + currentOriginalAssetFile)
 	print()
 		
 	#append this assets to the list of all assets
-	processedAssetList.append(currentAssetFileName)
+	if currentAssetFileName != "__TemplateSong":
+		processedAssetList.append(currentAssetFileName)
 		
 	#check if this file already exists in the processed folder
 	if os.path.exists(currentProcessedAssetPath):
 		os.remove(currentProcessedAssetPath)
 		
-	currentProcessedAsset = open(currentProcessedAssetPath, "w")
-	currentProcessedAsset.write("#include \"audio_engine_internal.h\"\n\n")
-	print("writing to file " + currentProcessedAssetFile)
-	print() 
+	if currentAssetFileName != "__TemplateSong":
+		currentProcessedAsset = open(currentProcessedAssetPath, "w")
+	else:
+		currentProcessedAsset = None
+
+	CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "#include \"audio_engine_internal.h\"\n\n")
+	
+	if currentAssetFileName != "__TemplateSong":
+		print("writing to file " + currentProcessedAssetFile)
+		print() 
 		
 	#read the entire file
 	currentAssetRawData = currentOriginalAsset.read()
@@ -154,18 +180,19 @@ for currentOriginalAssetFile in assetsList:
 		(currentAssetRawData[patternsIndex + (i * 4) + 2] << 16) + (currentAssetRawData[patternsIndex + (i * 4) + 3] << 24))
 		
 	#write the orders for this assets
-	currentProcessedAsset.write("cu8 " + currentAssetFileName + "Orders[] = {")
+	CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "cu8 " + currentAssetFileName + "Orders[] = {")
 	for i in range(currentAssetOrdersNum):
 		if (i % 32) == 0:
-			currentProcessedAsset.write("\n\t")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "\n\t")
 		if i != (currentAssetOrdersNum - 1):
-			currentProcessedAsset.write(hex(currentAssetOrders[i]) + ", ") 
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, hex(currentAssetOrders[i]) + ", ") 
 		else:
-			currentProcessedAsset.write(hex(currentAssetOrders[i]) + "\n};\n\n") 
-	print("(" + str(currentAssetOrdersNum) + "/" + str(currentAssetOrdersNum) + ") sequenced patterns successfully formatted.")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, hex(currentAssetOrders[i]) + "\n};\n\n") 
+	if currentAssetFileName != "__TemplateSong":
+		print("(" + str(currentAssetOrdersNum) + "/" + str(currentAssetOrdersNum) + ") sequenced patterns successfully formatted.")
 		
 	#handle the instruments
-	currentProcessedAsset.write("InstrumentData " + currentAssetFileName + "Instruments[] = {\n")
+	CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "InstrumentData " + currentAssetFileName + "Instruments[] = {\n")
 	keyboardSample = []
 	volEnvalopeNodes = []
 	panEnvalopeNodes = []
@@ -222,102 +249,103 @@ for currentOriginalAssetFile in assetsList:
 			pitEnvalopeNodes.append(currentAssetRawData[currentInstrumentIndex + (j * 3) + 1] | (currentAssetRawData[currentInstrumentIndex + (j * 3) + 2] << 8))
 			
 		#write this instrument's data structure into the file
-		currentProcessedAsset.write("\t{.fadeOut = " + hex(fadeOut) + ", .pitPanSeparation = " + \
+		CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "\t{.fadeOut = " + hex(fadeOut) + ", .pitPanSeparation = " + \
 		hex(pitPanSeparation) + ", .pitPanCenter = " + hex(pitPanCenter) + ", .globalVolume = " + \
 		hex(globalVolume) + ", .defaultPan = " + hex(defaultPan) + ", .randomVolVariation = " + \
 		hex(randomVolVariation) + ", .randomPanVariation = " + hex(randomPanVariation) + ", .keyboardSample = {")
 		for j in range(120):
 			if (j % 30) == 0:
-				currentProcessedAsset.write("\n\t")
+				CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "\n\t")
 			if j != 119:
-				currentProcessedAsset.write(hex(keyboardSample[j]) + ", ")
+				CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, hex(keyboardSample[j]) + ", ")
 			else:
-				currentProcessedAsset.write(hex(keyboardSample[j]) + "},\n\t")
-		currentProcessedAsset.write(".volEnvalope = {.flags = " + hex(volEnvalopeFlag) + ", .nodeCount = " + \
+				CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, hex(keyboardSample[j]) + "},\n\t")
+		CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ".volEnvalope = {.flags = " + hex(volEnvalopeFlag) + ", .nodeCount = " + \
 		hex(volEnvalopeNodeCount) + ", .loopBegin = " + hex(volEnvalopeLoopBegin) + ", .loopEnd = " + \
 		hex(volEnvalopeLoopEnd) + ", .sustainBegin = " + hex(volEnvalopeSustainBegin) + ", .sustainEnd = " + \
 		hex(volEnvalopeSustainEnd))
 		if (volEnvalopeNodeCount == 0):
-			currentProcessedAsset.write("}}")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "}}")
 		else:
-			currentProcessedAsset.write(",\n\t.envalopeNodes = {")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ",\n\t.envalopeNodes = {")
 			for j in range(volEnvalopeNodeCount): 
 				if ((j+5) % 10) == 0:
-					currentProcessedAsset.write("\n\t")
+					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "\n\t")
 				if j != (volEnvalopeNodeCount - 1):
-					currentProcessedAsset.write("{" + hex(volEnvalopeNodes[j*2]) + ", " + hex(volEnvalopeNodes[(j*2) + 1]) + "}, ")
+					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "{" + hex(volEnvalopeNodes[j*2]) + ", " + hex(volEnvalopeNodes[(j*2) + 1]) + "}, ")
 				else:
-					currentProcessedAsset.write("{" + hex(volEnvalopeNodes[j*2]) + ", " + hex(volEnvalopeNodes[(j*2) + 1]) + "}}},\n\t")
-		currentProcessedAsset.write(".panEnvalope = {.flags = " + hex(panEnvalopeFlag) + ", .nodeCount = " + \
+					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "{" + hex(volEnvalopeNodes[j*2]) + ", " + hex(volEnvalopeNodes[(j*2) + 1]) + "}}},\n\t")
+		CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ".panEnvalope = {.flags = " + hex(panEnvalopeFlag) + ", .nodeCount = " + \
 		hex(panEnvalopeNodeCount) + ", .loopBegin = " + hex(panEnvalopeLoopBegin) + ", .loopEnd = " + \
 		hex(panEnvalopeLoopEnd) + ", .sustainBegin = " + hex(panEnvalopeSustainBegin) + ", .sustainEnd = " + \
 		hex(panEnvalopeSustainEnd))
 		if (panEnvalopeNodeCount == 0):
-			currentProcessedAsset.write("}}")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "}}")
 		else:
-			currentProcessedAsset.write(",\n\t.envalopeNodes = {")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ",\n\t.envalopeNodes = {")
 			for j in range(panEnvalopeNodeCount): 
 				if ((j+5) % 10) == 0:
-					currentProcessedAsset.write("\n\t")
+					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "\n\t")
 				if j != (panEnvalopeNodeCount - 1):
-					currentProcessedAsset.write("{" + hex(panEnvalopeNodes[j*2]) + ", " + hex(panEnvalopeNodes[(j*2) + 1]) + "}, ")
+					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "{" + hex(panEnvalopeNodes[j*2]) + ", " + hex(panEnvalopeNodes[(j*2) + 1]) + "}, ")
 				else:
-					currentProcessedAsset.write("{" + hex(panEnvalopeNodes[j*2]) + ", " + hex(panEnvalopeNodes[(j*2) + 1]) + "}}},\n\t")
-		currentProcessedAsset.write(".pitchEnvalope = {.flags = " + hex(pitEnvalopeFlag) + ", .nodeCount = " + \
+					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "{" + hex(panEnvalopeNodes[j*2]) + ", " + hex(panEnvalopeNodes[(j*2) + 1]) + "}}},\n\t")
+		CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ".pitchEnvalope = {.flags = " + hex(pitEnvalopeFlag) + ", .nodeCount = " + \
 		hex(pitEnvalopeNodeCount) + ", .loopBegin = " + hex(pitEnvalopeLoopBegin) + ", .loopEnd = " + \
 		hex(pitEnvalopeLoopEnd) + ", .sustainBegin = " + hex(pitEnvalopeSustainBegin) + ", .sustainEnd = " + \
 		hex(pitEnvalopeSustainEnd))
 		if (pitEnvalopeNodeCount == 0):
-			currentProcessedAsset.write("}}")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "}}")
 		else:
-			currentProcessedAsset.write(",\n\t.envalopeNodes = {")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ",\n\t.envalopeNodes = {")
 			for j in range(pitEnvalopeNodeCount): 
 				if ((j+5) % 10) == 0:
-					currentProcessedAsset.write("\n\t")
+					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "\n\t")
 				if j != (pitEnvalopeNodeCount - 1):
-					currentProcessedAsset.write("{" + hex(pitEnvalopeNodes[j*2]) + ", " + hex(pitEnvalopeNodes[(j*2) + 1]) + "}, ")
+					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "{" + hex(pitEnvalopeNodes[j*2]) + ", " + hex(pitEnvalopeNodes[(j*2) + 1]) + "}, ")
 				else:
-					currentProcessedAsset.write("{" + hex(pitEnvalopeNodes[j*2]) + ", " + hex(pitEnvalopeNodes[(j*2) + 1]) + "}}}}")
+					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "{" + hex(pitEnvalopeNodes[j*2]) + ", " + hex(pitEnvalopeNodes[(j*2) + 1]) + "}}}}")
 		if i != (currentAssetInstrumentsNum - 1):
-			currentProcessedAsset.write(",")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ",")
 		else:
-			currentProcessedAsset.write("\n};")
-		currentProcessedAsset.write("\n\n")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "\n};")
+		CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "\n\n")
 	print("(" + str(currentAssetInstrumentsNum) + "/" + str(currentAssetInstrumentsNum) + ") instruments successfully formatted.")
 		
 	#extract and write each pattern's raw data
 	for i in range(currentAssetPatternsNum):
-		currentProcessedAsset.write("cu8 " + currentAssetFileName + "Pattern" + str(i) + "[] = {")
+		CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "cu8 " + currentAssetFileName + "Pattern" + str(i) + "[] = {")
 		currentPatternIndex = currentAssetPatterns[i]
 		#check if this is an empty pattern
 		if(currentPatternIndex == 0):
-			currentProcessedAsset.write("\n};\n\n")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "\n};\n\n")
 			continue
 		currentPatternLength = currentAssetRawData[currentPatternIndex] | (currentAssetRawData[currentPatternIndex + 1] << 8)
 		currentPatternIndex += 8
 		for j in range(currentPatternLength):
 			if (j % 24) == 0:
-				currentProcessedAsset.write("\n\t")
+				CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "\n\t")
 			if j != (currentPatternLength - 1):
-				currentProcessedAsset.write(hex(currentAssetRawData[currentPatternIndex + j]) + ", ")
+				CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, hex(currentAssetRawData[currentPatternIndex + j]) + ", ")
 			else:
-				currentProcessedAsset.write(hex(currentAssetRawData[currentPatternIndex + j]) + "\n};\n\n")
+				CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, hex(currentAssetRawData[currentPatternIndex + j]) + "\n};\n\n")
 		
 	#write the data structure linking all of the patterns together
-	currentProcessedAsset.write("PatternData " + currentAssetFileName + "Patterns[] = {\n\t")
+	CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "PatternData " + currentAssetFileName + "Patterns[] = {\n\t")
 	for i in range(currentAssetPatternsNum):
 		currentPatternIndex = currentAssetPatterns[i]
 		currentPatternRowsNum = currentAssetRawData[currentPatternIndex + 2]
-		currentProcessedAsset.write("{.rowsNum = " + hex(currentPatternRowsNum) + ", .packedPatternData = " + \
+		CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "{.rowsNum = " + hex(currentPatternRowsNum) + ", .packedPatternData = " + \
 		currentAssetFileName + "Pattern" + str(i))
 		if i != (currentAssetPatternsNum - 1):
-			currentProcessedAsset.write("},\n\t")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "},\n\t")
 		else:
-			currentProcessedAsset.write("}\n};\n\n")
-	print("(" + str(currentAssetPatternsNum) + "/" + str(currentAssetPatternsNum) + ") patterns successfully formatted.")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "}\n};\n\n")
+	if currentAssetFileName != "__TemplateSong":
+		print("(" + str(currentAssetPatternsNum) + "/" + str(currentAssetPatternsNum) + ") patterns successfully formatted.")
 		
 	#extract the sample data
-	currentProcessedAsset.write("cu16 " + currentAssetFileName + "Samples[] = {\n\t")
+	CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "cu16 " + currentAssetFileName + "Samples[] = {\n\t")
 	failedSamples = 0
 	currentSampleRawData = []
 	for i in range(currentAssetSamplesNum):
@@ -333,7 +361,7 @@ for currentOriginalAssetFile in assetsList:
 		#if the sample is blank
 		if currentOriginalSampleName == "_":
 			#add this sample to the assets's sample list
-			currentProcessedAsset.write("0xffff, ")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "0xffff, ")
 			print("\t(" + str(i + 1) + "/" + str(currentAssetSamplesNum) + ") Sample: " + \
 			currentOriginalSampleName + " is a blank sample, unnamed samples are not permitted.")
 			failedSamples += 1
@@ -342,7 +370,7 @@ for currentOriginalAssetFile in assetsList:
 		#if this is a psg sample, 
 		if currentOriginalSampleName[0:4] == "_PSG":
 			#add this sample to the assets's sample list
-			currentProcessedAsset.write("0xffff, ")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "0xffff, ")
 			print("\t(" + str(i + 1) + "/" + str(currentAssetSamplesNum) + ") Sample: " + \
 			currentOriginalSampleName + " is a PSG Sample, ignoring.")
 			continue
@@ -353,7 +381,7 @@ for currentOriginalAssetFile in assetsList:
 			print("\t(" + str(i + 1) + "/" + str(currentAssetSamplesNum) + ") Sample: " + \
 			currentOriginalSampleName + " already exists. Linking to the existing sample.")
 			index = originalSamplesList.index(currentOriginalSampleName)
-			currentProcessedAsset.write(hex(index) + ", ")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, hex(index) + ", ")
 			continue
 			
 		#check if this sample is in a supported format
@@ -450,16 +478,16 @@ for currentOriginalAssetFile in assetsList:
 		
 		#add this sample to the sample list
 		originalSamplesList.append(currentOriginalSampleName)
-		currentProcessedAsset.write(hex(len(originalSamplesList) - 1) + ", ")
+		CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, hex(len(originalSamplesList) - 1) + ", ")
 		
 		print("\t(" + str(i + 1) + "/" + str(currentAssetSamplesNum) + ") Sample: " + currentOriginalSampleName + " successfully formatted.")
 		currentOriginalSample.close()
 		
-	currentProcessedAsset.write("\n};\n\n")
+	CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "\n};\n\n")
 	print("(" + str(currentAssetSamplesNum - failedSamples) + "/" + str(currentAssetSamplesNum) + ") Samples successfully formatted")
 		
 	#write the AssetData struct for this assets
-	currentProcessedAsset.write("extern cu8 " + currentAssetFileName + "_Priority;\nextern cu8 " + \
+	CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "extern cu8 " + currentAssetFileName + "_Priority;\nextern cu8 " + \
 	currentAssetFileName + "_ChannelPriority[MAX_DMA_CHANNELS];\nAssetData " + currentAssetFileName + "Asset = {\n\t.orders = " + \
 	currentAssetFileName + "Orders, .instruments = " + currentAssetFileName + "Instruments, .samples = " + \
 	currentAssetFileName + "Samples, .patterns = " + currentAssetFileName + "Patterns, .assetName = \"" + \
@@ -472,18 +500,18 @@ for currentOriginalAssetFile in assetsList:
 	for currentChannelData in currentAssetInitChannelVol:
 		i += 1
 		if i != len(currentAssetInitChannelVol):
-			currentProcessedAsset.write(hex(currentChannelData) + ", ")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, hex(currentChannelData) + ", ")
 		else:
-			currentProcessedAsset.write(hex(currentChannelData))
-	currentProcessedAsset.write("}, .initChannelPan = {")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, hex(currentChannelData))
+	CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "}, .initChannelPan = {")
 	i = 0
 	for currentChannelData in currentAssetInitChannelPan:
 		i += 1
 		if i != len(currentAssetInitChannelPan):
-			currentProcessedAsset.write(hex(currentChannelData) + ", ")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, hex(currentChannelData) + ", ")
 		else:
-			currentProcessedAsset.write(hex(currentChannelData))
-	currentProcessedAsset.write("}\n\t};\n")
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, hex(currentChannelData))
+	CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "}\n\t};\n")
 	
 	if (failedSamples == 0):
 		print("Asset: " + (currentAssetName.decode("ascii").strip("\0")) + " successfully formatted\n")
@@ -492,7 +520,8 @@ for currentOriginalAssetFile in assetsList:
 		
 	#close the open files
 	currentOriginalAsset.close()
-	currentProcessedAsset.close()
+	if currentProcessedAsset != None:
+		currentProcessedAsset.close()
 	
 #write the list of every sample to the audio_list file
 audioList.write("AudioSample *sampleList[] = {\n\t")
