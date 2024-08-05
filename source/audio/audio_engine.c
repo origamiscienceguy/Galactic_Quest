@@ -591,9 +591,9 @@ void processSampledChannel(CurrentChannelSettings *channelPointer, ChannelData *
 	u8 finalVolume = 128;
 	u16 finalPitch = 0;
 	s8 finalPanning = 0;
-	u8 envalopeVolume = 64;
-	s8 envalopePitch = 0;
-	s8 envalopePanning = 0;
+	u8 envelopeVolume = 64;
+	s8 envelopePitch = 0;
+	s8 envelopePanning = 0;
 	s8 vibrato = 0;
 	s8 tremolo = 0;
 	s8 panbrello = 0;
@@ -627,23 +627,23 @@ void processSampledChannel(CurrentChannelSettings *channelPointer, ChannelData *
 	}
 	
 	if(channelPointer->noteState != NO_NOTE){
-		//process the three envalopes
-		if((channelPointer->volumeEnvalope.enabled & 2) || ((channelPointer->volumeEnvalope.enabled & 1) && !(channelPointer->volumeEnvalope.enabled & 4))){
-			envalopeVolume = processEnvalope(&channelPointer->volumeEnvalope, &channelPointer->instrumentPointer->volEnvalope, channelPointer->noteState);
-			//if the end of the volume envalope is reached, switch to fadeout
-			if((channelPointer->instrumentPointer->volEnvalope.nodeCount - 1) == (channelPointer->volumeEnvalope.currentNodeIndex)){
+		//process the three envelopes
+		if((channelPointer->volumeEnvelope.enabled & 2) || ((channelPointer->volumeEnvelope.enabled & 1) && !(channelPointer->volumeEnvelope.enabled & 4))){
+			envelopeVolume = processEnvelope(&channelPointer->volumeEnvelope, &channelPointer->instrumentPointer->volEnvelope, channelPointer->noteState);
+			//if the end of the volume envelope is reached, switch to fadeout
+			if((channelPointer->instrumentPointer->volEnvelope.nodeCount - 1) == (channelPointer->volumeEnvelope.currentNodeIndex)){
 				channelPointer->noteState = FADEOUT_NOTE;
 			}	
 		}
 		else if(channelPointer->noteState == PLAY_NOTE){
 			channelPointer->noteState = FADEOUT_NOTE;
 		}
-		if((channelPointer->pitchEnvalope.enabled & 2) || ((channelPointer->pitchEnvalope.enabled & 1) && !(channelPointer->pitchEnvalope.enabled & 4))){
-			envalopePitch = processEnvalope(&channelPointer->pitchEnvalope, &channelPointer->instrumentPointer->pitchEnvalope, channelPointer->noteState);
-			channelPointer->pitchModifier = (channelPointer->pitchModifier * portamentoTable[256 + (envalopePitch << 3)]) >> 12;
+		if((channelPointer->pitchEnvelope.enabled & 2) || ((channelPointer->pitchEnvelope.enabled & 1) && !(channelPointer->pitchEnvelope.enabled & 4))){
+			envelopePitch = processEnvelope(&channelPointer->pitchEnvelope, &channelPointer->instrumentPointer->pitchEnvelope, channelPointer->noteState);
+			channelPointer->pitchModifier = (channelPointer->pitchModifier * portamentoTable[256 + (envelopePitch << 3)]) >> 12;
 		}
-		if((channelPointer->panningEnvalope.enabled & 2) || ((channelPointer->panningEnvalope.enabled & 1) && !(channelPointer->panningEnvalope.enabled & 4))){
-			envalopePanning = processEnvalope(&channelPointer->panningEnvalope, &channelPointer->instrumentPointer->panEnvalope, channelPointer->noteState);
+		if((channelPointer->panningEnvelope.enabled & 2) || ((channelPointer->panningEnvelope.enabled & 1) && !(channelPointer->panningEnvelope.enabled & 4))){
+			envelopePanning = processEnvelope(&channelPointer->panningEnvelope, &channelPointer->instrumentPointer->panEnvelope, channelPointer->noteState);
 		}
 	}
 	
@@ -654,7 +654,7 @@ void processSampledChannel(CurrentChannelSettings *channelPointer, ChannelData *
 	autoVibrato = processVibrato(&channelPointer->autoVibrato);
 	
 	//calculate the final volume
-	finalVolume = ((((envalopeVolume * channelPointer->noteFadeComponent * channelPointer->currentVolume * assetPointer->globalVolume >> 6) *
+	finalVolume = ((((envelopeVolume * channelPointer->noteFadeComponent * channelPointer->currentVolume * assetPointer->globalVolume >> 6) *
 				channelPointer->channelVolume >> 6) * channelPointer->samplePointer->globalVolume >> 6) * channelPointer->instrumentPointer->globalVolume >> 8) * 
 				assetPointer->mixVolume >> 23;
 	//if the tremor has turned off the note right now
@@ -679,10 +679,10 @@ void processSampledChannel(CurrentChannelSettings *channelPointer, ChannelData *
 	channelPointer->pitchModifier = 0x1000;
 	
 	//calculate the final pan
-	//if we are using envalope pan
+	//if we are using envelope pan
 	if(channelPointer->currentPanning & 0x80){
-		finalPanning = envalopePanning;
-		channelPointer->currentPanning = envalopePanning + 32;
+		finalPanning = envelopePanning;
+		channelPointer->currentPanning = envelopePanning + 32;
 	}
 	else{
 		finalPanning = channelPointer->currentPanning - 32;
@@ -1153,34 +1153,34 @@ void processEffects(CurrentChannelSettings *channelPointer, CurrentAssetSettings
 				switch(command){
 				//if it is a S77 "volume envelope off" command
 				case 7:
-					channelPointer->volumeEnvalope.enabled = (channelPointer->volumeEnvalope.enabled & 1) | 0x84;
+					channelPointer->volumeEnvelope.enabled = (channelPointer->volumeEnvelope.enabled & 1) | 0x84;
 					channelPointer->effectState = EVERY_TICK_EFFECT;
 					return;
 				//if it is a S78 "volume envelope on" command
 				case 8:
-					channelPointer->volumeEnvalope.enabled = (channelPointer->volumeEnvalope.enabled & 1) | 0x82;
+					channelPointer->volumeEnvelope.enabled = (channelPointer->volumeEnvelope.enabled & 1) | 0x82;
 					channelPointer->effectState = EVERY_TICK_EFFECT;
 					return;
 				//if it is a S79 "panning envelope off" command
 				case 9:
-					channelPointer->panningEnvalope.enabled = (channelPointer->panningEnvalope.enabled & 1) | 0x84;
+					channelPointer->panningEnvelope.enabled = (channelPointer->panningEnvelope.enabled & 1) | 0x84;
 					//mark the panning envelope as not in use
 					channelPointer->currentPanning &= 0x7f;
 					channelPointer->effectState = EVERY_TICK_EFFECT;
 					return;
 				//if it is a S7A "panning envelope on" command
 				case 10:
-					channelPointer->panningEnvalope.enabled = (channelPointer->panningEnvalope.enabled & 1) | 0x82;
+					channelPointer->panningEnvelope.enabled = (channelPointer->panningEnvelope.enabled & 1) | 0x82;
 					channelPointer->effectState = EVERY_TICK_EFFECT;
 					return;
 				//if it is a S7B "pitch envelope off" command
 				case 11:
-					channelPointer->pitchEnvalope.enabled = (channelPointer->pitchEnvalope.enabled & 1) | 0x84;
+					channelPointer->pitchEnvelope.enabled = (channelPointer->pitchEnvelope.enabled & 1) | 0x84;
 					channelPointer->effectState = EVERY_TICK_EFFECT;
 					return;
 				//if it is a S7C "pitch envelope on" command
 				case 12:
-					channelPointer->panningEnvalope.enabled = (channelPointer->panningEnvalope.enabled & 1) | 0x82;
+					channelPointer->panningEnvelope.enabled = (channelPointer->panningEnvelope.enabled & 1) | 0x82;
 					channelPointer->effectState = EVERY_TICK_EFFECT;
 					return;
 				default:
@@ -1609,23 +1609,23 @@ void processTrigger(CurrentChannelSettings *channelPointer, CurrentAssetSettings
 		}
 		
 		//reset the envelopes
-		if(channelPointer->volumeEnvalope.enabled & 0x80){
-			channelPointer->volumeEnvalope.enabled = (channelPointer->volumeEnvalope.enabled & 0x7e) | (channelPointer->instrumentPointer->volEnvalope.flags & 1);
+		if(channelPointer->volumeEnvelope.enabled & 0x80){
+			channelPointer->volumeEnvelope.enabled = (channelPointer->volumeEnvelope.enabled & 0x7e) | (channelPointer->instrumentPointer->volEnvelope.flags & 1);
 		}
 		else{
-			channelPointer->volumeEnvalope.enabled = channelPointer->instrumentPointer->volEnvalope.flags & 1;
+			channelPointer->volumeEnvelope.enabled = channelPointer->instrumentPointer->volEnvelope.flags & 1;
 		}
-		if(channelPointer->pitchEnvalope.enabled & 0x80){
-			channelPointer->pitchEnvalope.enabled = (channelPointer->pitchEnvalope.enabled & 0x7e) | (channelPointer->instrumentPointer->pitchEnvalope.flags & 1);
-		}
-		else{
-			channelPointer->pitchEnvalope.enabled = channelPointer->instrumentPointer->pitchEnvalope.flags & 1;
-		}
-		if(channelPointer->panningEnvalope.enabled & 0x80){
-			channelPointer->panningEnvalope.enabled = (channelPointer->panningEnvalope.enabled & 0x7e) | (channelPointer->instrumentPointer->panEnvalope.flags & 1);
+		if(channelPointer->pitchEnvelope.enabled & 0x80){
+			channelPointer->pitchEnvelope.enabled = (channelPointer->pitchEnvelope.enabled & 0x7e) | (channelPointer->instrumentPointer->pitchEnvelope.flags & 1);
 		}
 		else{
-			channelPointer->panningEnvalope.enabled = channelPointer->instrumentPointer->panEnvalope.flags & 1;
+			channelPointer->pitchEnvelope.enabled = channelPointer->instrumentPointer->pitchEnvelope.flags & 1;
+		}
+		if(channelPointer->panningEnvelope.enabled & 0x80){
+			channelPointer->panningEnvelope.enabled = (channelPointer->panningEnvelope.enabled & 0x7e) | (channelPointer->instrumentPointer->panEnvelope.flags & 1);
+		}
+		else{
+			channelPointer->panningEnvelope.enabled = channelPointer->instrumentPointer->panEnvelope.flags & 1;
 		}
 		
 		//figure out the panning
@@ -1643,7 +1643,7 @@ void processTrigger(CurrentChannelSettings *channelPointer, CurrentAssetSettings
 			channelPointer->currentPanning = channelPointer->instrumentPointer->defaultPan & 0x7f;
 		}
 		//if the instrument has an enabled panning envelope. 
-		else if((channelPointer->panningEnvalope.enabled & 2) || ((channelPointer->panningEnvalope.enabled & 1) && !(channelPointer->panningEnvalope.enabled & 4))){
+		else if((channelPointer->panningEnvelope.enabled & 2) || ((channelPointer->panningEnvelope.enabled & 1) && !(channelPointer->panningEnvelope.enabled & 4))){
 			//mark the currentPan as using the panning envelope
 			channelPointer->currentPanning = 0x80 | channelPointer->channelPan;
 		}
@@ -1699,52 +1699,52 @@ void processNote(CurrentChannelSettings *channelPointer, CurrentAssetSettings *a
 	channelPointer->pitchState = NO_PITCH;
 }
 
-s8 processEnvalope(ChannelEnvalopeSettings *envalopeVariables, EnvalopeData *envalopeData, enum NoteState state){
-	//if we need to initialize the envalope
+s8 processEnvelope(ChannelEnvelopeSettings *envelopeVariables, EnvelopeData *envelopeData, enum NoteState state){
+	//if we need to initialize the envelope
 	if(state == FADEOUT_NOTE){
-		return envalopeVariables->currentYPos;
+		return envelopeVariables->currentYPos;
 	}
 	else if(state == TRIGGER_TICK_NOTE){
-		envalopeVariables->currentNode = &envalopeData->envalopeNodes[0];
-		envalopeVariables->nextNode = &envalopeData->envalopeNodes[1];
-		envalopeVariables->currentXPos = 0;
-		envalopeVariables->currentYPos = envalopeVariables->currentNode->nodeYPosition;
-		envalopeVariables->YPosError = 0;
-		envalopeVariables->currentNodeIndex = 0;
+		envelopeVariables->currentNode = &envelopeData->envelopeNodes[0];
+		envelopeVariables->nextNode = &envelopeData->envelopeNodes[1];
+		envelopeVariables->currentXPos = 0;
+		envelopeVariables->currentYPos = envelopeVariables->currentNode->nodeYPosition;
+		envelopeVariables->YPosError = 0;
+		envelopeVariables->currentNodeIndex = 0;
 	}
 	//check if the current tick position is at the sustain loop node, and instrument is sustaining
-	else if((envalopeVariables->currentXPos == envalopeData->envalopeNodes[envalopeData->sustainEnd].nodeXPosition) && (state == SUSTAIN_NOTE) && (envalopeData->flags & 4)){
-		envalopeVariables->currentNode = &envalopeData->envalopeNodes[envalopeData->sustainBegin];
-		envalopeVariables->nextNode = &envalopeData->envalopeNodes[envalopeData->sustainBegin + 1];
-		envalopeVariables->currentXPos = envalopeVariables->currentNode->nodeXPosition;
-		envalopeVariables->currentYPos = envalopeVariables->currentNode->nodeYPosition;
-		envalopeVariables->YPosError = 0;
-		envalopeVariables->currentNodeIndex = envalopeData->sustainBegin;
+	else if((envelopeVariables->currentXPos == envelopeData->envelopeNodes[envelopeData->sustainEnd].nodeXPosition) && (state == SUSTAIN_NOTE) && (envelopeData->flags & 4)){
+		envelopeVariables->currentNode = &envelopeData->envelopeNodes[envelopeData->sustainBegin];
+		envelopeVariables->nextNode = &envelopeData->envelopeNodes[envelopeData->sustainBegin + 1];
+		envelopeVariables->currentXPos = envelopeVariables->currentNode->nodeXPosition;
+		envelopeVariables->currentYPos = envelopeVariables->currentNode->nodeYPosition;
+		envelopeVariables->YPosError = 0;
+		envelopeVariables->currentNodeIndex = envelopeData->sustainBegin;
 	}
 	//check if the current tick position is at the loop node
-	else if((envalopeVariables->currentXPos == envalopeData->envalopeNodes[envalopeData->loopEnd].nodeXPosition) && (envalopeData->flags & 2)){
-		envalopeVariables->currentNode = &envalopeData->envalopeNodes[envalopeData->loopBegin];
-		envalopeVariables->nextNode = &envalopeData->envalopeNodes[envalopeData->loopBegin + 1];
-		envalopeVariables->currentXPos = envalopeVariables->currentNode->nodeXPosition;
-		envalopeVariables->currentYPos = envalopeVariables->currentNode->nodeYPosition;
-		envalopeVariables->YPosError = 0;
-		envalopeVariables->currentNodeIndex = envalopeData->loopBegin;
+	else if((envelopeVariables->currentXPos == envelopeData->envelopeNodes[envelopeData->loopEnd].nodeXPosition) && (envelopeData->flags & 2)){
+		envelopeVariables->currentNode = &envelopeData->envelopeNodes[envelopeData->loopBegin];
+		envelopeVariables->nextNode = &envelopeData->envelopeNodes[envelopeData->loopBegin + 1];
+		envelopeVariables->currentXPos = envelopeVariables->currentNode->nodeXPosition;
+		envelopeVariables->currentYPos = envelopeVariables->currentNode->nodeYPosition;
+		envelopeVariables->YPosError = 0;
+		envelopeVariables->currentNodeIndex = envelopeData->loopBegin;
 	}
 	//if the current tick position is at the final node
-	else if(envalopeVariables->currentXPos == envalopeData->envalopeNodes[envalopeData->nodeCount - 1].nodeXPosition){
-		envalopeVariables->currentYPos = envalopeData->envalopeNodes[envalopeData->nodeCount - 1].nodeYPosition;
-		envalopeVariables->currentNodeIndex = envalopeData->nodeCount - 1;
+	else if(envelopeVariables->currentXPos == envelopeData->envelopeNodes[envelopeData->nodeCount - 1].nodeXPosition){
+		envelopeVariables->currentYPos = envelopeData->envelopeNodes[envelopeData->nodeCount - 1].nodeYPosition;
+		envelopeVariables->currentNodeIndex = envelopeData->nodeCount - 1;
 	}
 	//if neither, increment the x position
 	else{
-		envalopeVariables->currentXPos++;
+		envelopeVariables->currentXPos++;
 		//check if we have reached the next node
-		if(envalopeVariables->currentXPos >= envalopeVariables->nextNode->nodeXPosition){
-			envalopeVariables->currentNodeIndex++;
-			envalopeVariables->currentNode = envalopeVariables->nextNode;
-			envalopeVariables->nextNode = &envalopeData->envalopeNodes[envalopeVariables->currentNodeIndex + 1];
-			envalopeVariables->currentYPos = envalopeVariables->currentNode->nodeYPosition;
-			envalopeVariables->YPosError = 0;
+		if(envelopeVariables->currentXPos >= envelopeVariables->nextNode->nodeXPosition){
+			envelopeVariables->currentNodeIndex++;
+			envelopeVariables->currentNode = envelopeVariables->nextNode;
+			envelopeVariables->nextNode = &envelopeData->envelopeNodes[envelopeVariables->currentNodeIndex + 1];
+			envelopeVariables->currentYPos = envelopeVariables->currentNode->nodeYPosition;
+			envelopeVariables->YPosError = 0;
 		}
 		//otherwise, interpolate the y position based on the node data
 		else{
@@ -1752,8 +1752,8 @@ s8 processEnvalope(ChannelEnvalopeSettings *envalopeVariables, EnvalopeData *env
 			u16 deltaX;
 			u8 absDeltaY;
 			s8 deltaYSign;
-			deltaY = envalopeVariables->nextNode->nodeYPosition - envalopeVariables->currentNode->nodeYPosition;
-			deltaX = envalopeVariables->nextNode->nodeXPosition - envalopeVariables->currentNode->nodeXPosition;
+			deltaY = envelopeVariables->nextNode->nodeYPosition - envelopeVariables->currentNode->nodeYPosition;
+			deltaX = envelopeVariables->nextNode->nodeXPosition - envelopeVariables->currentNode->nodeXPosition;
 			if(deltaY < 0){
 				absDeltaY = -deltaY;
 				deltaYSign = -1;
@@ -1765,19 +1765,19 @@ s8 processEnvalope(ChannelEnvalopeSettings *envalopeVariables, EnvalopeData *env
 			
 			//if the slope is between -1 and 1, use DDA algorithm
 			if(deltaX > absDeltaY){
-				envalopeVariables->YPosError += absDeltaY;
-				if(envalopeVariables->YPosError >= deltaX){
-					envalopeVariables->currentYPos += deltaYSign;
-					envalopeVariables->YPosError -= deltaX;
+				envelopeVariables->YPosError += absDeltaY;
+				if(envelopeVariables->YPosError >= deltaX){
+					envelopeVariables->currentYPos += deltaYSign;
+					envelopeVariables->YPosError -= deltaX;
 				}
 			}
 			//if the slope has a magnitude 1 or greater, use the interpolation formula LUT
 			else{
-				envalopeVariables->currentYPos = envalopeVariables->currentNode->nodeYPosition + (deltaY * envalopeInverseTable[deltaX] * (envalopeVariables->currentXPos - envalopeVariables->currentNode->nodeXPosition) >> 15);
+				envelopeVariables->currentYPos = envelopeVariables->currentNode->nodeYPosition + (deltaY * envelopeInverseTable[deltaX] * (envelopeVariables->currentXPos - envelopeVariables->currentNode->nodeXPosition) >> 15);
 			}
 		}
 	}
-	return envalopeVariables->currentYPos;
+	return envelopeVariables->currentYPos;
 }
 
 void volumeSlideUp(CurrentChannelSettings *channelPointer, u8 commandAmount){

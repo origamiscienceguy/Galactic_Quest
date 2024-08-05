@@ -194,9 +194,9 @@ for currentOriginalAssetFile in assetsList:
 	#handle the instruments
 	CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "InstrumentData " + currentAssetFileName + "Instruments[] = {\n")
 	keyboardSample = []
-	volEnvalopeNodes = []
-	panEnvalopeNodes = []
-	pitEnvalopeNodes = []
+	volEnvelopeNodes = []
+	panEnvelopeNodes = []
+	pitEnvelopeNodes = []
 	for i in range(currentAssetInstrumentsNum):
 		#extract the data from each instrument
 		currentInstrumentIndex = currentAssetInstruments[i]
@@ -212,41 +212,41 @@ for currentOriginalAssetFile in assetsList:
 		for j in range(120):
 			keyboardSample.append(currentAssetRawData[currentInstrumentIndex + (j*2) + 1] - 1)
 		currentInstrumentIndex += 0xf0
-		volEnvalopeFlag = currentAssetRawData[currentInstrumentIndex]
-		volEnvalopeNodeCount = currentAssetRawData[currentInstrumentIndex + 0x1]
-		volEnvalopeLoopBegin = currentAssetRawData[currentInstrumentIndex + 0x2]
-		volEnvalopeLoopEnd = currentAssetRawData[currentInstrumentIndex + 0x3]
-		volEnvalopeSustainBegin = currentAssetRawData[currentInstrumentIndex + 0x4]
-		volEnvalopeSustainEnd = currentAssetRawData[currentInstrumentIndex + 0x5]
+		volEnvelopeFlag = currentAssetRawData[currentInstrumentIndex]
+		volEnvelopeNodeCount = currentAssetRawData[currentInstrumentIndex + 0x1]
+		volEnvelopeLoopBegin = currentAssetRawData[currentInstrumentIndex + 0x2]
+		volEnvelopeLoopEnd = currentAssetRawData[currentInstrumentIndex + 0x3]
+		volEnvelopeSustainBegin = currentAssetRawData[currentInstrumentIndex + 0x4]
+		volEnvelopeSustainEnd = currentAssetRawData[currentInstrumentIndex + 0x5]
 		currentInstrumentIndex += 0x6
-		volEnvalopeNodes.clear()
+		volEnvelopeNodes.clear()
 		for j in range(25):
-			volEnvalopeNodes.append(currentAssetRawData[currentInstrumentIndex + (j * 3)])
-			volEnvalopeNodes.append(currentAssetRawData[currentInstrumentIndex + (j * 3) + 1] | (currentAssetRawData[currentInstrumentIndex + (j * 3) + 2] << 8))
+			volEnvelopeNodes.append(currentAssetRawData[currentInstrumentIndex + (j * 3)])
+			volEnvelopeNodes.append(currentAssetRawData[currentInstrumentIndex + (j * 3) + 1] | (currentAssetRawData[currentInstrumentIndex + (j * 3) + 2] << 8))
 		currentInstrumentIndex += 0x4c
-		panEnvalopeFlag = currentAssetRawData[currentInstrumentIndex]
-		panEnvalopeNodeCount = currentAssetRawData[currentInstrumentIndex + 0x1]
-		panEnvalopeLoopBegin = currentAssetRawData[currentInstrumentIndex + 0x2]
-		panEnvalopeLoopEnd = currentAssetRawData[currentInstrumentIndex + 0x3]
-		panEnvalopeSustainBegin = currentAssetRawData[currentInstrumentIndex + 0x4]
-		panEnvalopeSustainEnd = currentAssetRawData[currentInstrumentIndex + 0x5]
+		panEnvelopeFlag = currentAssetRawData[currentInstrumentIndex]
+		panEnvelopeNodeCount = currentAssetRawData[currentInstrumentIndex + 0x1]
+		panEnvelopeLoopBegin = currentAssetRawData[currentInstrumentIndex + 0x2]
+		panEnvelopeLoopEnd = currentAssetRawData[currentInstrumentIndex + 0x3]
+		panEnvelopeSustainBegin = currentAssetRawData[currentInstrumentIndex + 0x4]
+		panEnvelopeSustainEnd = currentAssetRawData[currentInstrumentIndex + 0x5]
 		currentInstrumentIndex += 0x6
-		panEnvalopeNodes.clear()
+		panEnvelopeNodes.clear()
 		for j in range(25):
-			panEnvalopeNodes.append(currentAssetRawData[currentInstrumentIndex + (j * 3)])
-			panEnvalopeNodes.append(currentAssetRawData[currentInstrumentIndex + (j * 3) + 1] | (currentAssetRawData[currentInstrumentIndex + (j * 3) + 2] << 8))
+			panEnvelopeNodes.append(currentAssetRawData[currentInstrumentIndex + (j * 3)])
+			panEnvelopeNodes.append(currentAssetRawData[currentInstrumentIndex + (j * 3) + 1] | (currentAssetRawData[currentInstrumentIndex + (j * 3) + 2] << 8))
 		currentInstrumentIndex += 0x4c
-		pitEnvalopeFlag = currentAssetRawData[currentInstrumentIndex]
-		pitEnvalopeNodeCount = currentAssetRawData[currentInstrumentIndex + 0x1]
-		pitEnvalopeLoopBegin = currentAssetRawData[currentInstrumentIndex + 0x2]
-		pitEnvalopeLoopEnd = currentAssetRawData[currentInstrumentIndex + 0x3]
-		pitEnvalopeSustainBegin = currentAssetRawData[currentInstrumentIndex + 0x4]
-		pitEnvalopeSustainEnd = currentAssetRawData[currentInstrumentIndex + 0x5]
+		pitEnvelopeFlag = currentAssetRawData[currentInstrumentIndex]
+		pitEnvelopeNodeCount = currentAssetRawData[currentInstrumentIndex + 0x1]
+		pitEnvelopeLoopBegin = currentAssetRawData[currentInstrumentIndex + 0x2]
+		pitEnvelopeLoopEnd = currentAssetRawData[currentInstrumentIndex + 0x3]
+		pitEnvelopeSustainBegin = currentAssetRawData[currentInstrumentIndex + 0x4]
+		pitEnvelopeSustainEnd = currentAssetRawData[currentInstrumentIndex + 0x5]
 		currentInstrumentIndex += 0x6
-		pitEnvalopeNodes.clear()
+		pitEnvelopeNodes.clear()
 		for j in range(25):
-			pitEnvalopeNodes.append(currentAssetRawData[currentInstrumentIndex + (j * 3)])
-			pitEnvalopeNodes.append(currentAssetRawData[currentInstrumentIndex + (j * 3) + 1] | (currentAssetRawData[currentInstrumentIndex + (j * 3) + 2] << 8))
+			pitEnvelopeNodes.append(currentAssetRawData[currentInstrumentIndex + (j * 3)])
+			pitEnvelopeNodes.append(currentAssetRawData[currentInstrumentIndex + (j * 3) + 1] | (currentAssetRawData[currentInstrumentIndex + (j * 3) + 2] << 8))
 			
 		#write this instrument's data structure into the file
 		CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "\t{.fadeOut = " + hex(fadeOut) + ", .pitPanSeparation = " + \
@@ -260,51 +260,51 @@ for currentOriginalAssetFile in assetsList:
 				CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, hex(keyboardSample[j]) + ", ")
 			else:
 				CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, hex(keyboardSample[j]) + "},\n\t")
-		CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ".volEnvalope = {.flags = " + hex(volEnvalopeFlag) + ", .nodeCount = " + \
-		hex(volEnvalopeNodeCount) + ", .loopBegin = " + hex(volEnvalopeLoopBegin) + ", .loopEnd = " + \
-		hex(volEnvalopeLoopEnd) + ", .sustainBegin = " + hex(volEnvalopeSustainBegin) + ", .sustainEnd = " + \
-		hex(volEnvalopeSustainEnd))
-		if (volEnvalopeNodeCount == 0):
+		CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ".volEnvelope = {.flags = " + hex(volEnvelopeFlag) + ", .nodeCount = " + \
+		hex(volEnvelopeNodeCount) + ", .loopBegin = " + hex(volEnvelopeLoopBegin) + ", .loopEnd = " + \
+		hex(volEnvelopeLoopEnd) + ", .sustainBegin = " + hex(volEnvelopeSustainBegin) + ", .sustainEnd = " + \
+		hex(volEnvelopeSustainEnd))
+		if (volEnvelopeNodeCount == 0):
 			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "}}")
 		else:
-			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ",\n\t.envalopeNodes = {")
-			for j in range(volEnvalopeNodeCount): 
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ",\n\t.envelopeNodes = {")
+			for j in range(volEnvelopeNodeCount): 
 				if ((j+5) % 10) == 0:
 					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "\n\t")
-				if j != (volEnvalopeNodeCount - 1):
-					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "{" + hex(volEnvalopeNodes[j*2]) + ", " + hex(volEnvalopeNodes[(j*2) + 1]) + "}, ")
+				if j != (volEnvelopeNodeCount - 1):
+					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "{" + hex(volEnvelopeNodes[j*2]) + ", " + hex(volEnvelopeNodes[(j*2) + 1]) + "}, ")
 				else:
-					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "{" + hex(volEnvalopeNodes[j*2]) + ", " + hex(volEnvalopeNodes[(j*2) + 1]) + "}}},\n\t")
-		CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ".panEnvalope = {.flags = " + hex(panEnvalopeFlag) + ", .nodeCount = " + \
-		hex(panEnvalopeNodeCount) + ", .loopBegin = " + hex(panEnvalopeLoopBegin) + ", .loopEnd = " + \
-		hex(panEnvalopeLoopEnd) + ", .sustainBegin = " + hex(panEnvalopeSustainBegin) + ", .sustainEnd = " + \
-		hex(panEnvalopeSustainEnd))
-		if (panEnvalopeNodeCount == 0):
+					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "{" + hex(volEnvelopeNodes[j*2]) + ", " + hex(volEnvelopeNodes[(j*2) + 1]) + "}}},\n\t")
+		CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ".panEnvelope = {.flags = " + hex(panEnvelopeFlag) + ", .nodeCount = " + \
+		hex(panEnvelopeNodeCount) + ", .loopBegin = " + hex(panEnvelopeLoopBegin) + ", .loopEnd = " + \
+		hex(panEnvelopeLoopEnd) + ", .sustainBegin = " + hex(panEnvelopeSustainBegin) + ", .sustainEnd = " + \
+		hex(panEnvelopeSustainEnd))
+		if (panEnvelopeNodeCount == 0):
 			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "}}")
 		else:
-			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ",\n\t.envalopeNodes = {")
-			for j in range(panEnvalopeNodeCount): 
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ",\n\t.envelopeNodes = {")
+			for j in range(panEnvelopeNodeCount): 
 				if ((j+5) % 10) == 0:
 					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "\n\t")
-				if j != (panEnvalopeNodeCount - 1):
-					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "{" + hex(panEnvalopeNodes[j*2]) + ", " + hex(panEnvalopeNodes[(j*2) + 1]) + "}, ")
+				if j != (panEnvelopeNodeCount - 1):
+					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "{" + hex(panEnvelopeNodes[j*2]) + ", " + hex(panEnvelopeNodes[(j*2) + 1]) + "}, ")
 				else:
-					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "{" + hex(panEnvalopeNodes[j*2]) + ", " + hex(panEnvalopeNodes[(j*2) + 1]) + "}}},\n\t")
-		CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ".pitchEnvalope = {.flags = " + hex(pitEnvalopeFlag) + ", .nodeCount = " + \
-		hex(pitEnvalopeNodeCount) + ", .loopBegin = " + hex(pitEnvalopeLoopBegin) + ", .loopEnd = " + \
-		hex(pitEnvalopeLoopEnd) + ", .sustainBegin = " + hex(pitEnvalopeSustainBegin) + ", .sustainEnd = " + \
-		hex(pitEnvalopeSustainEnd))
-		if (pitEnvalopeNodeCount == 0):
+					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "{" + hex(panEnvelopeNodes[j*2]) + ", " + hex(panEnvelopeNodes[(j*2) + 1]) + "}}},\n\t")
+		CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ".pitchEnvelope = {.flags = " + hex(pitEnvelopeFlag) + ", .nodeCount = " + \
+		hex(pitEnvelopeNodeCount) + ", .loopBegin = " + hex(pitEnvelopeLoopBegin) + ", .loopEnd = " + \
+		hex(pitEnvelopeLoopEnd) + ", .sustainBegin = " + hex(pitEnvelopeSustainBegin) + ", .sustainEnd = " + \
+		hex(pitEnvelopeSustainEnd))
+		if (pitEnvelopeNodeCount == 0):
 			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "}}")
 		else:
-			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ",\n\t.envalopeNodes = {")
-			for j in range(pitEnvalopeNodeCount): 
+			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ",\n\t.envelopeNodes = {")
+			for j in range(pitEnvelopeNodeCount): 
 				if ((j+5) % 10) == 0:
 					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "\n\t")
-				if j != (pitEnvalopeNodeCount - 1):
-					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "{" + hex(pitEnvalopeNodes[j*2]) + ", " + hex(pitEnvalopeNodes[(j*2) + 1]) + "}, ")
+				if j != (pitEnvelopeNodeCount - 1):
+					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "{" + hex(pitEnvelopeNodes[j*2]) + ", " + hex(pitEnvelopeNodes[(j*2) + 1]) + "}, ")
 				else:
-					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "{" + hex(pitEnvalopeNodes[j*2]) + ", " + hex(pitEnvalopeNodes[(j*2) + 1]) + "}}}}")
+					CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, "{" + hex(pitEnvelopeNodes[j*2]) + ", " + hex(pitEnvelopeNodes[(j*2) + 1]) + "}}}}")
 		if i != (currentAssetInstrumentsNum - 1):
 			CurrentProcessedAssetWrite(currentProcessedAsset, currentAssetFileName, ",")
 		else:

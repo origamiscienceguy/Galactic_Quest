@@ -83,20 +83,20 @@ typedef struct ChannelData{
 	u8 padding;
 }ChannelData;
 
-typedef const struct EnvalopeNode{
+typedef const struct EnvelopeNode{
 	cs8 nodeYPosition;
 	cu16 nodeXPosition;
-}EnvalopeNode;
+}EnvelopeNode;
 
-typedef const struct EnvalopeData{
+typedef const struct EnvelopeData{
 	cu8 flags;
 	cu8 nodeCount;
 	cu8 loopBegin;
 	cu8 loopEnd;
 	cu8 sustainBegin;
 	cu8 sustainEnd;
-	EnvalopeNode envalopeNodes[25];
-}EnvalopeData;
+	EnvelopeNode envelopeNodes[25];
+}EnvelopeData;
 
 typedef const struct InstrumentData{
 	cu8 fadeOut;
@@ -107,9 +107,9 @@ typedef const struct InstrumentData{
 	cu8 randomVolVariation;
 	cu8 randomPanVariation;
 	cu8 keyboardSample[120];
-	EnvalopeData volEnvalope;
-	EnvalopeData pitchEnvalope;
-	EnvalopeData panEnvalope;
+	EnvelopeData volEnvelope;
+	EnvelopeData pitchEnvelope;
+	EnvelopeData panEnvelope;
 }InstrumentData;
 
 typedef const struct PatternData{
@@ -151,15 +151,15 @@ typedef struct ChannelBasicSettings{
 	u8 effectValue; //effect number setting
 }ChannelBasicSettings;
 
-typedef struct ChannelEnvalopeSettings{
-	EnvalopeNode *currentNode; //pointer to the current node
-	EnvalopeNode *nextNode; //pointer to the next node
+typedef struct ChannelEnvelopeSettings{
+	EnvelopeNode *currentNode; //pointer to the current node
+	EnvelopeNode *nextNode; //pointer to the next node
 	u8 currentNodeIndex; //the index of the current node
-	u16 currentXPos; //the current x position within the envalope
+	u16 currentXPos; //the current x position within the envelope
 	u8 currentYPos; //stores the current Y position in case the DDA method is used
 	u8 YPosError; //the accumulated error of the DDA algorithm
 	u8 enabled; //bit one if the instrument has the envelope enabled, bit 2 is enable override, bit 3 is disable override
-}ChannelEnvalopeSettings;
+}ChannelEnvelopeSettings;
 
 typedef struct MemorySettings{
 	u8 D;
@@ -196,9 +196,9 @@ typedef struct VibratoSettings{
 typedef struct CurrentChannelSettings{
 	ChannelBasicSettings previousBasicSettings; //the settings that will be used if the pattern says to reuse them.
 	ChannelBasicSettings currentBasicSettings; //the settings that currently control the sound output
-	ChannelEnvalopeSettings volumeEnvalope; //the state of the volume envalope
-	ChannelEnvalopeSettings pitchEnvalope; //the state of the pitch envalope
-	ChannelEnvalopeSettings panningEnvalope; //the state of the panning envalope
+	ChannelEnvelopeSettings volumeEnvelope; //the state of the volume envelope
+	ChannelEnvelopeSettings pitchEnvelope; //the state of the pitch envelope
+	ChannelEnvelopeSettings panningEnvelope; //the state of the panning envelope
 	VibratoSettings vibrato; //the state of the vibrato
 	VibratoSettings tremolo; //the state of the tremolo
 	VibratoSettings panbrello; //the state of the panbrello
@@ -261,7 +261,7 @@ extern AssetData *assetsList[];
 extern cu16 numSamples;
 extern cu16 numAssets;
 extern cu16 pitchTable[];
-extern cu16 envalopeInverseTable[];
+extern cu16 envelopeInverseTable[];
 extern cu16 tempoTable[];
 extern cu8 tonePortamentoLUT[];
 extern cu16 extraFinePortamentoTable[];
@@ -286,7 +286,7 @@ void processEffects(CurrentChannelSettings *, CurrentAssetSettings *);
 void processNote(CurrentChannelSettings *, CurrentAssetSettings *);
 void processVolume(CurrentChannelSettings *);
 void processTrigger(CurrentChannelSettings *, CurrentAssetSettings *);
-s8 processEnvalope(ChannelEnvalopeSettings *, EnvalopeData *, enum NoteState);
+s8 processEnvelope(ChannelEnvelopeSettings *, EnvelopeData *, enum NoteState);
 void volumeSlideUp(CurrentChannelSettings *, u8);
 void volumeSlideDown(CurrentChannelSettings *, u8);
 void portamentoDown(CurrentChannelSettings *, u8);
