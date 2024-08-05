@@ -50,6 +50,10 @@ void gameplayInitialize(){
 	
 	memcpy32(&characterBuffer2[OBJ_CURSOR_GFX << 5], cursorTiles, sizeof(cursorTiles) >> 2);
 	memcpy32(&characterBuffer2[OBJ_MINIMAP_CURSOR_GFX << 5], minimap_cursorTiles, sizeof(minimap_cursorTiles) >> 2);
+	memcpy32(&characterBuffer2[OBJ_SELECT_A_SHIP_GFX << 5], list_title_leftTiles, sizeof(list_title_leftTiles) >> 2);
+	memcpy32(&characterBuffer2[(OBJ_SELECT_A_SHIP_GFX + 32) << 5], list_title_rightTiles, sizeof(list_title_rightTiles) >> 2);
+	memcpy32(&characterBuffer2[(OBJ_SELECT_A_SHIP_GFX + 48) << 5], list_footer_leftTiles, sizeof(list_footer_leftTiles) >> 2);
+	memcpy32(&characterBuffer2[(OBJ_SELECT_A_SHIP_GFX + 80) << 5], list_footer_rightTiles, sizeof(list_footer_rightTiles) >> 2);
 	characterData[2].size = sizeof(characterBuffer2) >> 2;
 	characterData[2].buffer = (void *)characterBuffer2;
 	characterData[2].position = &tile_mem_obj[OBJ_SPRITE_CHARDATA];
@@ -410,71 +414,8 @@ void drawMinimap(OBJ_ATTR *spriteBuffer, u8 *characterBuffer){
 		return;
 	}
 	
-	//determine the position of the minimap
-	if(state == WIDGET_STILL_LEFT){
-		minimap1XPos = -64 + minimapPositions[MINIMAP_MOVE_FRAMES - 1];
-	}
-	else if(state == WIDGET_STILL_RIGHT){
-		minimap1XPos = 240 - minimapPositions[MINIMAP_MOVE_FRAMES - 1];
-	}
-	else if(state == WIDGET_MOVING_RIGHT){
-		useMinimap2 = 1;
-		minimap1XPos = -64 + (minimapPositions[MINIMAP_MOVE_FRAMES - 1] - minimapPositions[mapData.minimap.actionTimer]);
-		minimap2XPos = 240 - minimapPositions[mapData.minimap.actionTimer];
-		if((mapData.minimap.actionTimer + 1) == mapData.minimap.actionTarget){
-			mapData.minimap.widgetState = WIDGET_STILL_RIGHT;
-		}
-		else{
-			mapData.minimap.actionTimer++;
-		}
-	}
-	else if(state == WIDGET_MOVING_LEFT){
-		useMinimap2 = 1;
-		minimap1XPos = 240 - (minimapPositions[MINIMAP_MOVE_FRAMES - 1] - minimapPositions[mapData.minimap.actionTimer]);
-		minimap2XPos = -64 + minimapPositions[mapData.minimap.actionTimer];
-		if((mapData.minimap.actionTimer + 1) == mapData.minimap.actionTarget){
-			mapData.minimap.widgetState = WIDGET_STILL_LEFT;
-		}
-		else{
-			mapData.minimap.actionTimer++;
-		}
-	}
-	else if(state == WIDGET_HIDING_LEFT){
-		minimap1XPos = -64 + minimapPositions[MINIMAP_MOVE_FRAMES - 1] - minimapPositions[mapData.minimap.actionTimer];
-		if((mapData.minimap.actionTimer + 1) == mapData.minimap.actionTarget){
-			mapData.minimap.widgetState = WIDGET_HIDDEN_LEFT;
-		}
-		else{
-			mapData.minimap.actionTimer++;
-		}
-	}
-	else if(state == WIDGET_HIDING_RIGHT){
-		minimap1XPos = 240 - (minimapPositions[MINIMAP_MOVE_FRAMES - 1] - minimapPositions[mapData.minimap.actionTimer]);
-		if((mapData.minimap.actionTimer + 1) == mapData.minimap.actionTarget){
-			mapData.minimap.widgetState = WIDGET_HIDDEN_RIGHT;
-		}
-		else{
-			mapData.minimap.actionTimer++;
-		}
-	}
-	else if(state == WIDGET_EMERGING_LEFT){
-		minimap1XPos = -64 + minimapPositions[mapData.minimap.actionTimer];
-		if((mapData.minimap.actionTimer + 1) == mapData.minimap.actionTarget){
-			mapData.minimap.widgetState = WIDGET_STILL_LEFT;
-		}
-		else{
-			mapData.minimap.actionTimer++;
-		}
-	}
-	else if(state == WIDGET_EMERGING_RIGHT){
-		minimap1XPos = 240 - minimapPositions[mapData.minimap.actionTimer];
-		if((mapData.minimap.actionTimer + 1) == mapData.minimap.actionTarget){
-			mapData.minimap.widgetState = WIDGET_STILL_RIGHT;
-		}
-		else{
-			mapData.minimap.actionTimer++;
-		}
-	}
+	moveWidget(minimapPositions, MINIMAP_MOVE_FRAMES, &mapData.minimap.actionTimer, &minimap1XPos, &minimap2XPos,
+	&mapData.minimap.widgetState, &useMinimap2, MINIMAP_WIDTH);
 	
 	//if there is an update request
 	if(mapData.minimap.updateRequest){
@@ -682,17 +623,73 @@ void drawHighlight(u8 *drawBuffer){
 		}
 	}
 }
-void drawSelectAShipMenu(u8 *shipList, u8 shipCount){
-	u8 xPos;
-	u8 yPos;
+void drawSelectAShipMenu(OBJ_ATTR *spriteBuffer){
+	s16 xPos1;
+	s16 xPos2;
+	s16 yPos;
+	u8 palette = mapData.teamTurn;
+	u8 useMenu2 = 0;
+	u8 numDisplayed = 0;
+	u8 isScrollingMenu = 0;
+	u8 shipCount = mapData.selectAShip.shipCount;
+	u8 state = mapData.selectAShip.widgetState;
+	
+	//if this menu is hidden, don't draw it
+	if((state == WIDGET_HIDDEN_LEFT) || (state == WIDGET_HIDDEN_RIGHT)){
+		for(u32 spriteSlot = OBJ_SELECT_A_SHIP_SPRITES_START; spriteSlot < OBJ_SELECT_A_SHIP_SPRITES_START + OBJ_SELECT_A_SHIP_SPRITES_NUM; spriteSlot++){
+			spriteBuffer[spriteSlot].attr0 = ATTR0_HIDE;
+		}
+		return;
+	}
 	
 	//if there are more than 8 ships in the same tile, the menu needs to scroll
 	if(shipCount > SELECT_A_SHIP_MAX_DISPLAYED_SHIPS){
 		yPos = selectAShipYPos[SELECT_A_SHIP_MAX_DISPLAYED_SHIPS];
+		numDisplayed = SELECT_A_SHIP_MAX_DISPLAYED_SHIPS - 1;
+		isScrollingMenu = 1;
 	}
 	//if there are 8 or fewer ships in the same tile
 	else{
 		yPos = selectAShipYPos[shipCount];
+		numDisplayed = shipCount;
+	}
+	
+	moveWidget(selectAShipXPos, SELECT_A_SHIP_MOVE_FRAMES, &mapData.selectAShip.actionTimer, &xPos1, &xPos2,
+	&mapData.selectAShip.widgetState, &useMenu2, SELECT_A_SHIP_WIDTH);
+	
+	
+	//setup the menu header and footer sprites
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(yPos);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START].attr1 = ATTR1_SIZE_64 | ATTR1_X(xPos1 & 0x1ff);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(yPos);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 1].attr1 = ATTR1_SIZE_32 | ATTR1_X((xPos1 + 64) & 0x1ff);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 1].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 32) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
+	
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 2].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(yPos + 32 + numDisplayed * 16);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 2].attr1 = ATTR1_SIZE_64 | ATTR1_X(xPos1 & 0x1ff);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 2].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 48) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 3].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(yPos + 32 + numDisplayed * 16);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 3].attr1 = ATTR1_SIZE_32 | ATTR1_X((xPos1 + 64) & 0x1ff);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 3].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 80) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
+	
+	//setup the body sprites
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 4].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(yPos + 31);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 4].attr1 = ATTR1_SIZE_64 | ATTR1_X(xPos1 & 0x1ff);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 4].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 88) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 5].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_TALL | ATTR0_Y(yPos + 31);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 5].attr1 = ATTR1_SIZE_64 | ATTR1_X((xPos1 + 64) & 0x1ff);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 5].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 152) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 6].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(yPos + 95);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 6].attr1 = ATTR1_SIZE_64 | ATTR1_X(xPos1 & 0x1ff);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 6].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 184) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 7].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_TALL | ATTR0_Y(yPos + 95);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 7].attr1 = ATTR1_SIZE_64 | ATTR1_X((xPos1 + 64) & 0x1ff);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 7].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 248) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
+	
+	//add the scrolling arrows
+	if(isScrollingMenu){
+	
 	}
 }
 
@@ -769,7 +766,8 @@ void openMapState(){
 			mapData.selectAShip.state = WAITING_SELECT_A_SHIP_MENU;
 			mapData.selectAShip.currentSelection = 0;
 			mapData.selectAShip.currentTopOption = 0;
-			hideMinimap();
+			hideWidget(&mapData.minimap.widgetState, &mapData.minimap.actionTimer, &mapData.minimap.actionTarget, MINIMAP_MOVE_FRAMES);
+			revealWidget(&mapData.selectAShip.widgetState, &mapData.selectAShip.actionTimer, &mapData.selectAShip.actionTarget, SELECT_A_SHIP_MOVE_FRAMES);
 		}
 		//if there are zero ships, do nothing
 	}
@@ -794,7 +792,7 @@ void openMapState(){
 	
 	//if the minimap is hidden, start bringing it visible again
 	if((mapData.minimap.widgetState == WIDGET_HIDDEN_LEFT) || (mapData.minimap.widgetState == WIDGET_HIDDEN_RIGHT)){
-		revealMinimap();
+		revealWidget(&mapData.minimap.widgetState, &mapData.minimap.actionTimer, &mapData.minimap.actionTarget, MINIMAP_MOVE_FRAMES);
 	}
 	
 	//handle any changes to the camera that occured this frame
@@ -809,8 +807,9 @@ void selectAShipState(){
 	u8 xPos = mapData.cursor.selectXPos;
 	u8 yPos = mapData.cursor.selectYPos;
 	numShipsInTile = countSameTeam(xPos, yPos, shipsInTile);
+	mapData.selectAShip.shipCount = numShipsInTile;
 	
-	drawSelectAShipMenu(shipsInTile, numShipsInTile);
+	updateSelectAShip(shipsInTile);
 	
 	if(inputs.pressed & KEY_B){
 		//b canceles the select menu
@@ -819,7 +818,8 @@ void selectAShipState(){
 		mapData.cursor.selectXPos = mapData.ships[mapData.selectedShip.index].xPos;
 		mapData.cursor.selectYPos = mapData.ships[mapData.selectedShip.index].yPos;
 		mapData.cursor.xPos = (mapData.ships[mapData.selectedShip.index].xPos << 4) - 8;
-		mapData.cursor.yPos = (mapData.ships[mapData.selectedShip.index].yPos << 4) - 8; 
+		mapData.cursor.yPos = (mapData.ships[mapData.selectedShip.index].yPos << 4) - 8;
+		hideWidget(&mapData.selectAShip.widgetState, &mapData.selectAShip.actionTimer, &mapData.selectAShip.actionTarget, SELECT_A_SHIP_MOVE_FRAMES);
 	}
 	
 	//L and R cycle backwards or forwards through the active ships for this team, and center the camera on the next ship in the cycle
@@ -1208,6 +1208,9 @@ void processCamera(){
 	//draw the minimap
 	drawMinimap(objectBuffer, characterBuffer0);
 	
+	//draw the select-a-ship menu
+	drawSelectAShipMenu(objectBuffer);
+	
 	//queue the tilemap for layer 1 to be sent
 	tilemapData[0].size = 512;
 	tilemapData[0].buffer = tilemapBuffer0;
@@ -1227,6 +1230,11 @@ void processCamera(){
 	characterData[0].buffer = characterBuffer0;
 	characterData[0].size = 640;
 	characterData[0].position = &tile_mem_obj[0];
+	
+	//queue the character data for menus
+	characterData[1].buffer = characterBuffer1;
+	characterData[1].size = 1536;
+	characterData[1].position = &tile_mem_obj[0][OBJ_SELECT_A_SHIP_GFX + 88];
 	
 	//queue the OAM data for all of the sprites
 	OAMData.position = (void *)oam_mem;
@@ -1753,7 +1761,7 @@ void selectShip(u8 shipIndex){
 		cameraPanInit(xTarget, yTarget, CYCLE_PAN_SPEED);
 		
 		//disable the minimap
-		hideMinimap();
+		hideWidget(&mapData.minimap.widgetState, &mapData.minimap.actionTimer, &mapData.minimap.actionTarget, MINIMAP_MOVE_FRAMES);
 }
 
 u8 arctan2(s16 deltaX, s16 deltaY){
@@ -1830,36 +1838,36 @@ void checkCycleButtons(){
 	}
 }
 
-void revealMinimap(){
+void revealWidget(u8 *state, u8 *frame, u8 *numFrames, u8 moveFrames){
 	//if the minimap is already out, or coming out, do nothing
-	if((mapData.minimap.widgetState != WIDGET_HIDDEN_LEFT) && (mapData.minimap.widgetState != WIDGET_HIDDEN_RIGHT)){
+	if((*state != WIDGET_HIDDEN_LEFT) && (*state != WIDGET_HIDDEN_RIGHT)){
 		return;
 	}
 	//bring the minimap back where it last was
-	if(mapData.minimap.widgetState == WIDGET_HIDDEN_LEFT){
-		mapData.minimap.widgetState = WIDGET_EMERGING_LEFT;
+	if(*state == WIDGET_HIDDEN_LEFT){
+		*state = WIDGET_EMERGING_LEFT;
 	}
-	else if(mapData.minimap.widgetState == WIDGET_HIDDEN_RIGHT){
-		mapData.minimap.widgetState = WIDGET_EMERGING_RIGHT;
+	else if(*state == WIDGET_HIDDEN_RIGHT){
+		*state = WIDGET_EMERGING_RIGHT;
 	}
-	mapData.minimap.actionTarget = 4;
-	mapData.minimap.actionTimer = 0;
+	*numFrames = moveFrames;
+	*frame = 0;
 }
 
-void hideMinimap(){
+void hideWidget(u8 *state, u8 *frame, u8 *numFrames, u8 moveFrames){
 	//if the minimap is already hidden or hiding, do nothing
-	if((mapData.minimap.widgetState == WIDGET_HIDING_RIGHT) || (mapData.minimap.widgetState == WIDGET_HIDING_LEFT) || 
-	(mapData.minimap.widgetState == WIDGET_HIDDEN_RIGHT) || (mapData.minimap.widgetState == WIDGET_HIDDEN_LEFT)){
+	if((*state == WIDGET_HIDING_RIGHT) || (*state == WIDGET_HIDING_LEFT) || 
+	(*state == WIDGET_HIDDEN_RIGHT) || (*state == WIDGET_HIDDEN_LEFT)){
 		return;
 	}
-	if((mapData.minimap.widgetState == WIDGET_STILL_LEFT) || (mapData.minimap.widgetState == WIDGET_MOVING_RIGHT) || (mapData.minimap.widgetState == WIDGET_EMERGING_RIGHT)){
-		mapData.minimap.widgetState = WIDGET_HIDING_LEFT;
+	if((*state == WIDGET_STILL_LEFT) || (*state == WIDGET_MOVING_RIGHT) || (*state == WIDGET_EMERGING_RIGHT)){
+		*state = WIDGET_HIDING_LEFT;
 	}
-	else if((mapData.minimap.widgetState == WIDGET_STILL_RIGHT) || (mapData.minimap.widgetState == WIDGET_MOVING_LEFT) || (mapData.minimap.widgetState == WIDGET_EMERGING_LEFT)){
-		mapData.minimap.widgetState = WIDGET_HIDING_RIGHT;
+	else if((*state == WIDGET_STILL_RIGHT) || (*state == WIDGET_MOVING_LEFT) || (*state == WIDGET_EMERGING_LEFT)){
+		*state = WIDGET_HIDING_RIGHT;
 	}
-	mapData.minimap.actionTarget = 4;
-	mapData.minimap.actionTimer = 0;
+	*numFrames = moveFrames;
+	*frame = 0;
 }
 
 void cursorBoundsCheck(){
@@ -1921,6 +1929,155 @@ u8 countSameTeam(u8 xPos, u8 yPos, u8 *shipsInTile){
 	}
 	return numShipsFound;
 }
+void moveWidget(cu8 *xMoveTable, u8 maxFrames, u8 *frame, s16 *xPos1, s16 *xPos2, enum WidgetState *state, u8 *useSecond, u8 width){
+	//determine the position of the widget
+	if(*state == WIDGET_STILL_LEFT){
+		*xPos1 = -width + xMoveTable[maxFrames - 1];
+	}
+	else if(*state == WIDGET_STILL_RIGHT){
+		*xPos1 = 240 - xMoveTable[maxFrames - 1];
+	}
+	else if(*state == WIDGET_MOVING_RIGHT){
+		*useSecond = 1;
+		*xPos1 = -width + (xMoveTable[maxFrames - 1] - xMoveTable[*frame]);
+		*xPos2 = 240 - xMoveTable[*frame];
+		if((*frame + 1) == maxFrames){
+			*state = WIDGET_STILL_RIGHT;
+		}
+		else{
+			*frame = *frame + 1;
+		}
+	}
+	else if(*state == WIDGET_MOVING_LEFT){
+		*useSecond = 1;
+		*xPos1 = 240 - (xMoveTable[maxFrames - 1] - xMoveTable[*frame]);
+		*xPos2 = -width + xMoveTable[*frame];
+		if((*frame + 1) == maxFrames){
+			*state = WIDGET_STILL_LEFT;
+		}
+		else{
+			*frame = *frame + 1;
+		}
+	}
+	else if(*state == WIDGET_HIDING_LEFT){
+		*xPos1 = -width + xMoveTable[maxFrames - 1] - xMoveTable[*frame];
+		if((*frame + 1) == maxFrames){
+			*state = WIDGET_HIDDEN_LEFT;
+		}
+		else{
+			*frame = *frame + 1;
+		}
+	}
+	else if(*state == WIDGET_HIDING_RIGHT){
+		*xPos1 = 240 - (xMoveTable[maxFrames - 1] - xMoveTable[*frame]);
+		if((*frame + 1) == maxFrames){
+			*state = WIDGET_HIDDEN_RIGHT;
+		}
+		else{
+			*frame = *frame + 1;
+		}
+	}
+	else if(*state == WIDGET_EMERGING_LEFT){
+		*xPos1 = -width + xMoveTable[*frame];
+		if((*frame + 1) == maxFrames){
+			*state = WIDGET_STILL_LEFT;
+		}
+		else{
+			*frame = *frame + 1;
+		}
+	}
+	else if(*state == WIDGET_EMERGING_RIGHT){
+		*xPos1 = 240 - xMoveTable[*frame];
+		if((*frame + 1) == maxFrames){
+			*state = WIDGET_STILL_RIGHT;
+		}
+		else{
+			*frame = *frame + 1;
+		}
+	}
+}
+
+void updateSelectAShip(u8 *shipList){
+	u8 topOption = mapData.selectAShip.currentTopOption;
+	u8 selectedOption = mapData.selectAShip.currentSelection;
+	u8 numberOfShips = mapData.selectAShip.shipCount;
+	u8 *bufferPointer = characterBuffer1;
+	cu16 *tilePointer = 0;
+	
+	//send the graphics for the first 4 entries, left
+	for(u8 currentIndex = topOption; currentIndex < topOption + 4; currentIndex++){
+		//if all ships have been rendered, render the rest as transparent
+		if(currentIndex >= (numberOfShips - 1)){
+			memset32(bufferPointer, 0, 128);
+		}
+		//if this ship is not selected
+		else if(currentIndex != selectedOption){
+			tilePointer = &list_ships_leftTiles[256 * mapData.ships[shipList[currentIndex]].type];
+			memcpy32(bufferPointer, tilePointer, 128);
+		}
+		//if this ship is selected
+		else{
+			tilePointer = &list_ships_focused_leftTiles[256 * mapData.ships[shipList[currentIndex]].type];
+			memcpy32(bufferPointer, tilePointer, 128);
+		}
+		bufferPointer += 512;
+	}
+	//send the graphics for the first 4 entries, right
+	for(u8 currentIndex = topOption; currentIndex < topOption + 4; currentIndex++){
+		//if all ships have been rendered, render the rest as transparent
+		if(currentIndex >= (numberOfShips - 1)){
+			memset32(bufferPointer, 0, 64);
+		}
+		//if this ship is not selected
+		else if(currentIndex != selectedOption){
+			tilePointer = list_ships_rightTiles;
+			memcpy32(bufferPointer, tilePointer, 64);
+		}
+		//if this ship is selected
+		else{
+			tilePointer = list_ships_focused_rightTiles;
+			memcpy32(bufferPointer, tilePointer, 64);
+		}
+		bufferPointer += 256;
+	}
+	//send the graphics for the second 4 entries, left
+	for(u8 currentIndex = topOption + 4; currentIndex < topOption + 8; currentIndex++){
+		//if all ships have been rendered, render the rest as transparent
+		if(currentIndex >= (numberOfShips - 1)){
+			memset32(bufferPointer, 0, 128);
+		}
+		//if this ship is not selected
+		else if(currentIndex != selectedOption){
+			tilePointer = &list_ships_leftTiles[256 * mapData.ships[shipList[currentIndex]].type];
+			memcpy32(bufferPointer, tilePointer, 128);
+		}
+		//if this ship is selected
+		else{
+			tilePointer = &list_ships_focused_leftTiles[256 * mapData.ships[shipList[currentIndex]].type];
+			memcpy32(bufferPointer, tilePointer, 128);
+		}
+		bufferPointer += 512;
+	}
+	//send the graphics for the second 4 entries, right
+	for(u8 currentIndex = topOption + 4; currentIndex < topOption + 8; currentIndex++){
+		//if all ships have been rendered, render the rest as transparent
+		if(currentIndex >= (numberOfShips - 1)){
+			memset32(bufferPointer, 0, 64);
+		}
+		//if this ship is not selected
+		else if(currentIndex != selectedOption){
+			tilePointer = list_ships_rightTiles;
+			memcpy32(bufferPointer, tilePointer, 64);
+		}
+		//if this ship is selected
+		else{
+			tilePointer = list_ships_focused_rightTiles;
+			memcpy32(bufferPointer, tilePointer, 64);
+		}
+		bufferPointer += 256;
+	}
+}
+
 //a temprary function to initialize a test map.
 void initMap(){
 	u8 index = 0;

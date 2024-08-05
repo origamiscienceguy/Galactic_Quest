@@ -108,5 +108,5 @@ const u8 selectAShipYPos[] = {
 
 //the x position of the top-left corner of the select-a-ship menu based on what frame of emergence it is at
 const u8 selectAShipXPos[] = {
-28, 46, 58, 64
+	28, 52, 70, 82, 88
 };

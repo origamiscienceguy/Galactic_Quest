@@ -68,6 +68,8 @@
 
 #define OBJ_SELECT_A_SHIP_SPRITES_START 8
 #define OBJ_SELECT_A_SHIP_SPRITES_NUM 30
+#define OBJ_SELECT_A_SHIP_GFX (OBJ_CURSOR_GFX + OBJ_CURSOR_GFX_SIZE)
+#define OBJ_SELECT_A_SHIP_GFX_SIZE 192
 
 
 
@@ -81,9 +83,11 @@
 #define SHIP_ACC 5
 #define MINIMAP_MOVE_FRAMES 4
 #define MINIMAP_YPOS 48
+#define MINIMAP_WIDTH 64
 
-#define SELECT_A_SHIP_MOVE_FRAMES 4
+#define SELECT_A_SHIP_MOVE_FRAMES 5
 #define SELECT_A_SHIP_MAX_DISPLAYED_SHIPS 8
+#define SELECT_A_SHIP_WIDTH 88
 
 //enums
 enum ShipType{
@@ -211,10 +215,9 @@ typedef struct SelectAShipMenu{
 	enum WidgetState widgetState;
 	u8 currentSelection;
 	u8 currentTopOption;
-	u8 xPos;
-	u8 yPos;
 	u8 actionTarget;
 	u8 actionTimer;
+	u8 shipCount;
 }SelectAShipMenu;
 
 typedef struct MapData{
@@ -265,8 +268,17 @@ extern const unsigned short bg_grid_highlightPal[16];
 extern const unsigned short bg_cycle_animTiles[304];
 extern const unsigned short bg_cycle_animMap[36];
 extern const unsigned short bg_cycle_animPal[16];
-extern const u8 *selectAShipYPos;
-extern const u8 *selectAShipXPos;
+extern const unsigned short list_title_leftTiles[512];
+extern const unsigned short list_title_rightTiles[256];
+extern const unsigned short list_footer_leftTiles[512];
+extern const unsigned short list_footer_rightTiles[128];
+extern const unsigned short list_ships_leftTiles[1792];
+extern const unsigned short list_ships_focused_leftTiles[1792];
+extern const unsigned short list_ships_rightTiles[128];
+extern const unsigned short list_ships_focused_rightTiles[128];
+
+extern const u8 selectAShipYPos[];
+extern const u8 selectAShipXPos[];
 
 extern const u8 minimapPositions[];
 
@@ -309,11 +321,13 @@ void moveCursor();
 void selectShip(u8);
 u8 arctan2(s16, s16);
 void checkCycleButtons();
-void revealMinimap();
-void hideMinimap();
+void revealWidget(u8 *, u8 *, u8 *, u8);
+void hideWidget(u8 *, u8 *, u8 *, u8);
 void cursorBoundsCheck();
 u8 countSameTeam(u8, u8, u8 *);
-void drawSelectAShipMenu(u8 *, u8);
+void drawSelectAShipMenu(OBJ_ATTR *);
+void moveWidget(cu8 *, u8, u8 *, s16 *, s16 *, enum WidgetState *, u8 *, u8);
+void updateSelectAShip(u8 *);
 
 //temp function
 void initMap();
