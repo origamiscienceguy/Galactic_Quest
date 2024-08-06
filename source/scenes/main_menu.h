@@ -45,7 +45,11 @@
 
 #define STARRY_BG_MAX_VEL 
 
-// Tile indices for nine slice
+//define the maximum number of menu items on a single page
+#define MAX_MENU_ITEMS 10
+
+//nine-slice constants
+#define TILE_SIZE	 8
 #define TOP_LEFT     0
 #define TOP          1
 #define TOP_RIGHT    2
@@ -56,16 +60,23 @@
 #define BOTTOM       7
 #define BOTTOM_RIGHT 8
 
-// Tile size
-#define TILE_SIZE 8
-
-// 
-
-
 //enums
 enum MainMenuState{
 	FLASH_WHITE, FADE_TO_TITLE, TITLE_COMET_ANIMATION, TITLE_HOLD, TITLE_FLY_OUT, MAIN_MENU_FLY_IN, MAIN_MENU_HOLD, MAIN_MENU_FLY_OUT, 
 };
+
+enum MenuPageIndex{
+	MPI_MAIN_MENU, MPI_PLAY_GAME, MPI_EXTRAS, MPI_OPTIONS, MPI_CREDITS, MPI_SOUND_TEST, MPI_MAX
+};
+
+typedef enum{
+    SCRIPT_RUNNER,
+    PAGE_TRANSFER,
+    SLIDER,
+	SHIFT,
+	TOGGLE,
+	SOUND_TESTER,
+} MenuElement;
 
 //structs
 typedef struct StarryBGData{
@@ -83,6 +94,30 @@ typedef struct MainMenuData{
 	s16 xPos;
 	s16 yPos;
 }MainMenuData;
+
+typedef int (*FunctionPtr)(void);
+
+// Define a union to store different types of data
+typedef union{
+    FunctionPtr functionPtr;
+    int intVal;
+    int* intArray;  // Pointer to an array of integers
+} MenuElementData;
+
+// Define the struct with the union
+typedef struct{
+    char* itemName;
+    MenuElement menuElement;
+    MenuElementData data;
+    enum{ FUNC_PTR, INT, INT_ARRAY } dataType; // To keep track of the type stored
+} MenuPageItem;
+
+// Define the MenuPage struct with an array of MenuPageItem
+typedef struct{
+    MenuPageItem items[MAX_MENU_ITEMS];  // Fixed-size array of MenuPageItem
+    size_t itemCount;                    // Number of items currently in the array
+	char* pageName;
+} MenuPage;
 
 //globals
 extern const unsigned short startfield_sampleTiles[1168];
@@ -108,11 +143,20 @@ extern cu16 titleFlyOutYLUT[11];
 void mainMenuInitialize();
 void mainMenuNormal();
 void mainMenuEnd();
-void processStarryBG();
 void scrollStarryBG();
 void drawNineSliceWindow(int width, int height);
 void startMatch();
+int menuExecNewGame();
+int menuExecContinue();
+int menuExecLoadGame();
+int menuExecOptionsApplyChanges();
+int menuExecPlayBGM();
+int menuExecPlaySFX();
+
+void printMenuPageItem(const MenuPageItem* item);
+void printMenuPage(const MenuPage* menuPage);
+
+size_t menuSize;
 
 //external functions
 #endif
-

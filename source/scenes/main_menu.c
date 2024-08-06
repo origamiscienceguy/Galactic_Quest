@@ -11,6 +11,66 @@ Scene mainMenuScene = {
 	.end = &mainMenuEnd,
 };
 
+int dataRange[] = {0, 100};
+
+// Initialize the Menu Pages
+MenuPage menuPages[6] = {
+	{
+		.items = {
+			{"Play Game", PAGE_TRANSFER, .data.intVal = (int)MPI_PLAY_GAME, .dataType = INT},
+			{"Extras", PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = INT},
+			{"Options", PAGE_TRANSFER, .data.intVal = (int)MPI_OPTIONS, .dataType = INT}
+		},
+		.itemCount = 3,
+		.pageName = "MAIN MENU"
+	},
+	{
+		.items = {
+			{"New Game", SCRIPT_RUNNER, .data.functionPtr = menuExecNewGame, .dataType = FUNC_PTR},
+			{"Continue", SCRIPT_RUNNER, .data.functionPtr = menuExecContinue, .dataType = FUNC_PTR},
+			{"Load Game", SCRIPT_RUNNER, .data.functionPtr = menuExecLoadGame, .dataType = FUNC_PTR},
+			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT}
+		},
+		.itemCount = 4,
+		.pageName = "PLAY GAME"
+	},{
+		.items = {
+			{"Sound Test", PAGE_TRANSFER, .data.intVal = (int)MPI_SOUND_TEST, .dataType = INT},
+			{"Credits", PAGE_TRANSFER, .data.intVal = (int)MPI_CREDITS, .dataType = INT},
+			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT}
+		},
+		.itemCount = 3,
+		.pageName = "EXTRAS"
+	},
+	{
+		.items = {
+			{"Master Volume", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY},
+			{"BGM", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY},
+			{"SFX", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY},
+			{"Apply Changes", SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = FUNC_PTR},
+			{"Abort", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT}
+		},
+		.itemCount = 5,
+		.pageName = "OPTIONS"
+	},
+	{
+		.items = {
+			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = INT}
+		},
+		.itemCount = 1,
+		.pageName = "CREDITS"
+	},
+	{
+		.items = {
+			{"BGM", SOUND_TESTER, .data.functionPtr = menuExecPlayBGM, .dataType = FUNC_PTR},
+			{"SFX", SOUND_TESTER, .data.functionPtr = menuExecPlaySFX, .dataType = FUNC_PTR},
+			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = INT}
+		},
+		.itemCount = 3,
+		.pageName = "SOUND TEST"
+	}
+};
+
 void mainMenuInitialize(){
 	REG_DISPCNT = DCNT_MODE0; //black screen
 	REG_BG0CNT = BG_4BPP | BG_SBB(STARRY_IMAGE_TILEMAP) | BG_CBB(STARRY_IMAGE_CHARDATA) | BG_PRIO(3) | BG_REG_64x64; //starry background layer
@@ -246,6 +306,21 @@ void mainMenuNormal(){
 		break;
 		
 	case MAIN_MENU_FLY_IN:
+		// Example array of MenuPageItem
+
+		/*
+		MenuPage menuPage = {
+			.items = {
+				{"Function Item", SCRIPT_RUNNER, .data.functionPtr = exampleFunction, .dataType = FUNC_PTR},
+				{"Integer Item", PAGE_TRANSFER, .data.intValue = 123, .dataType = INT},
+				{"Integer Array Item", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY}
+			},
+			.itemCount = 3
+		};*/
+
+		// Print the items in the MenuPage
+		printMenuPage(&menuPages[MPI_MAIN_MENU]);
+
 		// Set the Menu State to "MAIN_MENU_HOLD and re-init its timers"
 		mainMenuData.actionTarget = 32;
 		mainMenuData.actionTimer = 0;
@@ -257,15 +332,24 @@ void mainMenuNormal(){
 	case MAIN_MENU_HOLD:
 		drawNineSliceWindow(15, 15);
 		
-		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)) {
-			startMatch();
+		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
+			menuExecNewGame();
 		}
 		
 		// Make the starry background scroll up-left
 		scrollStarryBG();
 		break;
 	case MAIN_MENU_FLY_OUT:
-		//exit here
+		if(mainMenuData.actionTimer >= mainMenuData.actionTarget){
+			// Start the match
+			mainMenuEnd();
+		}
+		else{
+			mainMenuData.actionTimer++;
+		}
+
+		// Make the starry background scroll up-left
+		scrollStarryBG();
 		break;
 	default:
 		break;
@@ -274,13 +358,11 @@ void mainMenuNormal(){
 }
 
 void mainMenuEnd(){
-
+	currentScene.scenePointer = sceneList[GAMEPLAY];
+	currentScene.state = INITIALIZE;
 }
 
-void processStarryBG(){
-}
-
-void scrollStarryBG() {
+void scrollStarryBG(){
 	if(currentScene.sceneCounter % 8 <= 0){
 		mainMenuData.starryBG.xPos++;		
 	}
@@ -295,15 +377,15 @@ void scrollStarryBG() {
 	IOData[0].size = 1;
 }
 
-void drawTile(int x, int y, int tileIndex) {
-    // Implement the actual tile drawing logic here
+void drawTile(int x, int y, int tileIndex){
+    /// TODO: Implement the actual tile drawing logic here
     //printf("Drawing tile %d at (%d, %d)\n", tileIndex, x, y);
 }
 
 /// @brief Draws the nine slice window; Width and Height params are in terms of 8x8 tiles
 /// @param width 
 /// @param height 
-void drawNineSliceWindow(int width, int height) {
+void drawNineSliceWindow(int width, int height){
     // Dimensions of the nine slices
 
     // Draw corners
@@ -313,24 +395,76 @@ void drawNineSliceWindow(int width, int height) {
     drawTile((width - 1) * TILE_SIZE, (height - 1) * TILE_SIZE, BOTTOM_RIGHT); // Bottom-right corner
 
     // Draw edges
-    for (int i = 1; i < width - 1; ++i) {
+    for (int i = 1; i < width - 1; ++i){
         drawTile(i * TILE_SIZE, 0, TOP); // Top edge
         drawTile(i * TILE_SIZE, (height - 1) * TILE_SIZE, BOTTOM); // Bottom edge
     }
-    for (int i = 1; i < height - 1; ++i) {
+    for (int i = 1; i < height - 1; ++i){
         drawTile(0, i * TILE_SIZE, LEFT); // Left edge
         drawTile((width - 1) * TILE_SIZE, i * TILE_SIZE, RIGHT); // Right edge
     }
 
     // Draw center
-    for (int i = 1; i < width - 1; ++i) {
-        for (int j = 1; j < height - 1; ++j) {
+    for (int i = 1; i < width - 1; ++i){
+        for (int j = 1; j < height - 1; ++j){
             drawTile(i * TILE_SIZE, j * TILE_SIZE, CENTER); // Center
         }
     }
 }
 
-void startMatch() {
-	currentScene.scenePointer = sceneList[GAMEPLAY];
-	currentScene.state = INITIALIZE;
+int menuExecNewGame(){
+	mainMenuData.state = MAIN_MENU_FLY_OUT;
+	mainMenuData.actionTimer = 0;
+	mainMenuData.actionTarget = 40; // Specifies the length of the actionTimer
+	return 0;
+}
+
+int menuExecContinue(){
+	return 0;
+}
+
+int menuExecLoadGame(){
+	return 0;
+}
+
+int menuExecOptionsApplyChanges(){
+	return 0;
+}
+
+int menuExecPlayBGM(){
+	return 0;
+}
+
+int menuExecPlaySFX(){
+	return 0;
+}
+
+
+void printMenuPageItem(const MenuPageItem* item){
+    //printf("String: %s\n", item->itemName);
+    //printf("Enum: %d\n", item->dataType);
+    
+    switch (item->dataType){
+        case FUNC_PTR:
+            //printf("Function return value: %d\n", item->data.functionPtr());
+            break;
+        case INT:
+            //printf("Integer value: %d\n", item->data.intVal);
+            break;
+        case INT_ARRAY:
+            //printf("Integer array: ");
+            // Assuming the size of the array is known or can be tracked
+            // This placeholder assumes 4 elements for demonstration
+            for (size_t i = 0; i < 4; ++i){
+                //printf("%d ", item->data.intArray[i]);
+            }
+            //printf("\n");
+            break;
+    }
+}
+
+void printMenuPage(const MenuPage* menuPage){
+    for (size_t i = 0; i < menuPage->itemCount; ++i){
+        printMenuPageItem(&menuPage->items[i]);
+    }
 }
