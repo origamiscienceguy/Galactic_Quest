@@ -103,7 +103,7 @@ const u8 minimapPositions[] = {
 
 //the y position of the select-a-ship menu based on how many entries there are
 const u8 selectAShipYPos[] = {
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+	0, 0, 40, 32, 24, 16, 8, 0, 0, 0
 };
 
 //the x position of the top-left corner of the select-a-ship menu based on what frame of emergence it is at
