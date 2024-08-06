@@ -657,12 +657,8 @@ void drawSelectAShipMenu(OBJ_ATTR *spriteBuffer){
 	}
 	bodyYPos = yPos;
 	
-
-	
-	
 	moveWidget(selectAShipXPos, SELECT_A_SHIP_MOVE_FRAMES, &mapData.selectAShip.actionTimer, &xPos1, &xPos2,
 	&mapData.selectAShip.widgetState, &useMenu2, SELECT_A_SHIP_WIDTH);
-	
 	
 	//setup the menu header and footer sprites
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(yPos);
@@ -692,8 +688,6 @@ void drawSelectAShipMenu(OBJ_ATTR *spriteBuffer){
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 7].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_TALL | ATTR0_Y(bodyYPos + 96);
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 7].attr1 = ATTR1_SIZE_64 | ATTR1_X((xPos1 + 64) & 0x1ff);
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 7].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 248) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
-	
-	
 	
 	//add the scrolling arrows
 	if(isScrollingMenu){
@@ -794,6 +788,8 @@ void openMapState(){
 		else if(numShipsInTile >= 2){
 			mapData.state = SELECT_A_SHIP;
 			mapData.selectAShip.state = WAITING_SELECT_A_SHIP_MENU;
+			updateSelectAShip(shipsInTile);
+			mapData.selectAShip.shipCount = numShipsInTile;
 			mapData.selectAShip.currentSelection = 0;
 			mapData.selectAShip.currentTopOption = 0;
 			hideWidget(&mapData.minimap.widgetState, &mapData.minimap.actionTimer, &mapData.minimap.actionTarget, MINIMAP_MOVE_FRAMES);
