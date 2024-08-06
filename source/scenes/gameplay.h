@@ -137,7 +137,7 @@ enum GridState{
 };
 
 enum SelectAShipMenuState{
-	NO_SELECT_A_SHIP_MENU, SCROLLING_SELECT_A_SHIP_MENU, WAITING_SELECT_A_SHIP_MENU, SELECTING_SELECT_A_SHIP_MENU 
+	NO_SELECT_A_SHIP_MENU, WAITING_SELECT_A_SHIP_MENU, SELECTING_SELECT_A_SHIP_MENU 
 };
 
 //structs
@@ -218,6 +218,8 @@ typedef struct SelectAShipMenu{
 	u8 actionTarget;
 	u8 actionTimer;
 	u8 shipCount;
+	u8 downHeldCounter;
+	u8 upHeldCounter;
 }SelectAShipMenu;
 
 typedef struct MapData{

@@ -627,6 +627,7 @@ void drawSelectAShipMenu(OBJ_ATTR *spriteBuffer){
 	s16 xPos1;
 	s16 xPos2;
 	s16 yPos;
+	s16 bodyYPos;
 	u8 palette = mapData.teamTurn;
 	u8 useMenu2 = 0;
 	u8 numDisplayed = 0;
@@ -653,6 +654,10 @@ void drawSelectAShipMenu(OBJ_ATTR *spriteBuffer){
 		yPos = selectAShipYPos[shipCount];
 		numDisplayed = shipCount;
 	}
+	bodyYPos = yPos;
+	
+
+	
 	
 	moveWidget(selectAShipXPos, SELECT_A_SHIP_MOVE_FRAMES, &mapData.selectAShip.actionTimer, &xPos1, &xPos2,
 	&mapData.selectAShip.widgetState, &useMenu2, SELECT_A_SHIP_WIDTH);
@@ -674,18 +679,20 @@ void drawSelectAShipMenu(OBJ_ATTR *spriteBuffer){
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 3].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 80) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
 	
 	//setup the body sprites
-	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 4].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(yPos + 31);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 4].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(bodyYPos + 31);
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 4].attr1 = ATTR1_SIZE_64 | ATTR1_X(xPos1 & 0x1ff);
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 4].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 88) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
-	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 5].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_TALL | ATTR0_Y(yPos + 31);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 5].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_TALL | ATTR0_Y(bodyYPos + 31);
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 5].attr1 = ATTR1_SIZE_64 | ATTR1_X((xPos1 + 64) & 0x1ff);
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 5].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 152) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
-	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 6].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(yPos + 95);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 6].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(bodyYPos + 95);
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 6].attr1 = ATTR1_SIZE_64 | ATTR1_X(xPos1 & 0x1ff);
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 6].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 184) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
-	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 7].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_TALL | ATTR0_Y(yPos + 95);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 7].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_TALL | ATTR0_Y(bodyYPos + 95);
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 7].attr1 = ATTR1_SIZE_64 | ATTR1_X((xPos1 + 64) & 0x1ff);
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 7].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 248) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
+	
+	
 	
 	//add the scrolling arrows
 	if(isScrollingMenu){
@@ -809,21 +816,60 @@ void selectAShipState(){
 	numShipsInTile = countSameTeam(xPos, yPos, shipsInTile);
 	mapData.selectAShip.shipCount = numShipsInTile;
 	
-	updateSelectAShip(shipsInTile);
-	
 	if(inputs.pressed & KEY_B){
 		//b canceles the select menu
 		mapData.state = OPEN_MAP;
-		mapData.ships[mapData.selectedShip.index].state = READY_VISIBLE; 
-		mapData.cursor.selectXPos = mapData.ships[mapData.selectedShip.index].xPos;
-		mapData.cursor.selectYPos = mapData.ships[mapData.selectedShip.index].yPos;
-		mapData.cursor.xPos = (mapData.ships[mapData.selectedShip.index].xPos << 4) - 8;
-		mapData.cursor.yPos = (mapData.ships[mapData.selectedShip.index].yPos << 4) - 8;
 		hideWidget(&mapData.selectAShip.widgetState, &mapData.selectAShip.actionTimer, &mapData.selectAShip.actionTarget, SELECT_A_SHIP_MOVE_FRAMES);
+	}
+	
+	if(inputs.pressed & KEY_A){
+		mapData.selectAShip.state = SELECTING_SELECT_A_SHIP_MENU;
+		selectShip(shipsInTile[mapData.selectAShip.currentSelection]);
+		hideWidget(&mapData.selectAShip.widgetState, &mapData.selectAShip.actionTimer, &mapData.selectAShip.actionTarget, SELECT_A_SHIP_MOVE_FRAMES);
+	}
+	
+	if((inputs.current & KEY_DOWN) && (mapData.selectAShip.state == WAITING_SELECT_A_SHIP_MENU)){
+		if((mapData.selectAShip.downHeldCounter == 0) || ((mapData.selectAShip.downHeldCounter >= 20) && ((mapData.selectAShip.downHeldCounter % 4) == 0))){
+			if(mapData.selectAShip.currentSelection == (mapData.selectAShip.shipCount - 1)){
+				mapData.selectAShip.currentSelection = 0;
+				mapData.selectAShip.currentTopOption = 0;
+			}
+			else{
+				mapData.selectAShip.currentSelection++;
+			}
+			if(mapData.selectAShip.downHeldCounter != 0){
+				mapData.selectAShip.downHeldCounter = 20;
+			}
+		}
+		mapData.selectAShip.downHeldCounter++;
+	}
+	else{
+		mapData.selectAShip.downHeldCounter = 0;
+	}
+	
+	if((inputs.current & KEY_UP) && (mapData.selectAShip.state == WAITING_SELECT_A_SHIP_MENU)){
+		if((mapData.selectAShip.upHeldCounter == 0) || ((mapData.selectAShip.upHeldCounter >= 20) && ((mapData.selectAShip.upHeldCounter % 4) == 0))){
+			if(mapData.selectAShip.currentSelection == 0){
+				mapData.selectAShip.currentSelection = (mapData.selectAShip.shipCount - 1);
+				mapData.selectAShip.currentTopOption = (mapData.selectAShip.shipCount - 8);
+			}
+			else{
+				mapData.selectAShip.currentSelection--;
+			}
+			if(mapData.selectAShip.upHeldCounter != 0){
+				mapData.selectAShip.upHeldCounter = 20;
+			}
+		}
+		mapData.selectAShip.upHeldCounter++;
+	}
+	else{
+		mapData.selectAShip.upHeldCounter = 0;
 	}
 	
 	//L and R cycle backwards or forwards through the active ships for this team, and center the camera on the next ship in the cycle
 	checkCycleButtons();
+	
+	updateSelectAShip(shipsInTile);
 	
 	//handle any changes to the camera that occured this frame
 	processCamera();
@@ -2004,6 +2050,20 @@ void updateSelectAShip(u8 *shipList){
 	u8 *bufferPointer = characterBuffer1;
 	cu16 *tilePointer = 0;
 	
+	//handle the scrolling of the menu
+	if(numberOfShips > SELECT_A_SHIP_MAX_DISPLAYED_SHIPS){
+		if(((selectedOption - topOption) < 1) && topOption != 0){
+			topOption = selectedOption - 1;
+		}
+		else if(((selectedOption - topOption) > 5) && topOption != numberOfShips - 8){
+			topOption = selectedOption - 5;
+		}
+		if(selectedOption >= (numberOfShips - 2)){
+			topOption = numberOfShips - 7;
+		}
+		mapData.selectAShip.currentTopOption = topOption;
+	}
+	
 	//send the graphics for the first 4 entries, left
 	for(u8 currentIndex = topOption; currentIndex < topOption + 4; currentIndex++){
 		//if all ships have been rendered, render the rest as transparent
@@ -2011,13 +2071,8 @@ void updateSelectAShip(u8 *shipList){
 			memset32(bufferPointer, 0, 128);
 		}
 		//if this ship is not selected
-		else if(currentIndex != selectedOption){
-			tilePointer = &list_ships_leftTiles[256 * mapData.ships[shipList[currentIndex]].type];
-			memcpy32(bufferPointer, tilePointer, 128);
-		}
-		//if this ship is selected
 		else{
-			tilePointer = &list_ships_focused_leftTiles[256 * mapData.ships[shipList[currentIndex]].type];
+			tilePointer = &list_ships_leftTiles[256 * mapData.ships[shipList[currentIndex]].type];
 			memcpy32(bufferPointer, tilePointer, 128);
 		}
 		bufferPointer += 512;
@@ -2029,13 +2084,8 @@ void updateSelectAShip(u8 *shipList){
 			memset32(bufferPointer, 0, 64);
 		}
 		//if this ship is not selected
-		else if(currentIndex != selectedOption){
-			tilePointer = list_ships_rightTiles;
-			memcpy32(bufferPointer, tilePointer, 64);
-		}
-		//if this ship is selected
 		else{
-			tilePointer = list_ships_focused_rightTiles;
+			tilePointer = list_ships_rightTiles;
 			memcpy32(bufferPointer, tilePointer, 64);
 		}
 		bufferPointer += 256;
@@ -2043,17 +2093,12 @@ void updateSelectAShip(u8 *shipList){
 	//send the graphics for the second 4 entries, left
 	for(u8 currentIndex = topOption + 4; currentIndex < topOption + 8; currentIndex++){
 		//if all ships have been rendered, render the rest as transparent
-		if(currentIndex >= (numberOfShips - 1)){
+		if(currentIndex >= (numberOfShips)){
 			memset32(bufferPointer, 0, 128);
 		}
 		//if this ship is not selected
-		else if(currentIndex != selectedOption){
-			tilePointer = &list_ships_leftTiles[256 * mapData.ships[shipList[currentIndex]].type];
-			memcpy32(bufferPointer, tilePointer, 128);
-		}
-		//if this ship is selected
 		else{
-			tilePointer = &list_ships_focused_leftTiles[256 * mapData.ships[shipList[currentIndex]].type];
+			tilePointer = &list_ships_leftTiles[256 * mapData.ships[shipList[currentIndex]].type];
 			memcpy32(bufferPointer, tilePointer, 128);
 		}
 		bufferPointer += 512;
@@ -2061,20 +2106,35 @@ void updateSelectAShip(u8 *shipList){
 	//send the graphics for the second 4 entries, right
 	for(u8 currentIndex = topOption + 4; currentIndex < topOption + 8; currentIndex++){
 		//if all ships have been rendered, render the rest as transparent
-		if(currentIndex >= (numberOfShips - 1)){
+		if(currentIndex >= (numberOfShips)){
 			memset32(bufferPointer, 0, 64);
 		}
 		//if this ship is not selected
-		else if(currentIndex != selectedOption){
+		else{
 			tilePointer = list_ships_rightTiles;
 			memcpy32(bufferPointer, tilePointer, 64);
 		}
-		//if this ship is selected
-		else{
-			tilePointer = list_ships_focused_rightTiles;
-			memcpy32(bufferPointer, tilePointer, 64);
-		}
 		bufferPointer += 256;
+	}
+	
+	//draw the selected option
+	//if the selected option is among the top 4 displayed
+	if((selectedOption - topOption) < 4){
+		bufferPointer = characterBuffer1 + 512 * (selectedOption - topOption);
+		tilePointer = &list_ships_focused_leftTiles[256 * mapData.ships[shipList[selectedOption]].type];
+		memcpy32(bufferPointer, tilePointer, 128);
+		bufferPointer = characterBuffer1 + 2048 + 256 * (selectedOption - topOption);
+		tilePointer = list_ships_focused_rightTiles;
+		memcpy32(bufferPointer, tilePointer, 64);
+	}
+	//if the selected option is among the bottom 4 displayed
+	else if((selectedOption - topOption) < 8){
+		bufferPointer = characterBuffer1 + 3072 + 512 * ((selectedOption  - topOption) - 4);
+		tilePointer = &list_ships_focused_leftTiles[256 * mapData.ships[shipList[selectedOption]].type];
+		memcpy32(bufferPointer, tilePointer, 128);
+		bufferPointer = characterBuffer1 + 5120 + 256 * ((selectedOption - topOption) - 4);
+		tilePointer = list_ships_focused_rightTiles;
+		memcpy32(bufferPointer, tilePointer, 64);
 	}
 }
 
