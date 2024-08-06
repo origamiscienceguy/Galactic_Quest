@@ -45,9 +45,26 @@
 
 #define STARRY_BG_MAX_VEL 
 
+// Tile indices for nine slice
+#define TOP_LEFT     0
+#define TOP          1
+#define TOP_RIGHT    2
+#define LEFT         3
+#define CENTER       4
+#define RIGHT        5
+#define BOTTOM_LEFT  6
+#define BOTTOM       7
+#define BOTTOM_RIGHT 8
+
+// Tile size
+#define TILE_SIZE 8
+
+// 
+
+
 //enums
 enum MainMenuState{
-	FLASH_WHITE, FADE_TO_TITLE, TITLE_COMET_ANIMATION, TITLE_HOLD, TITLE_FLY_OUT, MAIN_MENU_FLY_IN, MAIN_MENU_FLY_OUT, 
+	FLASH_WHITE, FADE_TO_TITLE, TITLE_COMET_ANIMATION, TITLE_HOLD, TITLE_FLY_OUT, MAIN_MENU_FLY_IN, MAIN_MENU_HOLD, MAIN_MENU_FLY_OUT, 
 };
 
 //structs
@@ -92,6 +109,9 @@ void mainMenuInitialize();
 void mainMenuNormal();
 void mainMenuEnd();
 void processStarryBG();
+void scrollStarryBG();
+void drawNineSliceWindow(int width, int height);
+void startMatch();
 
 //external functions
 #endif

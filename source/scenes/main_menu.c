@@ -246,25 +246,26 @@ void mainMenuNormal(){
 		break;
 		
 	case MAIN_MENU_FLY_IN:
+		// Set the Menu State to "MAIN_MENU_HOLD and re-init its timers"
+		mainMenuData.actionTarget = 32;
+		mainMenuData.actionTimer = 0;
+		mainMenuData.state = MAIN_MENU_HOLD;
+
+		// Make the starry background scroll up-left
+		scrollStarryBG();
+		break;
+	case MAIN_MENU_HOLD:
+		drawNineSliceWindow(15, 15);
 		
-		currentScene.scenePointer = sceneList[GAMEPLAY];
-		currentScene.state = INITIALIZE;
-		
-		
-		
-		if(currentScene.sceneCounter % 8 <= 0){
-			mainMenuData.starryBG.xPos++;		
+		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)) {
+			startMatch();
 		}
-		if(currentScene.sceneCounter % 8 <= 0){
-			mainMenuData.starryBG.yPos++;
-		}
-		IOBuffer0[0] = mainMenuData.starryBG.xPos;
-		IOBuffer0[1] = mainMenuData.starryBG.yPos;
 		
-		IOData[0].position = (void *)(&REG_BG0HOFS);
-		IOData[0].buffer = IOBuffer0;
-		IOData[0].size = 1;
-		
+		// Make the starry background scroll up-left
+		scrollStarryBG();
+		break;
+	case MAIN_MENU_FLY_OUT:
+		//exit here
 		break;
 	default:
 		break;
@@ -277,4 +278,59 @@ void mainMenuEnd(){
 }
 
 void processStarryBG(){
+}
+
+void scrollStarryBG() {
+	if(currentScene.sceneCounter % 8 <= 0){
+		mainMenuData.starryBG.xPos++;		
+	}
+	if(currentScene.sceneCounter % 8 <= 0){
+		mainMenuData.starryBG.yPos++;
+	}
+	IOBuffer0[0] = mainMenuData.starryBG.xPos;
+	IOBuffer0[1] = mainMenuData.starryBG.yPos;
+	
+	IOData[0].position = (void *)(&REG_BG0HOFS);
+	IOData[0].buffer = IOBuffer0;
+	IOData[0].size = 1;
+}
+
+void drawTile(int x, int y, int tileIndex) {
+    // Implement the actual tile drawing logic here
+    //printf("Drawing tile %d at (%d, %d)\n", tileIndex, x, y);
+}
+
+/// @brief Draws the nine slice window; Width and Height params are in terms of 8x8 tiles
+/// @param width 
+/// @param height 
+void drawNineSliceWindow(int width, int height) {
+    // Dimensions of the nine slices
+
+    // Draw corners
+    drawTile(0, 0, TOP_LEFT); // Top-left corner
+    drawTile((width - 1) * TILE_SIZE, 0, TOP_RIGHT); // Top-right corner
+    drawTile(0, (height - 1) * TILE_SIZE, BOTTOM_LEFT); // Bottom-left corner
+    drawTile((width - 1) * TILE_SIZE, (height - 1) * TILE_SIZE, BOTTOM_RIGHT); // Bottom-right corner
+
+    // Draw edges
+    for (int i = 1; i < width - 1; ++i) {
+        drawTile(i * TILE_SIZE, 0, TOP); // Top edge
+        drawTile(i * TILE_SIZE, (height - 1) * TILE_SIZE, BOTTOM); // Bottom edge
+    }
+    for (int i = 1; i < height - 1; ++i) {
+        drawTile(0, i * TILE_SIZE, LEFT); // Left edge
+        drawTile((width - 1) * TILE_SIZE, i * TILE_SIZE, RIGHT); // Right edge
+    }
+
+    // Draw center
+    for (int i = 1; i < width - 1; ++i) {
+        for (int j = 1; j < height - 1; ++j) {
+            drawTile(i * TILE_SIZE, j * TILE_SIZE, CENTER); // Center
+        }
+    }
+}
+
+void startMatch() {
+	currentScene.scenePointer = sceneList[GAMEPLAY];
+	currentScene.state = INITIALIZE;
 }
