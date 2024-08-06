@@ -13,7 +13,6 @@
             },
             "group": {
                 "kind": "build",
-                "isDefault": true
             },
             "problemMatcher": []
         },
@@ -21,36 +20,49 @@
             "label": "Build Game",
             "type": "shell",
             "command": "make",
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "dependsOn": "Compile Audio",
+            "group": "build",
             "problemMatcher": []
         },
         {
-            "label": "Open Game",
+            "label": "Run Game",
             "type": "shell",
             "command": "start",
             "args": [
                 "${workspaceFolder}/build/Galactic_Quest.gba"
             ],
             "group": "build",
-            "dependsOn": "Build Game",
             "problemMatcher": []
+        },
+        {
+            "label": "Build and Run Game",
+            "dependsOn": [
+                "Build Game",
+                "Run Game"
+            ],
+            "dependsOrder": "sequence",
+            "type": "shell",
+            "command": "echo Task Complete",
+            "isBackground": false,
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+            }
         },
         {
             "label": "Build and Run Game with Audio",
             "dependsOn": [
                 "Compile Audio",
                 "Build Game",
-                "Open Game"
+                "Run Game"
             ],
             "dependsOrder": "sequence",
             "type": "shell",
             "command": "echo Task Complete",
             "isBackground": false,
-            "problemMatcher": []
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+            }
         }
     ]
 }
