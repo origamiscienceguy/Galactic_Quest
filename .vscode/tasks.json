@@ -1,0 +1,26 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Game",
+            "type": "shell",
+            "command": "make",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Game",
+            "type": "shell",
+            "command": "start",
+            "args": [
+                "${workspaceFolder}/build/Galactic_Quest.gba"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "dependsOn": "Build Game"
+        }
+    ]
+}
