@@ -66,9 +66,9 @@
 #define OBJ_CURSOR_GFX (OBJ_MINIMAP_CURSOR_GFX + OBJ_MINIMAP_CURSOR_GFX_SIZE)
 #define OBJ_CURSOR_GFX_SIZE 32
 
-#define OBJ_SELECT_A_SHIP_SPRITES_START 8
+#define OBJ_SELECT_A_SHIP_SPRITES_START 11
 #define OBJ_SELECT_A_SHIP_SPRITES_NUM 30
-#define OBJ_SELECT_A_SHIP_GFX (OBJ_CURSOR_GFX + OBJ_CURSOR_GFX_SIZE)
+#define OBJ_SELECT_A_SHIP_GFX (OBJ_CURSOR_GFX + OBJ_CURSOR_GFX_SIZE + 2)
 #define OBJ_SELECT_A_SHIP_GFX_SIZE 192
 
 
@@ -278,6 +278,7 @@ extern const unsigned short list_ships_leftTiles[1792];
 extern const unsigned short list_ships_focused_leftTiles[1792];
 extern const unsigned short list_ships_rightTiles[128];
 extern const unsigned short list_ships_focused_rightTiles[128];
+extern const unsigned short carretTiles[32];
 
 extern const u8 selectAShipYPos[];
 extern const u8 selectAShipXPos[];

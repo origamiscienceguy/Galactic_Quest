@@ -54,6 +54,7 @@ void gameplayInitialize(){
 	memcpy32(&characterBuffer2[(OBJ_SELECT_A_SHIP_GFX + 32) << 5], list_title_rightTiles, sizeof(list_title_rightTiles) >> 2);
 	memcpy32(&characterBuffer2[(OBJ_SELECT_A_SHIP_GFX + 48) << 5], list_footer_leftTiles, sizeof(list_footer_leftTiles) >> 2);
 	memcpy32(&characterBuffer2[(OBJ_SELECT_A_SHIP_GFX + 80) << 5], list_footer_rightTiles, sizeof(list_footer_rightTiles) >> 2);
+	memcpy32(&characterBuffer2[(OBJ_SELECT_A_SHIP_GFX - 2) << 5], carretTiles, sizeof(carretTiles) >> 2);
 	characterData[2].size = sizeof(characterBuffer2) >> 2;
 	characterData[2].buffer = (void *)characterBuffer2;
 	characterData[2].position = &tile_mem_obj[OBJ_SPRITE_CHARDATA];
@@ -696,7 +697,25 @@ void drawSelectAShipMenu(OBJ_ATTR *spriteBuffer){
 	
 	//add the scrolling arrows
 	if(isScrollingMenu){
-	
+		u8 verticalOffset = 0;
+		if((currentScene.sceneCounter % 64) < 16){
+			verticalOffset = 0;
+		}
+		else if((currentScene.sceneCounter % 64) < 32){
+			verticalOffset = 1;
+		}
+		else if((currentScene.sceneCounter % 64) < 48){
+			verticalOffset = 2;
+		}
+		else if((currentScene.sceneCounter % 64) < 64){
+			verticalOffset = 1;
+		}
+		spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START -3].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(yPos + verticalOffset + 35 + numDisplayed * 16);
+		spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START -3].attr1 = ATTR1_SIZE_8 | ATTR1_X((xPos1 + 20) & 0x1ff);
+		spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START -3].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX - 1) | ATTR2_PRIO(0) | ATTR2_PALBANK(0);
+		spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START -2].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(yPos + verticalOffset + 35 + numDisplayed * 16);
+		spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START -2].attr1 = ATTR1_SIZE_8 | ATTR1_X((xPos1 + 59) & 0x1ff);
+		spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START -2].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX - 1) | ATTR2_PRIO(0) | ATTR2_PALBANK(0);
 	}
 }
 
@@ -1889,8 +1908,15 @@ void revealWidget(u8 *state, u8 *frame, u8 *numFrames, u8 moveFrames){
 	if((*state != WIDGET_HIDDEN_LEFT) && (*state != WIDGET_HIDDEN_RIGHT)){
 		return;
 	}
+	//check if the cursor is near the left side
+	if((mapData.cursor.xPos - mapData.camera.xPos) < 64){
+		*state = WIDGET_EMERGING_RIGHT;
+	}
+	else if((mapData.cursor.xPos - mapData.camera.xPos) > 144){
+		*state = WIDGET_EMERGING_LEFT;
+	}
 	//bring the minimap back where it last was
-	if(*state == WIDGET_HIDDEN_LEFT){
+	else if(*state == WIDGET_HIDDEN_LEFT){
 		*state = WIDGET_EMERGING_LEFT;
 	}
 	else if(*state == WIDGET_HIDDEN_RIGHT){
@@ -1906,10 +1932,10 @@ void hideWidget(u8 *state, u8 *frame, u8 *numFrames, u8 moveFrames){
 	(*state == WIDGET_HIDDEN_RIGHT) || (*state == WIDGET_HIDDEN_LEFT)){
 		return;
 	}
-	if((*state == WIDGET_STILL_LEFT) || (*state == WIDGET_MOVING_RIGHT) || (*state == WIDGET_EMERGING_RIGHT)){
+	if((*state == WIDGET_STILL_LEFT) || (*state == WIDGET_MOVING_RIGHT) || (*state == WIDGET_EMERGING_LEFT)){
 		*state = WIDGET_HIDING_LEFT;
 	}
-	else if((*state == WIDGET_STILL_RIGHT) || (*state == WIDGET_MOVING_LEFT) || (*state == WIDGET_EMERGING_LEFT)){
+	else if((*state == WIDGET_STILL_RIGHT) || (*state == WIDGET_MOVING_LEFT) || (*state == WIDGET_EMERGING_RIGHT)){
 		*state = WIDGET_HIDING_RIGHT;
 	}
 	*numFrames = moveFrames;
