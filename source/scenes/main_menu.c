@@ -87,8 +87,9 @@ void mainMenuInitialize(){
 	//send the palettes
 	memcpy32(&paletteBufferBg[STARRY_IMAGE_PAL_START << 4], main_menu_starfieldPal, sizeof(main_menu_starfieldPal) >> 2);
 	memcpy32(&paletteBufferBg[TITLE_CARD_PAL_START << 4], sprTitleLogoPal, sizeof(sprTitleLogoPal) >> 2);
+	memcpy32(&paletteBufferBg[MENU_PAL_START << 4], tsMenuUIPal, sizeof(tsMenuUIPal) >> 2);
 
-	paletteData[0].size = 16;
+	paletteData[0].size = 24;
 	paletteData[0].position = pal_bg_mem;
 	paletteData[0].buffer = paletteBufferBg;
 	
@@ -106,6 +107,7 @@ void mainMenuInitialize(){
 	characterData[0].size = sizeof(characterBuffer0) >> 2;
 	
 	memcpy32(&characterBuffer1[TITLE_CARD_GFX_START << 5], sprTitleLogoTiles, sizeof(sprTitleLogoTiles) >> 2);
+	memcpy32(&characterBuffer1[MENU_GFX_START << 5], tsMenuUITiles, sizeof(tsMenuUITiles) >> 2);
 	characterData[1].position = tile_mem[TITLE_CARD_CHARDATA];
 	characterData[1].buffer = (void *)characterBuffer1;
 	characterData[1].size = sizeof(characterBuffer1) >> 2;
