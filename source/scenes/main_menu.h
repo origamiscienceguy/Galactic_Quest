@@ -67,6 +67,12 @@
 #define LASER_TOP 14
 #define LASER_BOTTOM 15
 
+//define constants for the secondary nine-slice tile indices
+#define SEC_TOP_LEFT 20
+#define SEC_TOP_MIDDLE 21
+#define SEC_LEFT 22
+#define SEC_CENTER 23
+
 //enums
 enum MainMenuState{
 	FLASH_WHITE, FADE_TO_TITLE, TITLE_COMET_ANIMATION, TITLE_HOLD, TITLE_FLY_OUT, MAIN_MENU_FLY_IN, MAIN_MENU_HOLD, MAIN_MENU_FLY_OUT, 
@@ -152,6 +158,7 @@ void mainMenuNormal();
 void mainMenuEnd();
 void scrollStarryBG();
 void drawNineSliceWindow(int x, int y, int width, int height);
+void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height);
 void drawTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical);
 int snapToGrid(int value);
 void startMatch();

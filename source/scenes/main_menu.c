@@ -387,7 +387,7 @@ int snapToGrid(int value) {
     return (value / 8) * 8;
 }
 
-/// @brief Draws the nine slice window; Width and Height params are in terms of 8x8 tiles
+/// @brief Draws a nine slice window for the centric main menu; Width and Height params are in terms of 8x8 tiles
 /// @param width 
 /// @param height 
 void drawNineSliceWindow(int x, int y, int width, int height) {
@@ -484,6 +484,60 @@ void drawNineSliceWindow(int x, int y, int width, int height) {
 			drawTile(x + i * TILE_SIZE, y + TILE_SIZE, LASER_BOTTOM, false, false);
 		}
 	}
+}
+
+/// @brief Draws a nine slice window for the main menu's Menu Page window; Width and Height params are in terms of 8x8 tiles
+/// @param width 
+/// @param height 
+void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height) {
+    // Snap (x, y) to nearest 8x8 grid values
+    x = snapToGrid(x);
+    y = snapToGrid(y);
+
+    int tileSize = 8;
+    int w = snapToGrid(width);
+    int h = snapToGrid(height);
+    int middleWidth = w - 2 * tileSize;
+    int middleHeight = h - 2 * tileSize;
+
+    // Draw the top-left tile
+    drawTile(x, y, SEC_TOP_LEFT, false, false);
+
+    // Draw the top-middle tiles
+    for (int i = 0; i < middleWidth / tileSize; i++) {
+        drawTile(x + tileSize + i * tileSize, y, SEC_TOP_MIDDLE, false, false);
+    }
+
+    // Draw the top-right tile
+    drawTile(x + tileSize + middleWidth, y, SEC_TOP_LEFT, true, false);
+
+    // Draw the left tiles
+    for (int i = 0; i < middleHeight / tileSize; i++) {
+        drawTile(x, y + tileSize + i * tileSize, SEC_LEFT, false, false);
+    }
+
+    // Draw the center tiles
+    for (int yOffset = 0; yOffset < middleHeight / tileSize; yOffset++) {
+        for (int xOffset = 0; xOffset < middleWidth / tileSize; xOffset++) {
+            drawTile(x + tileSize + xOffset * tileSize, y + tileSize + yOffset * tileSize, SEC_CENTER, false, false);
+        }
+    }
+
+    // Draw the right tiles
+    for (int i = 0; i < middleHeight / tileSize; i++) {
+        drawTile(x + tileSize + middleWidth, y + tileSize + i * tileSize, SEC_LEFT, true, false);
+    }
+
+    // Draw the bottom-left tile
+    drawTile(x, y + tileSize + middleHeight, SEC_TOP_LEFT, false, true);
+
+    // Draw the bottom-middle tiles
+    for (int i = 0; i < middleWidth / tileSize; i++) {
+        drawTile(x + tileSize + i * tileSize, y + tileSize + middleHeight, SEC_TOP_MIDDLE, false, true);
+    }
+
+    // Draw the bottom-right tile
+    drawTile(x + tileSize + middleWidth, y + tileSize + middleHeight, SEC_TOP_LEFT, true, true);
 }
 
 int menuExecNewGame(){
