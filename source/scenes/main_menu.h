@@ -45,6 +45,7 @@
 
 #define STARRY_BG_MAX_VEL 
 
+#define TILE_SIZE 8
 //define the maximum number of menu items on a single page
 #define MAX_MENU_ITEMS 10
 
@@ -63,6 +64,8 @@
 #define LM 11
 #define RM_UPPER 12
 #define RM 13
+#define LASER_TOP 14
+#define LASER_BOTTOM 15
 
 //enums
 enum MainMenuState{
