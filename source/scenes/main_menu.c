@@ -327,6 +327,10 @@ void mainMenuNormal(){
 		mainMenuData.actionTarget = 32;
 		mainMenuData.actionTimer = 0;
 		mainMenuData.state = MAIN_MENU_HOLD;
+		
+		tilemapData[1].position = &se_mem[MENU_TILEMAP];
+		tilemapData[1].buffer = (void *)tilemapBuffer1;
+		tilemapData[1].size = 512;
 
 		// Make the starry background scroll up-left
 		scrollStarryBG();
@@ -337,6 +341,10 @@ void mainMenuNormal(){
 		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
 			menuExecNewGame();
 		}
+		
+		tilemapData[1].position = &se_mem[MENU_TILEMAP];
+		tilemapData[1].buffer = (void *)tilemapBuffer1;
+		tilemapData[1].size = 512;
 		
 		// Make the starry background scroll up-left
 		scrollStarryBG();
@@ -349,7 +357,11 @@ void mainMenuNormal(){
 		else{
 			mainMenuData.actionTimer++;
 		}
-
+		
+		tilemapData[1].position = &se_mem[MENU_TILEMAP];
+		tilemapData[1].buffer = (void *)tilemapBuffer1;
+		tilemapData[1].size = 512;
+		
 		// Make the starry background scroll up-left
 		scrollStarryBG();
 		break;
@@ -383,7 +395,7 @@ void drawTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertica
     /// TODO: Implement the actual tile drawing logic here
 	// Tileset is Galactic_Quest\resources\graphics\tsMenuUI.bmp
     //printf("Drawing tile %d at (%d, %d) with horizontal flip %d and vertical flip %d\n", tileIndex, x, y, flipHorizontal, flipVertical);
-	tilemapBuffer1[(x >> 3) + ((y >> 3) << 5)] = SE_BUILD(1, 2, flipHorizontal, flipVertical);
+	tilemapBuffer1[(x >> 3) + ((y >> 3) << 5)] = SE_BUILD(MENU_GFX_START + tileIndex, 2, flipHorizontal, flipVertical);
 }
 
 int snapToGrid(int value) {
@@ -599,7 +611,5 @@ void printMenuPage(const MenuPage* menuPage){
         printMenuPageItem(&menuPage->items[i]);
     }
 	
-	tilemapData[1].position = &se_mem[MENU_TILEMAP];
-	tilemapData[1].buffer = (void *)tilemapBuffer1;
-	tilemapData[1].size = 512;
+
 }
