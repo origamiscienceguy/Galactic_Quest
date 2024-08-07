@@ -11,6 +11,66 @@ Scene mainMenuScene = {
 	.end = &mainMenuEnd,
 };
 
+int dataRange[] = {0, 100};
+
+// Initialize the Menu Pages
+MenuPage menuPages[6] = {
+	{
+		.items = {
+			{"Play Game", PAGE_TRANSFER, .data.intVal = (int)MPI_PLAY_GAME, .dataType = INT},
+			{"Extras", PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = INT},
+			{"Options", PAGE_TRANSFER, .data.intVal = (int)MPI_OPTIONS, .dataType = INT}
+		},
+		.itemCount = 3,
+		.pageName = "MAIN MENU"
+	},
+	{
+		.items = {
+			{"New Game", SCRIPT_RUNNER, .data.functionPtr = menuExecNewGame, .dataType = FUNC_PTR},
+			{"Continue", SCRIPT_RUNNER, .data.functionPtr = menuExecContinue, .dataType = FUNC_PTR},
+			{"Load Game", SCRIPT_RUNNER, .data.functionPtr = menuExecLoadGame, .dataType = FUNC_PTR},
+			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT}
+		},
+		.itemCount = 4,
+		.pageName = "PLAY GAME"
+	},{
+		.items = {
+			{"Sound Test", PAGE_TRANSFER, .data.intVal = (int)MPI_SOUND_TEST, .dataType = INT},
+			{"Credits", PAGE_TRANSFER, .data.intVal = (int)MPI_CREDITS, .dataType = INT},
+			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT}
+		},
+		.itemCount = 3,
+		.pageName = "EXTRAS"
+	},
+	{
+		.items = {
+			{"Master Volume", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY},
+			{"BGM", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY},
+			{"SFX", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY},
+			{"Apply Changes", SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = FUNC_PTR},
+			{"Abort", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT}
+		},
+		.itemCount = 5,
+		.pageName = "OPTIONS"
+	},
+	{
+		.items = {
+			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = INT}
+		},
+		.itemCount = 1,
+		.pageName = "CREDITS"
+	},
+	{
+		.items = {
+			{"BGM", SOUND_TESTER, .data.functionPtr = menuExecPlayBGM, .dataType = FUNC_PTR},
+			{"SFX", SOUND_TESTER, .data.functionPtr = menuExecPlaySFX, .dataType = FUNC_PTR},
+			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = INT}
+		},
+		.itemCount = 3,
+		.pageName = "SOUND TEST"
+	}
+};
+
 void mainMenuInitialize(){
 	REG_DISPCNT = DCNT_MODE0; //black screen
 	REG_BG0CNT = BG_4BPP | BG_SBB(STARRY_IMAGE_TILEMAP) | BG_CBB(STARRY_IMAGE_CHARDATA) | BG_PRIO(3) | BG_REG_64x64; //starry background layer
@@ -27,8 +87,9 @@ void mainMenuInitialize(){
 	//send the palettes
 	memcpy32(&paletteBufferBg[STARRY_IMAGE_PAL_START << 4], main_menu_starfieldPal, sizeof(main_menu_starfieldPal) >> 2);
 	memcpy32(&paletteBufferBg[TITLE_CARD_PAL_START << 4], sprTitleLogoPal, sizeof(sprTitleLogoPal) >> 2);
+	memcpy32(&paletteBufferBg[MENU_PAL_START << 4], tsMenuUIPal, sizeof(tsMenuUIPal) >> 2);
 
-	paletteData[0].size = 16;
+	paletteData[0].size = 24;
 	paletteData[0].position = pal_bg_mem;
 	paletteData[0].buffer = paletteBufferBg;
 	
@@ -46,6 +107,7 @@ void mainMenuInitialize(){
 	characterData[0].size = sizeof(characterBuffer0) >> 2;
 	
 	memcpy32(&characterBuffer1[TITLE_CARD_GFX_START << 5], sprTitleLogoTiles, sizeof(sprTitleLogoTiles) >> 2);
+	memcpy32(&characterBuffer1[MENU_GFX_START << 5], tsMenuUITiles, sizeof(tsMenuUITiles) >> 2);
 	characterData[1].position = tile_mem[TITLE_CARD_CHARDATA];
 	characterData[1].buffer = (void *)characterBuffer1;
 	characterData[1].size = sizeof(characterBuffer1) >> 2;
@@ -246,25 +308,62 @@ void mainMenuNormal(){
 		break;
 		
 	case MAIN_MENU_FLY_IN:
+		// Example array of MenuPageItem
+
+		/*
+		MenuPage menuPage = {
+			.items = {
+				{"Function Item", SCRIPT_RUNNER, .data.functionPtr = exampleFunction, .dataType = FUNC_PTR},
+				{"Integer Item", PAGE_TRANSFER, .data.intValue = 123, .dataType = INT},
+				{"Integer Array Item", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY}
+			},
+			.itemCount = 3
+		};*/
+
+		// Print the items in the MenuPage
+		printMenuPage(&menuPages[MPI_MAIN_MENU]);
+
+		// Set the Menu State to "MAIN_MENU_HOLD and re-init its timers"
+		mainMenuData.actionTarget = 32;
+		mainMenuData.actionTimer = 0;
+		mainMenuData.state = MAIN_MENU_HOLD;
 		
-		currentScene.scenePointer = sceneList[GAMEPLAY];
-		currentScene.state = INITIALIZE;
+		tilemapData[1].position = &se_mem[MENU_TILEMAP];
+		tilemapData[1].buffer = (void *)tilemapBuffer1;
+		tilemapData[1].size = 512;
+
+		// Make the starry background scroll up-left
+		scrollStarryBG();
+		break;
+	case MAIN_MENU_HOLD:
+		drawNineSliceWindow(0, 0, 15, 15);
 		
-		
-		
-		if(currentScene.sceneCounter % 8 <= 0){
-			mainMenuData.starryBG.xPos++;		
+		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
+			menuExecNewGame();
 		}
-		if(currentScene.sceneCounter % 8 <= 0){
-			mainMenuData.starryBG.yPos++;
+		
+		tilemapData[1].position = &se_mem[MENU_TILEMAP];
+		tilemapData[1].buffer = (void *)tilemapBuffer1;
+		tilemapData[1].size = 512;
+		
+		// Make the starry background scroll up-left
+		scrollStarryBG();
+		break;
+	case MAIN_MENU_FLY_OUT:
+		if(mainMenuData.actionTimer >= mainMenuData.actionTarget){
+			// Start the match
+			mainMenuEnd();
 		}
-		IOBuffer0[0] = mainMenuData.starryBG.xPos;
-		IOBuffer0[1] = mainMenuData.starryBG.yPos;
+		else{
+			mainMenuData.actionTimer++;
+		}
 		
-		IOData[0].position = (void *)(&REG_BG0HOFS);
-		IOData[0].buffer = IOBuffer0;
-		IOData[0].size = 1;
+		tilemapData[1].position = &se_mem[MENU_TILEMAP];
+		tilemapData[1].buffer = (void *)tilemapBuffer1;
+		tilemapData[1].size = 512;
 		
+		// Make the starry background scroll up-left
+		scrollStarryBG();
 		break;
 	default:
 		break;
@@ -273,8 +372,244 @@ void mainMenuNormal(){
 }
 
 void mainMenuEnd(){
-
+	currentScene.scenePointer = sceneList[GAMEPLAY];
+	currentScene.state = INITIALIZE;
 }
 
-void processStarryBG(){
+void scrollStarryBG(){
+	if(currentScene.sceneCounter % 8 <= 0){
+		mainMenuData.starryBG.xPos++;		
+	}
+	if(currentScene.sceneCounter % 8 <= 0){
+		mainMenuData.starryBG.yPos++;
+	}
+	IOBuffer0[0] = mainMenuData.starryBG.xPos;
+	IOBuffer0[1] = mainMenuData.starryBG.yPos;
+	
+	IOData[0].position = (void *)(&REG_BG0HOFS);
+	IOData[0].buffer = IOBuffer0;
+	IOData[0].size = 1;
+}
+
+void drawTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical) {
+    /// TODO: Implement the actual tile drawing logic here
+	// Tileset is Galactic_Quest\resources\graphics\tsMenuUI.bmp
+    //printf("Drawing tile %d at (%d, %d) with horizontal flip %d and vertical flip %d\n", tileIndex, x, y, flipHorizontal, flipVertical);
+	tilemapBuffer1[(x >> 3) + ((y >> 3) << 5)] = SE_BUILD(MENU_GFX_START + tileIndex, 2, flipHorizontal, flipVertical);
+}
+
+int snapToGrid(int value) {
+    return (value / 8) * 8;
+}
+
+/// @brief Draws a nine slice window for the centric main menu; Width and Height params are in terms of 8x8 tiles
+/// @param width 
+/// @param height 
+void drawNineSliceWindow(int x, int y, int width, int height) {
+    // Snap (x, y) to nearest 8x8 grid values
+    x = snapToGrid(x);
+    y = snapToGrid(y);
+
+	if (height > 1) {
+		// Draw the top row
+		if (width >= 2) {
+			drawTile(x, y, TL_1, false, false); // Top-left corner Part 1
+			drawTile(x + TILE_SIZE, y, TL_2, false, false); // Top-left corner Part 2
+			drawTile(x + 2 * TILE_SIZE, y, TL_3, false, false); // Top-left corner Part 3
+			for (int i = 3; i < width - 3; ++i) {
+				drawTile(x + i * TILE_SIZE, y, TOP_MIDDLE, false, false); // Top middle
+			}
+			if (width >= 3) {
+				drawTile(x + (width - 3) * TILE_SIZE, y, TR_1, false, false); // Top-right corner Part 1
+			}
+			if (width >= 2) {
+				drawTile(x + (width - 2) * TILE_SIZE, y, TR_2, false, false); // Top-right corner Part 2
+			}
+			if (width >= 3) {
+				drawTile(x + (width - 1) * TILE_SIZE, y, TR_3, false, false); // Top-right corner Part 3
+			}
+		}
+
+		// Calculate the bottomY position
+		int bottomY = y + (height - 1) * TILE_SIZE;
+
+		// Draw center rows
+		for (int j = 2; j < height - 1; ++j) {
+			drawTile(x, y + j * TILE_SIZE, LM, false, false); // Left-middle tile
+			for (int i = 1; i < width - 1; ++i) {
+				drawTile(x + i * TILE_SIZE, y + j * TILE_SIZE, CENTER, false, false); // Center
+			}
+			drawTile(x + (width - 1) * TILE_SIZE, y + j * TILE_SIZE, RM, false, false); // Right-middle tile
+		}
+
+		// Draw the bottom-middle row (mirrored)
+		if (height > 4) {
+			drawTile(x, bottomY - TILE_SIZE, LM_UPPER, false, true); // Left-middle-lower tile (flipped vertically)
+			for (int i = 1; i < width - 1; ++i) {
+				drawTile(x + i * TILE_SIZE, bottomY - TILE_SIZE, MIDDLE_UPPER, false, true); // Middle lower (flipped vertically)
+			}
+			drawTile(x + (width - 1) * TILE_SIZE, bottomY - TILE_SIZE, RM_UPPER, false, true); // Right-middle-lower tile (flipped vertically)
+		}
+
+		// Draw the bottom row
+		if (width > 2) {
+			drawTile(x, bottomY, TL_1, false, true); // Bottom-left corner Part 1 (flipped vertically)
+		}
+		if (width > 3) {
+			drawTile(x + TILE_SIZE, bottomY, TL_2, false, true); // Bottom-left corner Part 2 (flipped vertically)
+		}
+		if (width > 4) {
+			drawTile(x + 2 * TILE_SIZE, bottomY, TL_3, false, true); // Bottom-left corner Part 3 (flipped vertically)
+		}
+		for (int i = 3; i < width - 3; ++i) {
+			drawTile(x + i * TILE_SIZE, bottomY, TOP_MIDDLE, false, true); // Bottom middle (flipped vertically)
+		}
+		if (width >= 3) {
+			drawTile(x + (width - 3) * TILE_SIZE, bottomY, TR_1, false, true); // Bottom-right corner Part 1 (flipped vertically)
+		}
+		if (width >= 2) {
+			drawTile(x + (width - 2) * TILE_SIZE, bottomY, TR_2, false, true); // Bottom-right corner Part 2 (flipped vertically)
+		}
+		if (width >= 1) {
+			drawTile(x + (width - 1) * TILE_SIZE, bottomY, TR_3, false, true); // Bottom-right corner Part 3 (flipped vertically)
+		}
+
+		// Draw the top row (additional check to ensure no overlapping)
+		if (width >= 2) {
+			drawTile(x + TILE_SIZE, y, TL_2, false, false); // Top-left corner Part 2
+		}
+		if (width >= 3) {
+			drawTile(x + 2 * TILE_SIZE, y, TL_3, false, false); // Top-left corner Part 3
+		}
+		for (int i = 3; i < width - 3; ++i) {
+			drawTile(x + i * TILE_SIZE, y, TOP_MIDDLE, false, false); // Top middle
+		}
+		if (width >= 3) {
+			drawTile(x + (width - 3) * TILE_SIZE, y, TR_1, false, false); // Top-right corner Part 1
+		}
+		if (width >= 2) {
+			drawTile(x + (width - 2) * TILE_SIZE, y, TR_2, false, false); // Top-right corner Part 2
+		}
+		if (width >= 1) {
+			drawTile(x + (width - 1) * TILE_SIZE, y, TR_3, false, false); // Top-right corner Part 3
+		}
+	} else {
+		for (int i = 0; i < width; ++i) {
+			drawTile(x + i * TILE_SIZE, y, LASER_TOP, false, false);
+			drawTile(x + i * TILE_SIZE, y + TILE_SIZE, LASER_BOTTOM, false, false);
+		}
+	}
+}
+
+/// @brief Draws a nine slice window for the main menu's Menu Page window; Width and Height params are in terms of 8x8 tiles
+/// @param width 
+/// @param height 
+void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height) {
+    // Snap (x, y) to nearest 8x8 grid values
+    x = snapToGrid(x);
+    y = snapToGrid(y);
+
+    int tileSize = 8;
+    int w = snapToGrid(width);
+    int h = snapToGrid(height);
+    int middleWidth = w - 2 * tileSize;
+    int middleHeight = h - 2 * tileSize;
+
+    // Draw the top-left tile
+    drawTile(x, y, SEC_TOP_LEFT, false, false);
+
+    // Draw the top-middle tiles
+    for (int i = 0; i < middleWidth / tileSize; i++) {
+        drawTile(x + tileSize + i * tileSize, y, SEC_TOP_MIDDLE, false, false);
+    }
+
+    // Draw the top-right tile
+    drawTile(x + tileSize + middleWidth, y, SEC_TOP_LEFT, true, false);
+
+    // Draw the left tiles
+    for (int i = 0; i < middleHeight / tileSize; i++) {
+        drawTile(x, y + tileSize + i * tileSize, SEC_LEFT, false, false);
+    }
+
+    // Draw the center tiles
+    for (int yOffset = 0; yOffset < middleHeight / tileSize; yOffset++) {
+        for (int xOffset = 0; xOffset < middleWidth / tileSize; xOffset++) {
+            drawTile(x + tileSize + xOffset * tileSize, y + tileSize + yOffset * tileSize, SEC_CENTER, false, false);
+        }
+    }
+
+    // Draw the right tiles
+    for (int i = 0; i < middleHeight / tileSize; i++) {
+        drawTile(x + tileSize + middleWidth, y + tileSize + i * tileSize, SEC_LEFT, true, false);
+    }
+
+    // Draw the bottom-left tile
+    drawTile(x, y + tileSize + middleHeight, SEC_TOP_LEFT, false, true);
+
+    // Draw the bottom-middle tiles
+    for (int i = 0; i < middleWidth / tileSize; i++) {
+        drawTile(x + tileSize + i * tileSize, y + tileSize + middleHeight, SEC_TOP_MIDDLE, false, true);
+    }
+
+    // Draw the bottom-right tile
+    drawTile(x + tileSize + middleWidth, y + tileSize + middleHeight, SEC_TOP_LEFT, true, true);
+}
+
+int menuExecNewGame(){
+	mainMenuData.state = MAIN_MENU_FLY_OUT;
+	mainMenuData.actionTimer = 0;
+	mainMenuData.actionTarget = 40; // Specifies the length of the actionTimer
+	return 0;
+}
+
+int menuExecContinue(){
+	return 0;
+}
+
+int menuExecLoadGame(){
+	return 0;
+}
+
+int menuExecOptionsApplyChanges(){
+	return 0;
+}
+
+int menuExecPlayBGM(){
+	return 0;
+}
+
+int menuExecPlaySFX(){
+	return 0;
+}
+
+
+void printMenuPageItem(const MenuPageItem* item){
+    //printf("String: %s\n", item->itemName);
+    //printf("Enum: %d\n", item->dataType);
+    
+    switch (item->dataType){
+        case FUNC_PTR:
+            //printf("Function return value: %d\n", item->data.functionPtr());
+            break;
+        case INT:
+            //printf("Integer value: %d\n", item->data.intVal);
+            break;
+        case INT_ARRAY:
+            //printf("Integer array: ");
+            // Assuming the size of the array is known or can be tracked
+            // This placeholder assumes 4 elements for demonstration
+            for (size_t i = 0; i < 4; ++i){
+                //printf("%d ", item->data.intArray[i]);
+            }
+            //printf("\n");
+            break;
+    }
+}
+
+void printMenuPage(const MenuPage* menuPage){
+    for (size_t i = 0; i < menuPage->itemCount; ++i){
+        printMenuPageItem(&menuPage->items[i]);
+    }
+	
+
 }

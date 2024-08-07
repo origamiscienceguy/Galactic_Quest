@@ -552,6 +552,10 @@ audioAssets.write("\n};\n\n#endif")
 
 audioAssets.close()
 audioList.close()
-print("All assets processed. Press enter to close.")
-input()
 
+#wait for the user to press any key, but only if they're not running this Python script in a VSCode Build task
+if os.getenv('RUN_INTERACTIVELY') == 'true':
+	print("All audio assets processed. Press enter to close.")
+	input()
+else:
+	print("All audio assets processed.")

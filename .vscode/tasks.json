@@ -1,0 +1,68 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Compile Audio",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "conv_audio.py"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/scripts/"
+            },
+            "group": {
+                "kind": "build",
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build Game",
+            "type": "shell",
+            "command": "make",
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "Run Game",
+            "type": "shell",
+            "command": "start",
+            "args": [
+                "${workspaceFolder}/build/Galactic_Quest.gba"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "Build and Run Game",
+            "dependsOn": [
+                "Build Game",
+                "Run Game"
+            ],
+            "dependsOrder": "sequence",
+            "type": "shell",
+            "command": "echo Task Complete",
+            "isBackground": false,
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+            }
+        },
+        {
+            "label": "Build and Run Game with Audio",
+            "dependsOn": [
+                "Compile Audio",
+                "Build Game",
+                "Run Game"
+            ],
+            "dependsOrder": "sequence",
+            "type": "shell",
+            "command": "echo Task Complete",
+            "isBackground": false,
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+            }
+        }
+    ]
+}
