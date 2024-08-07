@@ -383,6 +383,7 @@ void drawTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertica
     /// TODO: Implement the actual tile drawing logic here
 	// Tileset is Galactic_Quest\resources\graphics\tsMenuUI.bmp
     //printf("Drawing tile %d at (%d, %d) with horizontal flip %d and vertical flip %d\n", tileIndex, x, y, flipHorizontal, flipVertical);
+	tilemapBuffer1[(x >> 3) + ((y >> 3) << 5)] = SE_BUILD(1, 2, flipHorizontal, flipVertical);
 }
 
 int snapToGrid(int value) {
@@ -597,4 +598,8 @@ void printMenuPage(const MenuPage* menuPage){
     for (size_t i = 0; i < menuPage->itemCount; ++i){
         printMenuPageItem(&menuPage->items[i]);
     }
+	
+	tilemapData[1].position = &se_mem[MENU_TILEMAP];
+	tilemapData[1].buffer = (void *)tilemapBuffer1;
+	tilemapData[1].size = 512;
 }
