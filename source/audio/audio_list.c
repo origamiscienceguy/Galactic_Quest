@@ -427,11 +427,17 @@ AudioSample _wavetable_bass = {
 	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
-AudioSample *sampleList[] = {
-	&_12_5pulse, &_25pulse, &_50pulse, &_tri_lo, &_tri_hi, &_vsaw0, &_edmkick, &_edmsnare, &_SnareAcoustic3, &_hihat, &_cym_crash_orch, &_fm_bass, &_FM_Bass2, &_FM_Bell1, &_FM_EPianoBell, &_FM_Wavetable2, &_horn, &_piano_hi, &_rave_lead, &_string_ens_gm, &_FM_Wavetable1, &_string_ensemble2, &_pipe_organ, &_FM_SlapBass2, &_power_snare, &_KickRockVerb, &_FM_BassSlap, &_psg_wt_trbass, &_whitenoisehi, &_acdBassEnv1, &_acdBassEnv2, &_acdBassEnv3, &_acdBassEnv4, &_acdBassEnv5, &_acdBassEnv6, &_acdBassEnv7, &_acdBassEnv8, &_acdBassEnv9, &_acdBassEnv10, &_acdBassEnv11, &_acdBassEnv12, &_acdBassEnv13, &_acdBassEnv14, &_acdBassEnv15, &_acdBassEnv16, &_acdBassEnv17, &_alto_sax, &_beat_loop, &_flute, &_glacierSynth, &_gpiano_c3, &_gpiano_c5, &_HipHopKick, &_layeredLead1, &_ns_sweep, &_perc_tri, &_piano_bass, &_sampl, &_psy_bass, &_rave_lead_2, &_recordscratch1, &_sine_hi, &_SnareHiphop, &_spacePad, &_strEns3, &_Syn_Bass_2, &_Tambourine, &_thATransition, &_timpani, &_trance_snare, &_wavetable_bass
+extern cu8 _woodblock_data[];
+AudioSample _woodblock = {
+	.sampleStart = _woodblock_data, .sampleLength = 2092, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 48000,
+	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
-cu16 numSamples = 71;
+AudioSample *sampleList[] = {
+	&_12_5pulse, &_25pulse, &_50pulse, &_tri_lo, &_tri_hi, &_vsaw0, &_edmkick, &_edmsnare, &_SnareAcoustic3, &_hihat, &_cym_crash_orch, &_fm_bass, &_FM_Bass2, &_FM_Bell1, &_FM_EPianoBell, &_FM_Wavetable2, &_horn, &_piano_hi, &_rave_lead, &_string_ens_gm, &_FM_Wavetable1, &_string_ensemble2, &_pipe_organ, &_FM_SlapBass2, &_power_snare, &_KickRockVerb, &_FM_BassSlap, &_psg_wt_trbass, &_whitenoisehi, &_acdBassEnv1, &_acdBassEnv2, &_acdBassEnv3, &_acdBassEnv4, &_acdBassEnv5, &_acdBassEnv6, &_acdBassEnv7, &_acdBassEnv8, &_acdBassEnv9, &_acdBassEnv10, &_acdBassEnv11, &_acdBassEnv12, &_acdBassEnv13, &_acdBassEnv14, &_acdBassEnv15, &_acdBassEnv16, &_acdBassEnv17, &_alto_sax, &_beat_loop, &_flute, &_glacierSynth, &_gpiano_c3, &_gpiano_c5, &_HipHopKick, &_layeredLead1, &_ns_sweep, &_perc_tri, &_piano_bass, &_sampl, &_psy_bass, &_rave_lead_2, &_recordscratch1, &_sine_hi, &_SnareHiphop, &_spacePad, &_strEns3, &_Syn_Bass_2, &_Tambourine, &_thATransition, &_timpani, &_trance_snare, &_wavetable_bass, &_woodblock
+};
+
+cu16 numSamples = 72;
 
 extern AssetData _musMainMenuAsset;
 extern AssetData _musOpeningAsset;
