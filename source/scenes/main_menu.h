@@ -48,17 +48,21 @@
 //define the maximum number of menu items on a single page
 #define MAX_MENU_ITEMS 10
 
-//nine-slice constants
-#define TILE_SIZE	 8
-#define TOP_LEFT     0
-#define TOP          1
-#define TOP_RIGHT    2
-#define LEFT         3
-#define CENTER       4
-#define RIGHT        5
-#define BOTTOM_LEFT  6
-#define BOTTOM       7
-#define BOTTOM_RIGHT 8
+//define tile indices for nine-slice
+#define BLANK 0
+#define TL_1 1
+#define TL_2 2
+#define TL_3 3
+#define TOP_MIDDLE 4
+#define TR_1 5
+#define TR_2 6
+#define TR_3 7
+#define LM_UPPER 8
+#define MIDDLE_UPPER 9
+#define CENTER 10
+#define LM 11
+#define RM_UPPER 12
+#define RM 13
 
 //enums
 enum MainMenuState{
@@ -144,7 +148,9 @@ void mainMenuInitialize();
 void mainMenuNormal();
 void mainMenuEnd();
 void scrollStarryBG();
-void drawNineSliceWindow(int width, int height);
+void drawNineSliceWindow(int x, int y, int width, int height);
+void drawTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical);
+int snapToGrid(int value);
 void startMatch();
 int menuExecNewGame();
 int menuExecContinue();

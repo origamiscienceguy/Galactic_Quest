@@ -330,7 +330,7 @@ void mainMenuNormal(){
 		scrollStarryBG();
 		break;
 	case MAIN_MENU_HOLD:
-		drawNineSliceWindow(15, 15);
+		drawNineSliceWindow(0, 0, 15, 15);
 		
 		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
 			menuExecNewGame();
@@ -377,38 +377,109 @@ void scrollStarryBG(){
 	IOData[0].size = 1;
 }
 
-void drawTile(int x, int y, int tileIndex){
+void drawTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical) {
     /// TODO: Implement the actual tile drawing logic here
-    //printf("Drawing tile %d at (%d, %d)\n", tileIndex, x, y);
+	// Tileset is Galactic_Quest\resources\graphics\tsMenuUI.bmp
+    printf("Drawing tile %d at (%d, %d) with horizontal flip %d and vertical flip %d\n",
+           tileIndex, x, y, flipHorizontal, flipVertical);
+}
+
+int snapToGrid(int value) {
+    return (value / 8) * 8;
 }
 
 /// @brief Draws the nine slice window; Width and Height params are in terms of 8x8 tiles
 /// @param width 
 /// @param height 
-void drawNineSliceWindow(int width, int height){
+void drawNineSliceWindow(int x, int y, int width, int height) {
+    // Snap (x, y) to nearest 8x8 grid values
+    x = snapToGrid(x);
+    y = snapToGrid(y);
+
     // Dimensions of the nine slices
+    const int TILE_SIZE = 8;
 
-    // Draw corners
-    drawTile(0, 0, TOP_LEFT); // Top-left corner
-    drawTile((width - 1) * TILE_SIZE, 0, TOP_RIGHT); // Top-right corner
-    drawTile(0, (height - 1) * TILE_SIZE, BOTTOM_LEFT); // Bottom-left corner
-    drawTile((width - 1) * TILE_SIZE, (height - 1) * TILE_SIZE, BOTTOM_RIGHT); // Bottom-right corner
-
-    // Draw edges
-    for (int i = 1; i < width - 1; ++i){
-        drawTile(i * TILE_SIZE, 0, TOP); // Top edge
-        drawTile(i * TILE_SIZE, (height - 1) * TILE_SIZE, BOTTOM); // Bottom edge
-    }
-    for (int i = 1; i < height - 1; ++i){
-        drawTile(0, i * TILE_SIZE, LEFT); // Left edge
-        drawTile((width - 1) * TILE_SIZE, i * TILE_SIZE, RIGHT); // Right edge
-    }
-
-    // Draw center
-    for (int i = 1; i < width - 1; ++i){
-        for (int j = 1; j < height - 1; ++j){
-            drawTile(i * TILE_SIZE, j * TILE_SIZE, CENTER); // Center
+    // Draw the top row
+    if (width >= 2) {
+        drawTile(x, y, TL_1, false, false); // Top-left corner Part 1
+        drawTile(x + TILE_SIZE, y, TL_2, false, false); // Top-left corner Part 2
+        drawTile(x + 2 * TILE_SIZE, y, TL_3, false, false); // Top-left corner Part 3
+        for (int i = 3; i < width - 3; ++i) {
+            drawTile(x + i * TILE_SIZE, y, TOP_MIDDLE, false, false); // Top middle
         }
+        if (width >= 3) {
+            drawTile(x + (width - 3) * TILE_SIZE, y, TR_1, false, false); // Top-right corner Part 1
+        }
+        if (width >= 2) {
+            drawTile(x + (width - 2) * TILE_SIZE, y, TR_2, false, false); // Top-right corner Part 2
+        }
+        if (width >= 3) {
+            drawTile(x + (width - 1) * TILE_SIZE, y, TR_3, false, false); // Top-right corner Part 3
+        }
+    }
+
+    // Calculate the bottomY position
+    int bottomY = y + (height - 1) * TILE_SIZE;
+
+    // Draw center rows
+    for (int j = 2; j < height - 1; ++j) {
+        drawTile(x, y + j * TILE_SIZE, LM, false, false); // Left-middle tile
+        for (int i = 1; i < width - 1; ++i) {
+            drawTile(x + i * TILE_SIZE, y + j * TILE_SIZE, CENTER, false, false); // Center
+        }
+        drawTile(x + (width - 1) * TILE_SIZE, y + j * TILE_SIZE, RM, false, false); // Right-middle tile
+    }
+
+    // Draw the bottom-middle row (mirrored)
+    if (height > 4) {
+        drawTile(x, bottomY - TILE_SIZE, LM_UPPER, false, true); // Left-middle-lower tile (flipped vertically)
+        for (int i = 1; i < width - 1; ++i) {
+            drawTile(x + i * TILE_SIZE, bottomY - TILE_SIZE, MIDDLE_UPPER, false, true); // Middle lower (flipped vertically)
+        }
+        drawTile(x + (width - 1) * TILE_SIZE, bottomY - TILE_SIZE, RM_UPPER, false, true); // Right-middle-lower tile (flipped vertically)
+    }
+
+    // Draw the bottom row
+    if (width > 2) {
+        drawTile(x, bottomY, TL_1, false, true); // Bottom-left corner Part 1 (flipped vertically)
+    }
+    if (width > 3) {
+        drawTile(x + TILE_SIZE, bottomY, TL_2, false, true); // Bottom-left corner Part 2 (flipped vertically)
+    }
+    if (width > 4) {
+        drawTile(x + 2 * TILE_SIZE, bottomY, TL_3, false, true); // Bottom-left corner Part 3 (flipped vertically)
+    }
+    for (int i = 3; i < width - 3; ++i) {
+        drawTile(x + i * TILE_SIZE, bottomY, TOP_MIDDLE, false, true); // Bottom middle (flipped vertically)
+    }
+    if (width >= 3) {
+        drawTile(x + (width - 3) * TILE_SIZE, bottomY, TR_1, false, true); // Bottom-right corner Part 1 (flipped vertically)
+    }
+    if (width >= 2) {
+        drawTile(x + (width - 2) * TILE_SIZE, bottomY, TR_2, false, true); // Bottom-right corner Part 2 (flipped vertically)
+    }
+    if (width >= 1) {
+        drawTile(x + (width - 1) * TILE_SIZE, bottomY, TR_3, false, true); // Bottom-right corner Part 3 (flipped vertically)
+    }
+
+    // Draw the top row (additional check to ensure no overlapping)
+    if (width >= 2) {
+        drawTile(x + TILE_SIZE, y, TL_2, false, false); // Top-left corner Part 2
+    }
+    if (width >= 3) {
+        drawTile(x + 2 * TILE_SIZE, y, TL_3, false, false); // Top-left corner Part 3
+    }
+    for (int i = 3; i < width - 3; ++i) {
+        drawTile(x + i * TILE_SIZE, y, TOP_MIDDLE, false, false); // Top middle
+    }
+    if (width >= 3) {
+        drawTile(x + (width - 3) * TILE_SIZE, y, TR_1, false, false); // Top-right corner Part 1
+    }
+    if (width >= 2) {
+        drawTile(x + (width - 2) * TILE_SIZE, y, TR_2, false, false); // Top-right corner Part 2
+    }
+    if (width >= 1) {
+        drawTile(x + (width - 1) * TILE_SIZE, y, TR_3, false, false); // Top-right corner Part 3
     }
 }
 
