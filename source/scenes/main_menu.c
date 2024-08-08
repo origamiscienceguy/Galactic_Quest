@@ -354,8 +354,8 @@ void mainMenuNormal(){
 
 			//endAsset(currentAssetIndex);
 			//currentAssetIndex = playNewAsset(BGM_ID_MAIN_MENU);
-			mainMenuData.menuBG.xPos = 0;//512 - 2;
-			mainMenuData.menuBG.yPos = 0;//512 - 0;
+			mainMenuData.menuBG.xPos = 512 - 2;
+			mainMenuData.menuBG.yPos = 0;//240;//512 - 0;
 		}
 		else{
 			mainMenuData.actionTimer++;
@@ -380,7 +380,7 @@ void mainMenuNormal(){
 		scrollStarryBG(-1, -1);
 
 		// Queue BG Scroll registers for the Starry BG and Menu Positions
-		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, 512 - 15, titleFlyOutYLUT[mainMenuData.actionTimer - 1]);
+		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, 512 - 15, titleFlyOutYLUT[clamp(mainMenuData.actionTimer - 1, 0, mainMenuData.actionTarget)]);
 		break;
 		
 	case MAIN_MENU_FLY_IN:
@@ -415,7 +415,7 @@ void mainMenuNormal(){
 			loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, (void *)menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 0);//menuExecNewGame();
 			loadGFX(MENU_CHARDATA, MENU_TEXT_FOCUSED_GFX_START, (void *)menu_action_focusedTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 1);//menuExecNewGame();
 		}
-		
+
 		tilemapData[1].position = &se_mem[MENU_TILEMAP];
 		tilemapData[1].buffer = (void *)tilemapBuffer1;
 		tilemapData[1].size = 512;
@@ -478,7 +478,7 @@ void scrollStarryBG(int addedX, int addedY){
 	}
 }
 
-void setTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical, int palette, int layer){
+void setTile(int x, int y, int drawingTileIndex, bool flipHorizontal, bool flipVertical, int palette, int layer){
     u16* tilemapBuffer;
 
     switch(layer) {
@@ -497,8 +497,8 @@ void setTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical
     }
 
     // Calculate the index and set the tile value
-    int index = x + (y << 5);
-    tilemapBuffer[index] = SE_BUILD(tileIndex, palette, flipHorizontal, flipVertical);
+    int tilemapIndex = x + (y << 5);
+    tilemapBuffer[tilemapIndex] = SE_BUILD(drawingTileIndex, palette, flipHorizontal, flipVertical);
 }
 
 /// @brief Draws a nine slice window for the centric main menu; Width and Height params are in terms of 8x8 tiles
