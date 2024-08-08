@@ -206,6 +206,7 @@ int menuExecPlaySFX();
 void loadGFX(u32 VRAMCharBlock, u32 VRAMTileIndex, void *graphicsBasePointer, u32 graphicsTileOffset, u32 numTilesToSend, u32 queueChannel);
 
 int easeInOut(int t, int power);
+int easeOutQuint(int t);
 int lerp(int a, int b, int t);
 
 void printMenuPageItem(const MenuPageItem* item);

@@ -214,7 +214,7 @@ void mainMenuNormal(){
 			int t = (actionTimerScaled * FIXED_POINT_SCALE) / actionTargetScaled;
 
 			// Apply ease-in-out function
-			int easedT = easeInOut(t, 2);
+			int easedT = easeInOut(t, 4);
 
 			// Calculate the interpolated position and update yPos
 			mainMenuData.starryBG.yPos = lerp(yStart, yTarget, easedT) / FIXED_POINT_SCALE;
@@ -320,7 +320,7 @@ void mainMenuNormal(){
 		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
 			skipToMenu();
 			yStart = mainMenuData.starryBG.yPos * FIXED_POINT_SCALE; // Start position (scaled)
-			yTarget = -5004 * FIXED_POINT_SCALE; // Target position (scaled)
+			yTarget = -4504 * FIXED_POINT_SCALE; // Target position (scaled)
 			titleCardYStart = mainMenuData.titleCardBG.yPos * FIXED_POINT_SCALE;
 			titleCardYTarget = (mainMenuData.titleCardBG.yPos + 140) * FIXED_POINT_SCALE;
 		}
@@ -369,7 +369,7 @@ void mainMenuNormal(){
 			int t2 = t * 8;
 
 			// Apply ease-in-out function
-			int easedT = easeInOut(t, 4);
+			int easedT = easeOutQuint(t);
 			int easedT2 = easeInOut(t2, 4);
 
 			// Calculate the interpolated position and update yPos
@@ -767,6 +767,18 @@ int easeInOut(int t, int factor){
         int temp = t - FIXED_POINT_SCALE;
         return (halfFactor * -temp * temp) / FIXED_POINT_SCALE + FIXED_POINT_SCALE;
     }
+}
+
+int easeOutQuint(int t) {
+    // Convert t to a floating-point value in fixed-point arithmetic
+    int tInverse = FIXED_POINT_SCALE - t;
+    int tInverseSquared = (tInverse * tInverse) / FIXED_POINT_SCALE;
+    int tInverseCubed = (tInverse * tInverseSquared) / FIXED_POINT_SCALE;
+    int tInverseQuartic = (tInverse * tInverseCubed) / FIXED_POINT_SCALE;
+    int tInverseQuintic = (tInverse * tInverseQuartic) / FIXED_POINT_SCALE;
+    
+    // Use the formula: 1 - (1 - t)^5
+    return FIXED_POINT_SCALE - tInverseQuintic;
 }
 
 void displayPressStart(){
