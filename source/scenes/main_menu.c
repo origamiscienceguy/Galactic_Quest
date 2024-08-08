@@ -420,14 +420,21 @@ void mainMenuNormal(){
 		tilemapData[1].buffer = (void *)tilemapBuffer1;
 		tilemapData[1].size = 512;
 
-		drawNineSliceWindow(10, 6, 9, 9, 1);
+		int winSliceWidth = 10;
+		drawNineSliceWindow(10, 6, winSliceWidth, 10, 1);
 		
+		drawMenuTextSegment(winSliceWidth, 10, 8, 0, 2, false);
+		drawMenuTextSegment(winSliceWidth, 10, 10, 1, 2, true);
+		drawMenuTextSegment(winSliceWidth, 10, 12, 2, 2, false);
+		
+		/*	
 		tilemapData[2].position = &se_mem[MENU_TILEMAP];
 		tilemapData[2].buffer = (void *)tilemapBuffer2;
 		tilemapData[2].size = 512;
 
 		drawNineSliceWindow(10, 6, 9, 9, 2);
-		
+		*/
+
 		// Make the starry background scroll up-left
 		scrollStarryBG(-1, -1);
 
@@ -584,7 +591,7 @@ void drawNineSliceWindow(int x, int y, int width, int height, int layer){
 /// @param width 
 /// @param height 
 void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int layer){
-   int tilesetIndex = MENU_GFX_START;
+   	int tilesetIndex = MENU_GFX_START;
     int palette = 2;
 
     int middleWidth = width - 2;
@@ -628,6 +635,21 @@ void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int 
 
     // Draw the bottom-right tile
     setTile(x + 1 + middleWidth, y + 1 + middleHeight, tilesetIndex + SEC_TOP_LEFT, true, true, palette, layer);
+}
+
+void drawMenuTextSegment(int nineSliceWidth, int tileXPos, int tileYPos, int menuElementPosition, int palette, bool highlighted){
+	int tilesetIndex;	
+	if (!highlighted)
+		tilesetIndex = MENU_TEXT_GFX_START;
+	else
+		tilesetIndex = MENU_TEXT_FOCUSED_GFX_START;
+	
+	for (int row = 0; row < 2; row++) {
+		for (int tileXOff = 0; tileXOff < MENU_TEXT_TILE_WIDTH; tileXOff++) {
+			int vramIndex = tilesetIndex + tileXOff + (menuElementPosition * MENU_TEXT_TILE_WIDTH * 2) + (row * MENU_TEXT_TILE_WIDTH);
+			setTile(tileXPos + tileXOff, tileYPos + row, vramIndex, false, false, palette, MENU_TEXT_LAYER_ID);
+		}
+	}
 }
 
 int menuExecNewGame(){
