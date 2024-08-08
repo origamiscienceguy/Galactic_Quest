@@ -336,17 +336,17 @@ void mainMenuNormal(){
 		scrollStarryBG();
 		break;
 	case MAIN_MENU_HOLD:
-		drawNineSliceWindow(0, 0, 15, 15);
 		
 		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
-			//loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8);//menuExecNewGame();
-			loadGFX(MENU_CHARDATA, MENU_TEXT_FOCUSED_GFX_START, menu_action_focusedTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8);//menuExecNewGame();
-			
+			loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 0);//menuExecNewGame();
+			loadGFX(MENU_CHARDATA, MENU_TEXT_FOCUSED_GFX_START, menu_action_focusedTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 1);//menuExecNewGame();
 		}
 		
 		tilemapData[1].position = &se_mem[MENU_TILEMAP];
 		tilemapData[1].buffer = (void *)tilemapBuffer1;
 		tilemapData[1].size = 512;
+		
+		drawNineSliceWindow(2, 5, 10, 5);
 		
 		// Make the starry background scroll up-left
 		scrollStarryBG();
@@ -394,172 +394,137 @@ void scrollStarryBG(){
 }
 
 void drawTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical, int palette){
-    /// TODO: Implement the actual tile drawing logic here
-	// Tileset is Galactic_Quest\resources\graphics\tsMenuUI.bmp
-    //printf("Drawing tile %d at (%d, %d) with horizontal flip %d and vertical flip %d\n", tileIndex, x, y, flipHorizontal, flipVertical);
-	tilemapBuffer1[(x >> 3) + ((y >> 3) << 5)] = SE_BUILD(tileIndex, palette, flipHorizontal, flipVertical);
-}
-
-int snapToGrid(int value){
-    return (value / 8) * 8;
+    // Calculate tilemap index directly from tile coordinates
+    tilemapBuffer1[x + (y << 5)] = SE_BUILD(tileIndex, palette, flipHorizontal, flipVertical);
 }
 
 /// @brief Draws a nine slice window for the centric main menu; Width and Height params are in terms of 8x8 tiles
 /// @param width 
 /// @param height 
 void drawNineSliceWindow(int x, int y, int width, int height){
-    // Snap (x, y) to nearest 8x8 grid values
-    x = snapToGrid(x);
-    y = snapToGrid(y);
-	int tilesetIndex = MENU_GFX_START;
-	int palette = 2;
+    int tilesetIndex = MENU_GFX_START;
+    int palette = 2;
 
-	if (height > 1){
-		// Draw the top row
-		if (width >= 2){
-			drawTile(x, y, tilesetIndex +  TL_1, false, false, palette); // Top-left corner Part 1
-			drawTile(x + TILE_SIZE, y, tilesetIndex +  TL_2, false, false, palette); // Top-left corner Part 2
-			drawTile(x + 2 * TILE_SIZE, y, tilesetIndex +  TL_3, false, false, palette); // Top-left corner Part 3
-			for (int i = 3; i < width - 3; ++i){
-				drawTile(x + i * TILE_SIZE, y, tilesetIndex +  TOP_MIDDLE, false, false, palette); // Top middle
-			}
-			if (width >= 3){
-				drawTile(x + (width - 3) * TILE_SIZE, y, tilesetIndex +  TR_1, false, false, palette); // Top-right corner Part 1
-			}
-			if (width >= 2){
-				drawTile(x + (width - 2) * TILE_SIZE, y, tilesetIndex +  TR_2, false, false, palette); // Top-right corner Part 2
-			}
-			if (width >= 3){
-				drawTile(x + (width - 1) * TILE_SIZE, y, tilesetIndex +  TR_3, false, false, palette); // Top-right corner Part 3
-			}
-		}
+    if (height > 1) {
+        // Draw the top-middle row
+        if (height >= 2) {
+            drawTile(x, y + 1, tilesetIndex + LM_UPPER, false, false, palette); // Left-middle-upper tile
+            for (int i = 1; i < width - 1; ++i) {
+                drawTile(x + i, y + 1, tilesetIndex + MIDDLE_UPPER, false, false, palette); // Middle upper
+            }
+            drawTile(x + (width - 1), y + 1, tilesetIndex + RM_UPPER, false, false, palette); // Right-middle-upper tile
+        }
 
-		// Calculate the bottomY position
-		int bottomY = y + (height - 1) * TILE_SIZE;
+        // Calculate the bottomY position
+        int bottomY = y + (height - 1);
 
-		// Draw center rows
-		for (int j = 2; j < height - 1; ++j){
-			drawTile(x, y + j * TILE_SIZE, tilesetIndex +  LM, false, false, palette); // Left-middle tile
-			for (int i = 1; i < width - 1; ++i){
-				drawTile(x + i * TILE_SIZE, y + j * TILE_SIZE, tilesetIndex +  CENTER, false, false, palette); // Center
-			}
-			drawTile(x + (width - 1) * TILE_SIZE, y + j * TILE_SIZE, tilesetIndex +  RM, false, false, palette); // Right-middle tile
-		}
+        // Draw center rows
+        for (int j = 2; j < height - 1; ++j) {
+            drawTile(x, y + j, tilesetIndex + LM, false, false, palette); // Left-middle tile
+            for (int i = 1; i < width - 1; ++i) {
+                drawTile(x + i, y + j, tilesetIndex + CENTER, false, false, palette); // Center
+            }
+            drawTile(x + (width - 1), y + j, tilesetIndex + RM, false, false, palette); // Right-middle tile
+        }
 
-		// Draw the bottom-middle row (mirrored)
-		if (height > 4){
-			drawTile(x, bottomY - TILE_SIZE, tilesetIndex +  LM_UPPER, false, true, palette); // Left-middle-lower tile (flipped vertically)
-			for (int i = 1; i < width - 1; ++i){
-				drawTile(x + i * TILE_SIZE, bottomY - TILE_SIZE, tilesetIndex +  MIDDLE_UPPER, false, true, palette); // Middle lower (flipped vertically)
-			}
-			drawTile(x + (width - 1) * TILE_SIZE, bottomY - TILE_SIZE, tilesetIndex +  RM_UPPER, false, true, palette); // Right-middle-lower tile (flipped vertically)
-		}
+        // Draw the bottom-middle row (mirrored)
+        if (height > 4) {
+            drawTile(x, bottomY - 1, tilesetIndex + LM_UPPER, false, true, palette); // Left-middle-lower tile (flipped vertically)
+            for (int i = 1; i < width - 1; ++i) {
+                drawTile(x + i, bottomY - 1, tilesetIndex + MIDDLE_UPPER, false, true, palette); // Middle lower (flipped vertically)
+            }
+            drawTile(x + (width - 1), bottomY - 1, tilesetIndex + RM_UPPER, false, true, palette); // Right-middle-lower tile (flipped vertically)
+        }
 
-		// Draw the bottom row
-		if (width > 2){
-			drawTile(x, bottomY, tilesetIndex +  TL_1, false, true, palette); // Bottom-left corner Part 1 (flipped vertically)
-		}
-		if (width > 3){
-			drawTile(x + TILE_SIZE, bottomY, tilesetIndex +  TL_2, false, true, palette); // Bottom-left corner Part 2 (flipped vertically)
-		}
-		if (width > 4){
-			drawTile(x + 2 * TILE_SIZE, bottomY, tilesetIndex +  TL_3, false, true, palette); // Bottom-left corner Part 3 (flipped vertically)
-		}
-		for (int i = 3; i < width - 3; ++i){
-			drawTile(x + i * TILE_SIZE, bottomY, tilesetIndex +  TOP_MIDDLE, false, true, palette); // Bottom middle (flipped vertically)
-		}
-		if (width >= 3){
-			drawTile(x + (width - 3) * TILE_SIZE, bottomY, tilesetIndex +  TR_1, false, true, palette); // Bottom-right corner Part 1 (flipped vertically)
-		}
-		if (width >= 2){
-			drawTile(x + (width - 2) * TILE_SIZE, bottomY, tilesetIndex +  TR_2, false, true, palette); // Bottom-right corner Part 2 (flipped vertically)
-		}
-		if (width >= 1){
-			drawTile(x + (width - 1) * TILE_SIZE, bottomY, tilesetIndex +  TR_3, false, true, palette); // Bottom-right corner Part 3 (flipped vertically)
-		}
+        // Draw the bottom row
+        if (width > 2)
+            drawTile(x + 1, bottomY, tilesetIndex + TL_2, false, true, palette); // Bottom-left corner Part 2 (flipped vertically)
+        if (width > 3)
+            drawTile(x + 2, bottomY, tilesetIndex + TL_3, false, true, palette); // Bottom-left corner Part 3 (flipped vertically)
+        for (int i = 3; i < width - 3; ++i) {
+            drawTile(x + i, bottomY, tilesetIndex + TOP_MIDDLE, false, true, palette); // Bottom middle (flipped vertically)
+        }
+        if (width >= 3)
+            drawTile(x + (width - 3), bottomY, tilesetIndex + TR_1, false, true, palette); // Bottom-right corner Part 1 (flipped vertically)
+        if (width >= 2)
+            drawTile(x + (width - 2), bottomY, tilesetIndex + TR_2, false, true, palette); // Bottom-right corner Part 2 (flipped vertically)
 
-		// Draw the top row (additional check to ensure no overlapping)
-		if (width >= 2){
-			drawTile(x + TILE_SIZE, y, tilesetIndex +  TL_2, false, false, palette); // Top-left corner Part 2
-		}
-		if (width >= 3){
-			drawTile(x + 2 * TILE_SIZE, y, tilesetIndex +  TL_3, false, false, palette); // Top-left corner Part 3
-		}
-		for (int i = 3; i < width - 3; ++i){
-			drawTile(x + i * TILE_SIZE, y, tilesetIndex +  TOP_MIDDLE, false, false, palette); // Top middle
-		}
-		if (width >= 3){
-			drawTile(x + (width - 3) * TILE_SIZE, y, tilesetIndex +  TR_1, false, false, palette); // Top-right corner Part 1
-		}
-		if (width >= 2){
-			drawTile(x + (width - 2) * TILE_SIZE, y, tilesetIndex +  TR_2, false, false, palette); // Top-right corner Part 2
-		}
-		if (width >= 1){
-			drawTile(x + (width - 1) * TILE_SIZE, y, tilesetIndex +  TR_3, false, false, palette); // Top-right corner Part 3
-		}
-	} else {
-		for (int i = 0; i < width; ++i){
-			drawTile(x + i * TILE_SIZE, y, tilesetIndex +  LASER_TOP, false, false, palette);
-			drawTile(x + i * TILE_SIZE, y + TILE_SIZE, tilesetIndex +  LASER_BOTTOM, false, false, palette);
-		}
-	}
+        // Draw the top row
+        for (int i = 3; i < width - 3; ++i) {
+            drawTile(x + i, y, tilesetIndex + TOP_MIDDLE, false, false, palette); // Top middle
+        }
+
+        if (width >= 3)
+            drawTile(x + (width - 3), y, tilesetIndex + TR_1, false, false, palette); // Top-right corner Part 1
+        if (width >= 2)
+            drawTile(x + 1, y, tilesetIndex + TL_2, false, false, palette); // Top-left corner Part 2
+        if (width >= 3)
+            drawTile(x + 2, y, tilesetIndex + TL_3, false, false, palette); // Top-left corner Part 3
+
+        if (width >= 2)
+            drawTile(x + (width - 2), y, tilesetIndex + TR_2, false, false, palette); // Top-right corner Part 2
+
+        drawTile(x + (width - 1), bottomY, tilesetIndex + TR_3, false, true, palette); // Bottom-right corner Part 3 (flipped vertically)
+        drawTile(x, bottomY, tilesetIndex + TL_1, false, true, palette); // Bottom-left corner Part 1 (flipped vertically)
+
+        drawTile(x + (width - 1), y, tilesetIndex + TR_3, false, false, palette); // Top-right corner Part 3
+        drawTile(x, y, tilesetIndex + TL_1, false, false, palette); // Top-left corner Part 1
+    } else {
+        for (int i = 0; i < width; ++i) {
+            drawTile(x + i, y, tilesetIndex + LASER_TOP, false, false, palette);
+            drawTile(x + i, y + 1, tilesetIndex + LASER_BOTTOM, false, false, palette);
+        }
+    }
 }
 
 /// @brief Draws a nine slice window for the main menu's Menu Page window; Width and Height params are in terms of 8x8 tiles
 /// @param width 
 /// @param height 
 void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height){
-    // Snap (x, y) to nearest 8x8 grid values
-    x = snapToGrid(x);
-    y = snapToGrid(y);
+   int tilesetIndex = MENU_GFX_START;
+    int palette = 2;
 
-	int tilesetIndex = MENU_GFX_START;
-	int palette = 2;
-
-    int tileSize = 8;
-    int w = snapToGrid(width);
-    int h = snapToGrid(height);
-    int middleWidth = w - 2 * tileSize;
-    int middleHeight = h - 2 * tileSize;
+    int middleWidth = width - 2;
+    int middleHeight = height - 2;
 
     // Draw the top-left tile
-    drawTile(x, y, tilesetIndex +  SEC_TOP_LEFT, false, false, palette);
+    drawTile(x, y, tilesetIndex + SEC_TOP_LEFT, false, false, palette);
 
     // Draw the top-middle tiles
-    for (int i = 0; i < middleWidth / tileSize; i++){
-        drawTile(x + tileSize + i * tileSize, y, tilesetIndex +  SEC_TOP_MIDDLE, false, false, palette);
+    for (int i = 0; i < middleWidth; i++) {
+        drawTile(x + 1 + i, y, tilesetIndex + SEC_TOP_MIDDLE, false, false, palette);
     }
 
     // Draw the top-right tile
-    drawTile(x + tileSize + middleWidth, y, tilesetIndex +  SEC_TOP_LEFT, true, false, palette);
+    drawTile(x + 1 + middleWidth, y, tilesetIndex + SEC_TOP_LEFT, true, false, palette);
 
     // Draw the left tiles
-    for (int i = 0; i < middleHeight / tileSize; i++){
-        drawTile(x, y + tileSize + i * tileSize, tilesetIndex +  SEC_LEFT, false, false, palette);
+    for (int i = 0; i < middleHeight; i++) {
+        drawTile(x, y + 1 + i, tilesetIndex + SEC_LEFT, false, false, palette);
     }
 
     // Draw the center tiles
-    for (int yOffset = 0; yOffset < middleHeight / tileSize; yOffset++){
-        for (int xOffset = 0; xOffset < middleWidth / tileSize; xOffset++){
-            drawTile(x + tileSize + xOffset * tileSize, y + tileSize + yOffset * tileSize, tilesetIndex +  SEC_CENTER, false, false, palette);
+    for (int yOffset = 0; yOffset < middleHeight; yOffset++) {
+        for (int xOffset = 0; xOffset < middleWidth; xOffset++) {
+            drawTile(x + 1 + xOffset, y + 1 + yOffset, tilesetIndex + SEC_CENTER, false, false, palette);
         }
     }
 
     // Draw the right tiles
-    for (int i = 0; i < middleHeight / tileSize; i++){
-        drawTile(x + tileSize + middleWidth, y + tileSize + i * tileSize, tilesetIndex +  SEC_LEFT, true, false, palette);
+    for (int i = 0; i < middleHeight; i++) {
+        drawTile(x + 1 + middleWidth, y + 1 + i, tilesetIndex + SEC_LEFT, true, false, palette);
     }
 
     // Draw the bottom-left tile
-    drawTile(x, y + tileSize + middleHeight, tilesetIndex +  SEC_TOP_LEFT, false, true, palette);
+    drawTile(x, y + 1 + middleHeight, tilesetIndex + SEC_TOP_LEFT, false, true, palette);
 
     // Draw the bottom-middle tiles
-    for (int i = 0; i < middleWidth / tileSize; i++){
-        drawTile(x + tileSize + i * tileSize, y + tileSize + middleHeight, tilesetIndex +  SEC_TOP_MIDDLE, false, true, palette);
+    for (int i = 0; i < middleWidth; i++) {
+        drawTile(x + 1 + i, y + 1 + middleHeight, tilesetIndex + SEC_TOP_MIDDLE, false, true, palette);
     }
 
     // Draw the bottom-right tile
-    drawTile(x + tileSize + middleWidth, y + tileSize + middleHeight, tilesetIndex +  SEC_TOP_LEFT, true, true, palette);
+    drawTile(x + 1 + middleWidth, y + 1 + middleHeight, tilesetIndex + SEC_TOP_LEFT, true, true, palette);
 }
 
 int menuExecNewGame(){
@@ -622,8 +587,8 @@ void printMenuPage(const MenuPage* menuPage){
 //example usage to load the portion of the image starting 6 tile rows down, and 8 tile rows deep.
 //loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8);
 
+// Limit of 4 queue channels per frame
 void loadGFX(u32 VRAMCharBlock, u32 VRAMTileIndex, void *graphicsBasePointer, u32 graphicsTileOffset, u32 numTilesToSend, u32 queueChannel){
-	
 	characterData[queueChannel].position = &tile_mem[VRAMCharBlock][VRAMTileIndex];
 	characterData[queueChannel].buffer = &((u8 *)graphicsBasePointer)[graphicsTileOffset << 5];
 	characterData[queueChannel].size = numTilesToSend << 3;
