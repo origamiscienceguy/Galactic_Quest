@@ -159,14 +159,14 @@ void mainMenuNormal(){
 			mainMenuData.actionTarget = 16;
 			mainMenuData.actionTimer = 0;
 			mainMenuData.state = FADE_TO_TITLE;
-			IOBuffer0[0] = 16;
+			IOBuffer1[0] = 16;
 		}
 		else{
 			mainMenuData.actionTimer++;
-			IOBuffer0[0] = mainMenuData.actionTimer >> 1;
+			IOBuffer1[0] = mainMenuData.actionTimer >> 1;
 		}
 		IOData[0].position = (void *)&REG_BLDY;
-		IOData[0].buffer = IOBuffer0;
+		IOData[0].buffer = IOBuffer1;
 		IOData[0].size = 1;
 		break;
 	case FADE_TO_TITLE:
@@ -175,14 +175,14 @@ void mainMenuNormal(){
 			mainMenuData.actionTarget = 2;
 			mainMenuData.actionTimer = 0;
 			//playNewAsset(BGM_ID_TITLE);
-			IOBuffer0[0] = 0;
+			IOBuffer1[0] = 0;
 		}
 		else{
 			mainMenuData.actionTimer++;
-			IOBuffer0[0] = 16 - mainMenuData.actionTimer;
+			IOBuffer1[0] = 16 - mainMenuData.actionTimer;
 		}
 		IOData[0].position = (void *)&REG_BLDY;
-		IOData[0].buffer = IOBuffer0;
+		IOData[0].buffer = IOBuffer1;
 		IOData[0].size = 1;
 		objectBuffer[SHOOTING_STAR_SPRITE].attr0 = ATTR0_HIDE;
 		break;
@@ -202,7 +202,9 @@ void mainMenuNormal(){
 			mainMenuData.state = TITLE_FLASH;
 			mainMenuData.actionTarget = 30;
 			mainMenuData.actionTimer = 0;
-			IOBuffer0[0] = 0;
+			
+			// Queue IOBuffer1 for controlling fade on REG_BLDY in the next state (TITLE_FLASH)
+			IOBuffer1[0] = 0;
 		}
 		else{
 			int yStart = TITLE_CAM_PAN_BOTTOM * FIXED_POINT_SCALE; // Start position (scaled)
@@ -223,24 +225,18 @@ void mainMenuNormal(){
 			mainMenuData.actionTimer++;
 		}
 
-		// Update the Starry BG Position
-		IOBuffer1[0] = mainMenuData.starryBG.xPos;
-		IOBuffer1[1] = mainMenuData.starryBG.yPos;
-		IOData[1].position = (void *)(&REG_BG0HOFS);
-		IOData[1].buffer = IOBuffer1;
-		IOData[1].size = 1;
-
-		objectBuffer[SHOOTING_STAR_SPRITE].attr0 = ATTR0_HIDE;
-		IOData[0].position = (void *)&REG_BLDY;
-		IOData[0].buffer = IOBuffer0;
-		IOData[0].size = 1;
+		// Update the BG Positions (using IOBuffer0)
+		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.titleCardBG.xPos, mainMenuData.titleCardBG.yPos);
 		break;
 	case TITLE_FLASH:
 		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
 			mainMenuData.state = TITLE_REVEAL;
 			mainMenuData.actionTarget = 64;
 			mainMenuData.actionTimer = 0;
-			IOBuffer0[0] = 16;
+
+			// Queue IOBuffer1 for controlling fade on REG_BLDY in the next state (TITLE_REVEAL)
+			IOBuffer1[0] = 16;
+
 			// Send the Title BG tilemap
 			tilemapData[1].position = &se_mem[TITLE_CARD_TILEMAP];
 			tilemapData[1].buffer = (void *)sprTitleLogoMap;
@@ -248,10 +244,10 @@ void mainMenuNormal(){
 		}
 		else{
 			mainMenuData.actionTimer++;
-			IOBuffer0[0] = (mainMenuData.actionTimer * 2) >> 1;
+			IOBuffer1[0] = (mainMenuData.actionTimer * 2) >> 1;
 		}
 		IOData[0].position = (void *)&REG_BLDY;
-		IOData[0].buffer = IOBuffer0;
+		IOData[0].buffer = IOBuffer1;
 		IOData[0].size = 1;
 		objectBuffer[SHOOTING_STAR_SPRITE].attr0 = ATTR0_HIDE;
 		break;
@@ -260,18 +256,18 @@ void mainMenuNormal(){
 			mainMenuData.state = TITLE_COMET_ANIMATION;
 			mainMenuData.actionTarget = 64;
 			mainMenuData.actionTimer = 0;
-			IOBuffer0[0] = 0;
 		}
 		else{
 			mainMenuData.actionTimer++;
 
-			if (IOBuffer0[0] > 0)
-				IOBuffer0[0] = 16 - mainMenuData.actionTimer * 2;
+			// Control the fading values, utilizing IOBuffer1
+			if (IOBuffer1[0] > 0)
+				IOBuffer1[0] = 16 - mainMenuData.actionTimer * 2;
 			else
-				IOBuffer0[0] = 0;
+				IOBuffer1[0] = 0;
 		}
 		IOData[0].position = (void *)&REG_BLDY;
-		IOData[0].buffer = IOBuffer0;
+		IOData[0].buffer = IOBuffer1;
 		IOData[0].size = 1;
 		objectBuffer[SHOOTING_STAR_SPRITE].attr0 = ATTR0_HIDE;
 		break;
@@ -343,13 +339,8 @@ void mainMenuNormal(){
 		OAMData.position = (void *)oam_mem;
 		OAMData.buffer = objectBuffer;
 		OAMData.size = sizeof(objectBuffer) >> 2;
-		
-		IOData[0].position = (void *)(&REG_BG0HOFS);
-		IOData[0].buffer = IOBuffer0;
-		IOData[0].size = 1;
 		break;
 	case TITLE_FLY_OUT:
-		
 		if(mainMenuData.actionTimer >= mainMenuData.actionTarget){
 			mainMenuData.state = MAIN_MENU_FLY_IN;
 			
@@ -401,7 +392,6 @@ void mainMenuNormal(){
 		// Queue BG Scroll registers for the Starry BG and Menu Positions
 		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.titleCardBG.xPos, mainMenuData.titleCardBG.yPos);
 		break;
-		
 	case MAIN_MENU_FLY_IN:
 		// Example array of MenuPageItem
 
@@ -423,8 +413,6 @@ void mainMenuNormal(){
 		mainMenuData.actionTimer = 0;
 		mainMenuData.state = MAIN_MENU_HOLD;
 		
-
-		
 		// Make the starry background scroll left
 		scrollStarryBG(-1, 0);
 
@@ -436,24 +424,25 @@ void mainMenuNormal(){
 
 		}
 
-		tilemapData[1].position = &se_mem[MENU_TILEMAP];
-		tilemapData[1].buffer = (void *)tilemapBuffer1;
-		tilemapData[1].size = 512;
-
 		int winSliceWidth = 10;
+
+		// Write to tilemap layer 1 using tilemapBuffer1
 		drawNineSliceWindow(10, 6, winSliceWidth, 10, 1);
 		
 		drawMenuTextSegment(winSliceWidth, 10, 8, 0, 2, false);
 		drawMenuTextSegment(winSliceWidth, 10, 10, 1, 2, true);
 		drawMenuTextSegment(winSliceWidth, 10, 12, 2, 2, false);
 		
-		/*	
-		tilemapData[2].position = &se_mem[MENU_TILEMAP];
-		tilemapData[2].buffer = (void *)tilemapBuffer2;
-		tilemapData[2].size = 512;
+		tilemapData[1].position = &se_mem[MENU_TILEMAP];
+		tilemapData[1].buffer = (void *)tilemapBuffer1;
+		tilemapData[1].size = 512;
 
-		drawNineSliceWindow(10, 6, 9, 9, 2);
-		*/
+		// Write to tilemap layer 2 using tilemapBuffer2
+		//drawNineSliceWindow(10, 6, 9, 9, 2);
+
+		//tilemapData[2].position = &se_mem[MENU_TILEMAP];
+		//tilemapData[2].buffer = (void *)tilemapBuffer2;
+		//tilemapData[2].size = 512;
 
 		// Make the starry background scroll up-left
 		scrollStarryBG(-1, 0);
