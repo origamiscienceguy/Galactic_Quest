@@ -339,7 +339,9 @@ void mainMenuNormal(){
 		drawNineSliceWindow(0, 0, 15, 15);
 		
 		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
-			menuExecNewGame();
+			//loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8);//menuExecNewGame();
+			loadGFX(MENU_CHARDATA, MENU_TEXT_FOCUSED_GFX_START, menu_action_focusedTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8);//menuExecNewGame();
+			
 		}
 		
 		tilemapData[1].position = &se_mem[MENU_TILEMAP];
@@ -615,8 +617,6 @@ void printMenuPage(const MenuPage* menuPage){
     for (size_t i = 0; i < menuPage->itemCount; ++i){
         printMenuPageItem(&menuPage->items[i]);
     }
-	
-
 }
 
 //example usage to load the portion of the image starting 6 tile rows down, and 8 tile rows deep.
