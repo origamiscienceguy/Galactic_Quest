@@ -80,11 +80,13 @@ void mainMenuInitialize(){
 	mainMenuData.starryBG.xPos = 512 - 16;
 	REG_BG0HOFS = mainMenuData.starryBG.xPos;
 	mainMenuData.starryBG.yPos = TITLE_CAM_PAN_BOTTOM;
+	mainMenuData.titleCardBG.xPos = 512 - 15;
+	mainMenuData.titleCardBG.yPos = 512 - 43;
 	mainMenuData.menuBG.xPos = 0;
 	mainMenuData.menuBG.yPos = 0;
 	REG_BG0VOFS = mainMenuData.starryBG.yPos;
-	REG_BG1HOFS = 512 - 15;
-	REG_BG1VOFS = 512 - 43;
+	REG_BG1HOFS = mainMenuData.titleCardBG.xPos;
+	REG_BG1VOFS = mainMenuData.titleCardBG.yPos;
 	
 	//send the palettes
 	memcpy32(&paletteBufferBg[STARRY_IMAGE_PAL_START << 4], main_menu_starfieldPal, sizeof(main_menu_starfieldPal) >> 2);
@@ -212,7 +214,7 @@ void mainMenuNormal(){
 			int t = (actionTimerScaled * FIXED_POINT_SCALE) / actionTargetScaled;
 
 			// Apply ease-in-out function
-			int easedT = easeInOut(t);
+			int easedT = easeInOut(t, 2);
 
 			// Calculate the interpolated position and update yPos
 			mainMenuData.starryBG.yPos = lerp(yStart, yTarget, easedT) / FIXED_POINT_SCALE;
@@ -317,6 +319,10 @@ void mainMenuNormal(){
 	case TITLE_HOLD:
 		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
 			skipToMenu();
+			yStart = mainMenuData.starryBG.yPos * FIXED_POINT_SCALE; // Start position (scaled)
+			yTarget = -5004 * FIXED_POINT_SCALE; // Target position (scaled)
+			titleCardYStart = mainMenuData.titleCardBG.yPos * FIXED_POINT_SCALE;
+			titleCardYTarget = (mainMenuData.titleCardBG.yPos + 140) * FIXED_POINT_SCALE;
 		}
 		else{
 			mainMenuData.actionTimer++;
@@ -326,18 +332,13 @@ void mainMenuNormal(){
 			displayPressStart();
 		}
 		else{
-			//hide "press start"
-			objectBuffer[PRESS_START_SPRITE1].attr0 = ATTR0_HIDE;
-			objectBuffer[PRESS_START_SPRITE2].attr0 = ATTR0_HIDE;
-			objectBuffer[PRESS_START_SPRITE3].attr0 = ATTR0_HIDE;
+			hidePressStart();
 		}
 		
 		// Make the starry background scroll up-left
 		scrollStarryBG(-1, -1);
 
-		// Update ONLY the starry BG. Keep the Title Screen in place.
-		IOBuffer0[0] = mainMenuData.starryBG.xPos;
-		IOBuffer0[1] = mainMenuData.starryBG.yPos;
+		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.titleCardBG.xPos, mainMenuData.titleCardBG.yPos);
 		
 		OAMData.position = (void *)oam_mem;
 		OAMData.buffer = objectBuffer;
@@ -349,28 +350,39 @@ void mainMenuNormal(){
 		break;
 	case TITLE_FLY_OUT:
 		
-		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
+		if(mainMenuData.actionTimer >= mainMenuData.actionTarget){
 			mainMenuData.state = MAIN_MENU_FLY_IN;
-
+			
 			//endAsset(currentAssetIndex);
 			//currentAssetIndex = playNewAsset(BGM_ID_MAIN_MENU);
 			mainMenuData.menuBG.xPos = 512 - 2;
 			mainMenuData.menuBG.yPos = 0;
 			loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, (void *)menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 0);
 			loadGFX(MENU_CHARDATA, MENU_TEXT_FOCUSED_GFX_START, (void *)menu_action_focusedTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 1);
-		}
-		else{
+		}else{
+			// Make the starry background scroll up, *very* quickly. Use quadratic interpolation
+
+			// Calculate the interpolation factor t, with proper scaling
+			int actionTimerScaled = mainMenuData.actionTimer * FIXED_POINT_SCALE;
+			int actionTargetScaled = mainMenuData.actionTarget * FIXED_POINT_SCALE;
+			int t = (actionTimerScaled * FIXED_POINT_SCALE) / actionTargetScaled;
+			int t2 = t * 8;
+
+			// Apply ease-in-out function
+			int easedT = easeInOut(t, 4);
+			int easedT2 = easeInOut(t2, 4);
+
+			// Calculate the interpolated position and update yPos
+			mainMenuData.starryBG.yPos = lerp(yStart, yTarget, easedT) / FIXED_POINT_SCALE;
+			mainMenuData.titleCardBG.yPos = lerp(titleCardYStart, titleCardYTarget, easedT2) / FIXED_POINT_SCALE;
 			mainMenuData.actionTimer++;
 		}
 		
-		if(mainMenuData.actionTimer % 16 >= 8){
+		if(mainMenuData.actionTimer % 16 >= 8 && mainMenuData.actionTimer < 80){
 			displayPressStart();
 		}
 		else{
-			//hide "press start"
-			objectBuffer[PRESS_START_SPRITE1].attr0 = ATTR0_HIDE;
-			objectBuffer[PRESS_START_SPRITE2].attr0 = ATTR0_HIDE;
-			objectBuffer[PRESS_START_SPRITE3].attr0 = ATTR0_HIDE;
+			hidePressStart();
 		}
 		
 		// Sprite positioning
@@ -378,11 +390,16 @@ void mainMenuNormal(){
 		OAMData.buffer = objectBuffer;
 		OAMData.size = sizeof(objectBuffer) >> 2;
 		
-		// Make the starry background scroll up-left
-		scrollStarryBG(-1, -1);
+		if (mainMenuData.actionTimer > 40) {
+			// Hide the title card after 40 frames in this state
+			memset32(tilemapBuffer1, 0, sizeof(sprTitleLogoMap) >> 2);
+			tilemapData[1].size = sizeof(sprTitleLogoMap) >> 2;
+			tilemapData[1].buffer = tilemapBuffer1;
+			tilemapData[1].position = &se_mem[TITLE_CARD_TILEMAP];
+		}
 
 		// Queue BG Scroll registers for the Starry BG and Menu Positions
-		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, 512 - 15, titleFlyOutYLUT[clamp(mainMenuData.actionTimer - 1, 0, mainMenuData.actionTarget)]);
+		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.titleCardBG.xPos, mainMenuData.titleCardBG.yPos);
 		break;
 		
 	case MAIN_MENU_FLY_IN:
@@ -406,8 +423,10 @@ void mainMenuNormal(){
 		mainMenuData.actionTimer = 0;
 		mainMenuData.state = MAIN_MENU_HOLD;
 		
-		// Make the starry background scroll up-left
-		scrollStarryBG(-1, -1);
+
+		
+		// Make the starry background scroll left
+		scrollStarryBG(-1, 0);
 
 		// Queue BG Scroll registers for the Starry BG and Menu Positions
 		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.menuBG.xPos, mainMenuData.menuBG.yPos);
@@ -437,7 +456,7 @@ void mainMenuNormal(){
 		*/
 
 		// Make the starry background scroll up-left
-		scrollStarryBG(-1, -1);
+		scrollStarryBG(-1, 0);
 
 		// Queue BG Scroll registers for the Starry BG and Menu Positions
 		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.menuBG.xPos, mainMenuData.menuBG.yPos);
@@ -740,12 +759,13 @@ int lerp(int a, int b, int t){
     return a + (t * (b - a) / FIXED_POINT_SCALE);
 }
 
-int easeInOut(int t){
+int easeInOut(int t, int factor){
+    int halfFactor = factor / 2;
     if (t < FIXED_POINT_SCALE / 2){
-        return 2 * t * t / FIXED_POINT_SCALE;
+        return (halfFactor * t * t) / FIXED_POINT_SCALE;
     } else {
         int temp = t - FIXED_POINT_SCALE;
-        return -2 * temp * temp / FIXED_POINT_SCALE + FIXED_POINT_SCALE;
+        return (halfFactor * -temp * temp) / FIXED_POINT_SCALE + FIXED_POINT_SCALE;
     }
 }
 
@@ -761,6 +781,12 @@ void displayPressStart(){
 	objectBuffer[PRESS_START_SPRITE3].attr2 = ATTR2_ID(PRESS_START_GFX_START + 8) | ATTR2_PRIO(0) | ATTR2_PALBANK(PRESS_START_PAL_START);
 }
 
+void hidePressStart(){
+	objectBuffer[PRESS_START_SPRITE1].attr0 = ATTR0_HIDE;
+	objectBuffer[PRESS_START_SPRITE2].attr0 = ATTR0_HIDE;
+	objectBuffer[PRESS_START_SPRITE3].attr0 = ATTR0_HIDE;
+}
+
 void skipToMenu(){
 	//mainMenuData.actionTarget = 0;
 	//mainMenuData.actionTimer = 0;
@@ -769,6 +795,6 @@ void skipToMenu(){
 	currentScene.state = NORMAL;
 	mainMenuData.state = TITLE_FLY_OUT;
 	mainMenuData.actionTimer = 1;
-	mainMenuData.actionTarget = 32;
+	mainMenuData.actionTarget = 300;
 	displayPressStart();
 }

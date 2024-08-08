@@ -124,6 +124,7 @@ typedef struct BGData{
 typedef struct MainMenuData{
 	enum MainMenuState state;
 	BGData starryBG;
+	BGData titleCardBG;
 	BGData menuBG;
 	u16 actionTimer;
 	u16 actionTarget;
@@ -178,12 +179,14 @@ extern const unsigned short tsMenuUITiles[320];
 extern const unsigned short tsMenuUIPal[16];
 extern const unsigned short menu_action_focusedTiles[8320];
 extern const unsigned short menu_actionTiles[8320];
+int yStart, yTarget, titleCardYStart, titleCardYTarget;
 
 //local functions
 void mainMenuInitialize();
 void mainMenuNormal();
 void mainMenuEnd();
 
+void hidePressStart();
 void displayPressStart();
 
 void scrollStarryBG(int addedX, int addedY);
@@ -202,7 +205,7 @@ int menuExecPlaySFX();
 
 void loadGFX(u32 VRAMCharBlock, u32 VRAMTileIndex, void *graphicsBasePointer, u32 graphicsTileOffset, u32 numTilesToSend, u32 queueChannel);
 
-int easeInOut(int t);
+int easeInOut(int t, int power);
 int lerp(int a, int b, int t);
 
 void printMenuPageItem(const MenuPageItem* item);
