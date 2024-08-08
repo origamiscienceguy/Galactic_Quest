@@ -86,9 +86,11 @@
 #define SEC_LEFT 22
 #define SEC_CENTER 23
 
+#define FIXED_POINT_SCALE 1000
+
 //enums
 enum MainMenuState{
-	FLASH_WHITE, FADE_TO_TITLE, TITLE_COMET_ANIMATION, TITLE_HOLD, TITLE_FLY_OUT, MAIN_MENU_FLY_IN, MAIN_MENU_HOLD, MAIN_MENU_FLY_OUT, 
+	FLASH_WHITE, FADE_TO_TITLE, TITLE_WAIT_AT_BOTTOM, TITLE_PAN_UP, TITLE_FLASH, TITLE_REVEAL, TITLE_COMET_ANIMATION, TITLE_HOLD, TITLE_FLY_OUT, MAIN_MENU_FLY_IN, MAIN_MENU_HOLD, MAIN_MENU_FLY_OUT, 
 };
 
 enum MenuPageIndex{
@@ -187,6 +189,11 @@ int menuExecLoadGame();
 int menuExecOptionsApplyChanges();
 int menuExecPlayBGM();
 int menuExecPlaySFX();
+
+void loadGFX(u32 VRAMCharBlock, u32 VRAMTileIndex, void *graphicsBasePointer, u32 graphicsTileOffset, u32 numTilesToSend, u32 queueChannel);
+
+int easeInOut(int t);
+int lerp(int a, int b, int t);
 
 void printMenuPageItem(const MenuPageItem* item);
 void printMenuPage(const MenuPage* menuPage);

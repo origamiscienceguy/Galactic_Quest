@@ -79,7 +79,7 @@ void mainMenuInitialize(){
 	REG_BLDY = BLDY(0);
 	mainMenuData.starryBG.xPos = 512 - 16;
 	REG_BG0HOFS = mainMenuData.starryBG.xPos;
-	mainMenuData.starryBG.yPos = 104;
+	mainMenuData.starryBG.yPos = 512;
 	mainMenuData.menuBG.xPos = 0;
 	mainMenuData.menuBG.yPos = 0;
 	REG_BG0VOFS = mainMenuData.starryBG.yPos;
@@ -123,15 +123,10 @@ void mainMenuInitialize(){
 	characterData[5].buffer = (void *)characterBuffer5;
 	characterData[5].size = sizeof(characterBuffer5) >> 2;
 	
-	//send the tilemaps;
-	
+	//send the starry BG tilemap
 	tilemapData[0].position = &se_mem[STARRY_IMAGE_TILEMAP];
 	tilemapData[0].buffer = (void *)main_menu_starfieldMetaTiles;
 	tilemapData[0].size = sizeof(main_menu_starfieldMetaTiles) >> 2;
-	
-	tilemapData[1].position = &se_mem[TITLE_CARD_TILEMAP];
-	tilemapData[1].buffer = (void *)sprTitleLogoMap;
-	tilemapData[1].size = sizeof(sprTitleLogoMap) >> 2;
 	
 	mainMenuData.actionTarget = 32;
 	mainMenuData.actionTimer = 0;
@@ -167,7 +162,7 @@ void mainMenuNormal(){
 		break;
 	case FADE_TO_TITLE:
 		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
-			mainMenuData.state = TITLE_COMET_ANIMATION;
+			mainMenuData.state = TITLE_WAIT_AT_BOTTOM;
 			mainMenuData.actionTarget = 64;
 			mainMenuData.actionTimer = 0;
 			IOBuffer0[0] = 0;
@@ -179,6 +174,96 @@ void mainMenuNormal(){
 		IOData[0].position = (void *)&REG_BLDY;
 		IOData[0].buffer = IOBuffer0;
 		IOData[0].size = 1;
+		objectBuffer[SHOOTING_STAR_SPRITE].attr0 = ATTR0_HIDE;
+		break;
+	case TITLE_WAIT_AT_BOTTOM:
+		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
+			mainMenuData.state = TITLE_PAN_UP;
+			mainMenuData.actionTarget = 300;
+			mainMenuData.actionTimer = 0;
+		}
+		else{
+			mainMenuData.actionTimer++;
+		}
+		objectBuffer[SHOOTING_STAR_SPRITE].attr0 = ATTR0_HIDE;
+		break;
+	case TITLE_PAN_UP:
+		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
+			mainMenuData.state = TITLE_FLASH;
+			mainMenuData.actionTarget = 64;
+			mainMenuData.actionTimer = 0;
+			IOBuffer0[0] = 0;
+		}
+		else{
+			int yStart = 512 * FIXED_POINT_SCALE; // Start position (scaled)
+			int yTarget = 104 * FIXED_POINT_SCALE; // Target position (scaled)
+
+			// Calculate the interpolation factor t, with proper scaling
+			int actionTimerScaled = mainMenuData.actionTimer * FIXED_POINT_SCALE;
+			int actionTargetScaled = mainMenuData.actionTarget * FIXED_POINT_SCALE;
+			int t = (actionTimerScaled * FIXED_POINT_SCALE) / actionTargetScaled;
+
+			// Apply ease-in-out function
+			int easedT = easeInOut(t);
+
+			// Calculate the interpolated position and update yPos
+			mainMenuData.starryBG.yPos = lerp(yStart, yTarget, easedT) / FIXED_POINT_SCALE;
+
+			// Increment actionTimer
+			mainMenuData.actionTimer++;
+		}
+
+		// Update the Starry BG Position
+		IOBuffer1[0] = mainMenuData.starryBG.xPos;
+		IOBuffer1[1] = mainMenuData.starryBG.yPos;
+		IOData[1].position = (void *)(&REG_BG0HOFS);
+		IOData[1].buffer = IOBuffer1;
+		IOData[1].size = 1;
+
+		objectBuffer[SHOOTING_STAR_SPRITE].attr0 = ATTR0_HIDE;
+		IOData[0].position = (void *)&REG_BLDY;
+		IOData[0].buffer = IOBuffer0;
+		IOData[0].size = 1;
+		break;
+	case TITLE_FLASH:
+		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
+			mainMenuData.state = TITLE_REVEAL;
+			mainMenuData.actionTarget = 64;
+			mainMenuData.actionTimer = 0;
+			IOBuffer0[0] = 16;
+			// Send the Title BG tilemap
+			tilemapData[1].position = &se_mem[TITLE_CARD_TILEMAP];
+			tilemapData[1].buffer = (void *)sprTitleLogoMap;
+			tilemapData[1].size = sizeof(sprTitleLogoMap) >> 2;
+		}
+		else{
+			mainMenuData.actionTimer++;
+			IOBuffer0[0] = mainMenuData.actionTimer >> 1;
+		}
+		IOData[0].position = (void *)&REG_BLDY;
+		IOData[0].buffer = IOBuffer0;
+		IOData[0].size = 1;
+		objectBuffer[SHOOTING_STAR_SPRITE].attr0 = ATTR0_HIDE;
+		break;
+	case TITLE_REVEAL:
+		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
+			mainMenuData.state = TITLE_COMET_ANIMATION;
+			mainMenuData.actionTarget = 64;
+			mainMenuData.actionTimer = 0;
+			IOBuffer0[0] = 0;
+		}
+		else{
+			mainMenuData.actionTimer++;
+
+			if (IOBuffer0[0] > 0)
+				IOBuffer0[0] = 16 - mainMenuData.actionTimer;
+			else
+				IOBuffer0[0] = 0;
+		}
+		IOData[0].position = (void *)&REG_BLDY;
+		IOData[0].buffer = IOBuffer0;
+		IOData[0].size = 1;
+		objectBuffer[SHOOTING_STAR_SPRITE].attr0 = ATTR0_HIDE;
 		break;
 	case TITLE_COMET_ANIMATION:
 		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
@@ -241,13 +326,10 @@ void mainMenuNormal(){
 			objectBuffer[PRESS_START_SPRITE3].attr0 = ATTR0_HIDE;
 		}
 		
-		
-		if(currentScene.sceneCounter % 8 <= 0){
-			mainMenuData.starryBG.xPos++;		
-		}
-		if(currentScene.sceneCounter % 8 <= 0){
-			mainMenuData.starryBG.yPos++;
-		}
+		// Make the starry background scroll up-left
+		scrollStarryBG(-1, -1);
+
+		// Update ONLY the starry BG. Keep the Title Screen in place.
 		IOBuffer0[0] = mainMenuData.starryBG.xPos;
 		IOBuffer0[1] = mainMenuData.starryBG.yPos;
 		
@@ -258,9 +340,7 @@ void mainMenuNormal(){
 		IOData[0].position = (void *)(&REG_BG0HOFS);
 		IOData[0].buffer = IOBuffer0;
 		IOData[0].size = 1;
-		
 		break;
-		
 	case TITLE_FLY_OUT:
 		
 		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
@@ -337,8 +417,8 @@ void mainMenuNormal(){
 		break;
 	case MAIN_MENU_HOLD:
 		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
-			loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 0);//menuExecNewGame();
-			loadGFX(MENU_CHARDATA, MENU_TEXT_FOCUSED_GFX_START, menu_action_focusedTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 1);//menuExecNewGame();
+			loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, (void *)menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 0);//menuExecNewGame();
+			loadGFX(MENU_CHARDATA, MENU_TEXT_FOCUSED_GFX_START, (void *)menu_action_focusedTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 1);//menuExecNewGame();
 		}
 		
 		tilemapData[1].position = &se_mem[MENU_TILEMAP];
@@ -404,11 +484,11 @@ void drawNineSliceWindow(int x, int y, int width, int height){
     int tilesetIndex = MENU_GFX_START;
     int palette = 2;
 
-    if (height > 1) {
+    if (height > 1){
         // Draw the top-middle row
-        if (height >= 2) {
+        if (height >= 2){
             drawTile(x, y + 1, tilesetIndex + LM_UPPER, false, false, palette); // Left-middle-upper tile
-            for (int i = 1; i < width - 1; ++i) {
+            for (int i = 1; i < width - 1; ++i){
                 drawTile(x + i, y + 1, tilesetIndex + MIDDLE_UPPER, false, false, palette); // Middle upper
             }
             drawTile(x + (width - 1), y + 1, tilesetIndex + RM_UPPER, false, false, palette); // Right-middle-upper tile
@@ -418,18 +498,18 @@ void drawNineSliceWindow(int x, int y, int width, int height){
         int bottomY = y + (height - 1);
 
         // Draw center rows
-        for (int j = 2; j < height - 1; ++j) {
+        for (int j = 2; j < height - 1; ++j){
             drawTile(x, y + j, tilesetIndex + LM, false, false, palette); // Left-middle tile
-            for (int i = 1; i < width - 1; ++i) {
+            for (int i = 1; i < width - 1; ++i){
                 drawTile(x + i, y + j, tilesetIndex + CENTER, false, false, palette); // Center
             }
             drawTile(x + (width - 1), y + j, tilesetIndex + RM, false, false, palette); // Right-middle tile
         }
 
         // Draw the bottom-middle row (mirrored)
-        if (height > 4) {
+        if (height > 4){
             drawTile(x, bottomY - 1, tilesetIndex + LM_UPPER, false, true, palette); // Left-middle-lower tile (flipped vertically)
-            for (int i = 1; i < width - 1; ++i) {
+            for (int i = 1; i < width - 1; ++i){
                 drawTile(x + i, bottomY - 1, tilesetIndex + MIDDLE_UPPER, false, true, palette); // Middle lower (flipped vertically)
             }
             drawTile(x + (width - 1), bottomY - 1, tilesetIndex + RM_UPPER, false, true, palette); // Right-middle-lower tile (flipped vertically)
@@ -440,7 +520,7 @@ void drawNineSliceWindow(int x, int y, int width, int height){
             drawTile(x + 1, bottomY, tilesetIndex + TL_2, false, true, palette); // Bottom-left corner Part 2 (flipped vertically)
         if (width > 3)
             drawTile(x + 2, bottomY, tilesetIndex + TL_3, false, true, palette); // Bottom-left corner Part 3 (flipped vertically)
-        for (int i = 3; i < width - 3; ++i) {
+        for (int i = 3; i < width - 3; ++i){
             drawTile(x + i, bottomY, tilesetIndex + TOP_MIDDLE, false, true, palette); // Bottom middle (flipped vertically)
         }
         if (width >= 3)
@@ -449,7 +529,7 @@ void drawNineSliceWindow(int x, int y, int width, int height){
             drawTile(x + (width - 2), bottomY, tilesetIndex + TR_2, false, true, palette); // Bottom-right corner Part 2 (flipped vertically)
 
         // Draw the top row
-        for (int i = 3; i < width - 3; ++i) {
+        for (int i = 3; i < width - 3; ++i){
             drawTile(x + i, y, tilesetIndex + TOP_MIDDLE, false, false, palette); // Top middle
         }
 
@@ -469,7 +549,7 @@ void drawNineSliceWindow(int x, int y, int width, int height){
         drawTile(x + (width - 1), y, tilesetIndex + TR_3, false, false, palette); // Top-right corner Part 3
         drawTile(x, y, tilesetIndex + TL_1, false, false, palette); // Top-left corner Part 1
     } else {
-        for (int i = 0; i < width; ++i) {
+        for (int i = 0; i < width; ++i){
             drawTile(x + i, y, tilesetIndex + LASER_TOP, false, false, palette);
             drawTile(x + i, y + 1, tilesetIndex + LASER_BOTTOM, false, false, palette);
         }
@@ -490,7 +570,7 @@ void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height){
     drawTile(x, y, tilesetIndex + SEC_TOP_LEFT, false, false, palette);
 
     // Draw the top-middle tiles
-    for (int i = 0; i < middleWidth; i++) {
+    for (int i = 0; i < middleWidth; i++){
         drawTile(x + 1 + i, y, tilesetIndex + SEC_TOP_MIDDLE, false, false, palette);
     }
 
@@ -498,19 +578,19 @@ void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height){
     drawTile(x + 1 + middleWidth, y, tilesetIndex + SEC_TOP_LEFT, true, false, palette);
 
     // Draw the left tiles
-    for (int i = 0; i < middleHeight; i++) {
+    for (int i = 0; i < middleHeight; i++){
         drawTile(x, y + 1 + i, tilesetIndex + SEC_LEFT, false, false, palette);
     }
 
     // Draw the center tiles
-    for (int yOffset = 0; yOffset < middleHeight; yOffset++) {
-        for (int xOffset = 0; xOffset < middleWidth; xOffset++) {
+    for (int yOffset = 0; yOffset < middleHeight; yOffset++){
+        for (int xOffset = 0; xOffset < middleWidth; xOffset++){
             drawTile(x + 1 + xOffset, y + 1 + yOffset, tilesetIndex + SEC_CENTER, false, false, palette);
         }
     }
 
     // Draw the right tiles
-    for (int i = 0; i < middleHeight; i++) {
+    for (int i = 0; i < middleHeight; i++){
         drawTile(x + 1 + middleWidth, y + 1 + i, tilesetIndex + SEC_LEFT, true, false, palette);
     }
 
@@ -518,7 +598,7 @@ void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height){
     drawTile(x, y + 1 + middleHeight, tilesetIndex + SEC_TOP_LEFT, false, true, palette);
 
     // Draw the bottom-middle tiles
-    for (int i = 0; i < middleWidth; i++) {
+    for (int i = 0; i < middleWidth; i++){
         drawTile(x + 1 + i, y + 1 + middleHeight, tilesetIndex + SEC_TOP_MIDDLE, false, true, palette);
     }
 
@@ -593,7 +673,7 @@ void loadGFX(u32 VRAMCharBlock, u32 VRAMTileIndex, void *graphicsBasePointer, u3
 	characterData[queueChannel].size = numTilesToSend << 3;
 }
 
-void updateBGScrollRegisters(u16 bg0XPos, u16 bg0YPos, u16 bg1XPos, u16 bg1YPos) {
+void updateBGScrollRegisters(u16 bg0XPos, u16 bg0YPos, u16 bg1XPos, u16 bg1YPos){
 	IOBuffer0[0] = bg0XPos;
 	IOBuffer0[1] = bg0YPos;
 	IOBuffer0[2] = bg1XPos;
@@ -603,4 +683,17 @@ void updateBGScrollRegisters(u16 bg0XPos, u16 bg0YPos, u16 bg1XPos, u16 bg1YPos)
 	IOData[0].position = (void *)(&REG_BG0HOFS);
 	IOData[0].buffer = IOBuffer0;
 	IOData[0].size = 2;
+}
+
+int lerp(int a, int b, int t) {
+    return a + (t * (b - a) / FIXED_POINT_SCALE);
+}
+
+int easeInOut(int t) {
+    if (t < FIXED_POINT_SCALE / 2) {
+        return 2 * t * t / FIXED_POINT_SCALE;
+    } else {
+        int temp = t - FIXED_POINT_SCALE;
+        return -2 * temp * temp / FIXED_POINT_SCALE + FIXED_POINT_SCALE;
+    }
 }
