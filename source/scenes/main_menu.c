@@ -391,11 +391,11 @@ void scrollStarryBG(){
 	IOData[0].size = 1;
 }
 
-void drawTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical) {
+void drawTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical, int palette) {
     /// TODO: Implement the actual tile drawing logic here
 	// Tileset is Galactic_Quest\resources\graphics\tsMenuUI.bmp
     //printf("Drawing tile %d at (%d, %d) with horizontal flip %d and vertical flip %d\n", tileIndex, x, y, flipHorizontal, flipVertical);
-	tilemapBuffer1[(x >> 3) + ((y >> 3) << 5)] = SE_BUILD(MENU_GFX_START + tileIndex, 2, flipHorizontal, flipVertical);
+	tilemapBuffer1[(x >> 3) + ((y >> 3) << 5)] = SE_BUILD(MtileIndex, palette, flipHorizontal, flipVertical);
 }
 
 int snapToGrid(int value) {
@@ -612,4 +612,11 @@ void printMenuPage(const MenuPage* menuPage){
     }
 	
 
+}
+
+void loadGFX(u32 charBlock, u32 tileIndex, void *graphicsBasePointer, u32 graphicsTileOffset, u32 numTilesToSend){
+
+	characterData[1].position = tile_mem[charBlock][tileIndex];
+	characterData[1].buffer = ((u8 *)graphicsBasePointer)[graphicsTileOffset << 5];
+	characterData[1].size = numTilesToSend << 3;
 }

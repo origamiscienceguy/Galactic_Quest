@@ -49,10 +49,10 @@
 #define MENU_GFX_START (TITLE_CARD_GFX_START + TITLE_CARD_GFX_SIZE)
 #define MENU_GFX_SIZE 20
 #define MENU_TEXT_GFX_START (MENU_GFX_START + MENU_GFX_SIZE)
-#define MENU_TEXT_GFX_SIZE 624
+#define MENU_TEXT_GFX_SIZE 156
 #define MENU_TEXT_PAL_START 2
 #define MENU_TEXT_FOCUSED_GFX_START (MENU_TEXT_GFX_START + MENU_TEXT_GFX_SIZE)
-#define MENU_TEXT_FUCUSED_GFX_SIZE 624
+#define MENU_TEXT_FUCUSED_GFX_SIZE 156
 #define MENU_TEXT_FOCUSED_PAL_START 2
 
 #define STARRY_BG_MAX_VEL 
@@ -165,8 +165,9 @@ extern const unsigned short main_menu_starfieldPal[16];
 extern cu16 titleFlyOutYLUT[11];
 extern const unsigned short tsMenuUITiles[320];
 extern const unsigned short tsMenuUIPal[16];
-extern const unsigned short menu_action_focusedTiles[9984];
-extern const unsigned short menu_actionTiles[9984];
+extern const unsigned short menu_action_focusedTiles[8320];
+extern const unsigned short menu_actionTiles[8320];
+
 
 //local functions
 void mainMenuInitialize();
