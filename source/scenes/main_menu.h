@@ -86,11 +86,12 @@
 #define SEC_LEFT 22
 #define SEC_CENTER 23
 
+#define TITLE_CAM_PAN_BOTTOM 250 // 512
 #define FIXED_POINT_SCALE 1000
 
 //enums
 enum MainMenuState{
-	FLASH_WHITE, FADE_TO_TITLE, TITLE_WAIT_AT_BOTTOM, TITLE_PAN_UP, TITLE_FLASH, TITLE_REVEAL, TITLE_COMET_ANIMATION, TITLE_HOLD, TITLE_FLY_OUT, MAIN_MENU_FLY_IN, MAIN_MENU_HOLD, MAIN_MENU_FLY_OUT, 
+	FLASH_WHITE, FADE_TO_TITLE, TITLE_WAIT_AT_BOTTOM, TITLE_PAN_UP, TITLE_FLASH, TITLE_REVEAL, TITLE_COMET_ANIMATION, TITLE_BEFORE_HOLD, TITLE_HOLD, TITLE_FLY_OUT, MAIN_MENU_FLY_IN, MAIN_MENU_HOLD, MAIN_MENU_FLY_OUT, 
 };
 
 enum MenuPageIndex{
@@ -177,6 +178,9 @@ extern const unsigned short menu_actionTiles[8320];
 void mainMenuInitialize();
 void mainMenuNormal();
 void mainMenuEnd();
+
+void displayPressStart();
+
 void scrollStarryBG(int addedX, int addedY);
 void drawNineSliceWindow(int x, int y, int width, int height);
 void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height);
