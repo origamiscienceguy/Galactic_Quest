@@ -105,16 +105,17 @@ typedef enum{
 } MenuElement;
 
 //structs
-typedef struct StarryBGData{
+typedef struct BGData{
 	u16 xPos;
 	u16 yPos;
 	s16 xVel;
 	s16 yVel;
-}StarryBGData;
+}BGData;
 
 typedef struct MainMenuData{
 	enum MainMenuState state;
-	StarryBGData starryBG;
+	BGData starryBG;
+	BGData menuBG;
 	u16 actionTimer;
 	u16 actionTarget;
 	s16 xPos;
@@ -174,10 +175,11 @@ extern const unsigned short menu_actionTiles[8320];
 void mainMenuInitialize();
 void mainMenuNormal();
 void mainMenuEnd();
-void scrollStarryBG();
+void scrollStarryBG(int addedX, int addedY);
 void drawNineSliceWindow(int x, int y, int width, int height);
 void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height);
 void drawTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical, int palette);
+void updateBGScrollRegisters(u16 bg0XPos, u16 bg0YPos, u16 bg1XPos, u16 bg1YPos);
 void startMatch();
 int menuExecNewGame();
 int menuExecContinue();

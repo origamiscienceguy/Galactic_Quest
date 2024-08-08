@@ -80,6 +80,8 @@ void mainMenuInitialize(){
 	mainMenuData.starryBG.xPos = 512 - 16;
 	REG_BG0HOFS = mainMenuData.starryBG.xPos;
 	mainMenuData.starryBG.yPos = 104;
+	mainMenuData.menuBG.xPos = 0;
+	mainMenuData.menuBG.yPos = 0;
 	REG_BG0VOFS = mainMenuData.starryBG.yPos;
 	REG_BG1HOFS = 512 - 15;
 	REG_BG1VOFS = 512 - 43;
@@ -209,7 +211,7 @@ void mainMenuNormal(){
 	case TITLE_HOLD:
 		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
 			mainMenuData.state = TITLE_FLY_OUT;
-			mainMenuData.actionTimer = 0;
+			mainMenuData.actionTimer = 1;
 			mainMenuData.actionTarget = 32;
 			//hide "press start"
 			objectBuffer[PRESS_START_SPRITE1].attr0 = ATTR0_HIDE;
@@ -263,6 +265,9 @@ void mainMenuNormal(){
 		
 		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
 			mainMenuData.state = MAIN_MENU_FLY_IN;
+
+			mainMenuData.menuBG.xPos = 0;//512 - 2;
+			mainMenuData.menuBG.yPos = 0;//512 - 0;
 		}
 		else{
 			mainMenuData.actionTimer++;
@@ -287,24 +292,16 @@ void mainMenuNormal(){
 			objectBuffer[PRESS_START_SPRITE3].attr0 = ATTR0_HIDE;
 		}
 		
-		if(currentScene.sceneCounter % 8 <= 0){
-			mainMenuData.starryBG.xPos++;		
-		}
-		if(currentScene.sceneCounter % 8 <= 0){
-			mainMenuData.starryBG.yPos++;
-		}
-		IOBuffer0[0] = mainMenuData.starryBG.xPos;
-		IOBuffer0[1] = mainMenuData.starryBG.yPos;
-		IOBuffer0[2] = 512 - 15;
-		IOBuffer0[3] = titleFlyOutYLUT[mainMenuData.actionTimer];
-		
+		// Sprite positioning
 		OAMData.position = (void *)oam_mem;
 		OAMData.buffer = objectBuffer;
 		OAMData.size = sizeof(objectBuffer) >> 2;
 		
-		IOData[0].position = (void *)(&REG_BG0HOFS);
-		IOData[0].buffer = IOBuffer0;
-		IOData[0].size = 2;
+		// Make the starry background scroll up-left
+		scrollStarryBG(-1, -1);
+
+		// Queue BG Scroll registers for the Starry BG and Menu Positions
+		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, 512 - 15, titleFlyOutYLUT[mainMenuData.actionTimer - 1]);
 		break;
 		
 	case MAIN_MENU_FLY_IN:
@@ -333,10 +330,12 @@ void mainMenuNormal(){
 		tilemapData[1].size = 512;
 
 		// Make the starry background scroll up-left
-		scrollStarryBG();
+		scrollStarryBG(-1, -1);
+
+		// Queue BG Scroll registers for the Starry BG and Menu Positions
+		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.menuBG.xPos, mainMenuData.menuBG.yPos);
 		break;
 	case MAIN_MENU_HOLD:
-		
 		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
 			loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 0);//menuExecNewGame();
 			loadGFX(MENU_CHARDATA, MENU_TEXT_FOCUSED_GFX_START, menu_action_focusedTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 1);//menuExecNewGame();
@@ -346,10 +345,13 @@ void mainMenuNormal(){
 		tilemapData[1].buffer = (void *)tilemapBuffer1;
 		tilemapData[1].size = 512;
 		
-		drawNineSliceWindow(2, 5, 10, 5);
+		drawNineSliceWindow(0, 0, 15, 15);
 		
 		// Make the starry background scroll up-left
-		scrollStarryBG();
+		scrollStarryBG(-1, -1);
+
+		// Queue BG Scroll registers for the Starry BG and Menu Positions
+		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.menuBG.xPos, mainMenuData.menuBG.yPos);
 		break;
 	case MAIN_MENU_FLY_OUT:
 		if(mainMenuData.actionTimer >= mainMenuData.actionTarget){
@@ -365,7 +367,10 @@ void mainMenuNormal(){
 		tilemapData[1].size = 512;
 		
 		// Make the starry background scroll up-left
-		scrollStarryBG();
+		scrollStarryBG(-1, -1);
+
+		// Queue BG Scroll registers for the Starry BG and Menu Positions
+		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.menuBG.xPos, mainMenuData.menuBG.yPos);
 		break;
 	default:
 		break;
@@ -378,19 +383,13 @@ void mainMenuEnd(){
 	currentScene.state = INITIALIZE;
 }
 
-void scrollStarryBG(){
+void scrollStarryBG(int addedX, int addedY){
 	if(currentScene.sceneCounter % 8 <= 0){
-		mainMenuData.starryBG.xPos++;		
+		mainMenuData.starryBG.xPos -= addedX;		
 	}
 	if(currentScene.sceneCounter % 8 <= 0){
-		mainMenuData.starryBG.yPos++;
+		mainMenuData.starryBG.yPos -= addedY;
 	}
-	IOBuffer0[0] = mainMenuData.starryBG.xPos;
-	IOBuffer0[1] = mainMenuData.starryBG.yPos;
-	
-	IOData[0].position = (void *)(&REG_BG0HOFS);
-	IOData[0].buffer = IOBuffer0;
-	IOData[0].size = 1;
 }
 
 void drawTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical, int palette){
@@ -592,4 +591,16 @@ void loadGFX(u32 VRAMCharBlock, u32 VRAMTileIndex, void *graphicsBasePointer, u3
 	characterData[queueChannel].position = &tile_mem[VRAMCharBlock][VRAMTileIndex];
 	characterData[queueChannel].buffer = &((u8 *)graphicsBasePointer)[graphicsTileOffset << 5];
 	characterData[queueChannel].size = numTilesToSend << 3;
+}
+
+void updateBGScrollRegisters(u16 bg0XPos, u16 bg0YPos, u16 bg1XPos, u16 bg1YPos) {
+	IOBuffer0[0] = bg0XPos;
+	IOBuffer0[1] = bg0YPos;
+	IOBuffer0[2] = bg1XPos;
+	IOBuffer0[3] = bg1YPos;
+
+	// Send the buffer to get processed
+	IOData[0].position = (void *)(&REG_BG0HOFS);
+	IOData[0].buffer = IOBuffer0;
+	IOData[0].size = 2;
 }
