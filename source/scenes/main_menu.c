@@ -614,7 +614,10 @@ void printMenuPage(const MenuPage* menuPage){
 
 }
 
-void loadGFX(u32 charBlock, u32 tileIndex, void *graphicsBasePointer, u32 graphicsTileOffset, u32 numTilesToSend){
+//example usage to load the portion of the image starting 6 tile rows down, and 8 tile rows deep.
+//loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8);
+
+void loadGFX(u32 VRAMCharBlock, u32 VRAMTileIndex, void *graphicsBasePointer, u32 graphicsTileOffset, u32 numTilesToSend){
 
 	characterData[1].position = tile_mem[charBlock][tileIndex];
 	characterData[1].buffer = ((u8 *)graphicsBasePointer)[graphicsTileOffset << 5];
