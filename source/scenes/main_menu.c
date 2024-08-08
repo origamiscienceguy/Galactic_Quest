@@ -619,7 +619,7 @@ void printMenuPage(const MenuPage* menuPage){
 
 void loadGFX(u32 VRAMCharBlock, u32 VRAMTileIndex, void *graphicsBasePointer, u32 graphicsTileOffset, u32 numTilesToSend){
 
-	characterData[1].position = tile_mem[VRAMcharBlock][VRAMtileIndex];
-	characterData[1].buffer = ((u8 *)graphicsBasePointer)[graphicsTileOffset << 5];
+	characterData[1].position = &tile_mem[VRAMCharBlock][VRAMTileIndex];
+	characterData[1].buffer = &((u8 *)graphicsBasePointer)[graphicsTileOffset << 5];
 	characterData[1].size = numTilesToSend << 3;
 }
