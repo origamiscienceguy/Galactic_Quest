@@ -132,9 +132,16 @@ void mainMenuInitialize(){
 	mainMenuData.actionTimer = 0;
 	mainMenuData.state = FLASH_WHITE;
 	currentScene.state = NORMAL;
+
+
+	if (TITLE_DEBUG_MODE >= 1)
+		skipToMenu();
 }
 
 void mainMenuNormal(){
+	static u8 currentAssetIndex = 0;
+	static u8 currentAsset = 0;
+	extern u16 numAssets;
 	switch(mainMenuData.state){
 	case FLASH_WHITE:
 		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
@@ -165,7 +172,7 @@ void mainMenuNormal(){
 			mainMenuData.state = TITLE_WAIT_AT_BOTTOM;
 			mainMenuData.actionTarget = 2;
 			mainMenuData.actionTimer = 0;
-			playNewAsset(10);
+			//playNewAsset(BGM_ID_TITLE);
 			IOBuffer0[0] = 0;
 		}
 		else{
@@ -309,14 +316,7 @@ void mainMenuNormal(){
 		break;
 	case TITLE_HOLD:
 		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
-			mainMenuData.state = TITLE_FLY_OUT;
-			mainMenuData.actionTimer = 1;
-			mainMenuData.actionTarget = 32;
-			//hide "press start"
-			//objectBuffer[PRESS_START_SPRITE1].attr0 = ATTR0_HIDE;
-			//objectBuffer[PRESS_START_SPRITE2].attr0 = ATTR0_HIDE;
-			//objectBuffer[PRESS_START_SPRITE3].attr0 = ATTR0_HIDE;
-			displayPressStart();
+			skipToMenu();
 		}
 		else{
 			mainMenuData.actionTimer++;
@@ -352,6 +352,8 @@ void mainMenuNormal(){
 		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
 			mainMenuData.state = MAIN_MENU_FLY_IN;
 
+			//endAsset(currentAssetIndex);
+			//currentAssetIndex = playNewAsset(BGM_ID_MAIN_MENU);
 			mainMenuData.menuBG.xPos = 0;//512 - 2;
 			mainMenuData.menuBG.yPos = 0;//512 - 0;
 		}
@@ -402,10 +404,6 @@ void mainMenuNormal(){
 		mainMenuData.actionTimer = 0;
 		mainMenuData.state = MAIN_MENU_HOLD;
 		
-		tilemapData[1].position = &se_mem[MENU_TILEMAP];
-		tilemapData[1].buffer = (void *)tilemapBuffer1;
-		tilemapData[1].size = 512;
-
 		// Make the starry background scroll up-left
 		scrollStarryBG(-1, -1);
 
@@ -421,8 +419,14 @@ void mainMenuNormal(){
 		tilemapData[1].position = &se_mem[MENU_TILEMAP];
 		tilemapData[1].buffer = (void *)tilemapBuffer1;
 		tilemapData[1].size = 512;
+
+		drawNineSliceWindow(10, 6, 9, 9, 1);
 		
-		drawNineSliceWindow(0, 0, 15, 15);
+		tilemapData[2].position = &se_mem[MENU_TILEMAP];
+		tilemapData[2].buffer = (void *)tilemapBuffer2;
+		tilemapData[2].size = 512;
+
+		drawNineSliceWindow(10, 6, 9, 9, 2);
 		
 		// Make the starry background scroll up-left
 		scrollStarryBG(-1, -1);
@@ -439,10 +443,15 @@ void mainMenuNormal(){
 			mainMenuData.actionTimer++;
 		}
 		
+		/*
 		tilemapData[1].position = &se_mem[MENU_TILEMAP];
 		tilemapData[1].buffer = (void *)tilemapBuffer1;
 		tilemapData[1].size = 512;
 		
+		tilemapData[2].position = &se_mem[MENU_TILEMAP];
+		tilemapData[2].buffer = (void *)tilemapBuffer2;
+		tilemapData[2].size = 512;*/
+
 		// Make the starry background scroll up-left
 		scrollStarryBG(-1, -1);
 
@@ -469,26 +478,44 @@ void scrollStarryBG(int addedX, int addedY){
 	}
 }
 
-void drawTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical, int palette){
-    // Calculate tilemap index directly from tile coordinates
-    tilemapBuffer1[x + (y << 5)] = SE_BUILD(tileIndex, palette, flipHorizontal, flipVertical);
+void setTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical, int palette, int layer){
+    u16* tilemapBuffer;
+
+    switch(layer) {
+        default:
+            tilemapBuffer = tilemapBuffer0;
+            break;
+        case 1:
+            tilemapBuffer = tilemapBuffer1;
+            break;
+        case 2:
+            tilemapBuffer = tilemapBuffer2;
+            break;
+        case 3:
+            tilemapBuffer = tilemapBuffer3;
+            break;
+    }
+
+    // Calculate the index and set the tile value
+    int index = x + (y << 5);
+    tilemapBuffer[index] = SE_BUILD(tileIndex, palette, flipHorizontal, flipVertical);
 }
 
 /// @brief Draws a nine slice window for the centric main menu; Width and Height params are in terms of 8x8 tiles
 /// @param width 
 /// @param height 
-void drawNineSliceWindow(int x, int y, int width, int height){
+void drawNineSliceWindow(int x, int y, int width, int height, int layer){
     int tilesetIndex = MENU_GFX_START;
     int palette = 2;
 
     if (height > 1){
         // Draw the top-middle row
         if (height >= 2){
-            drawTile(x, y + 1, tilesetIndex + LM_UPPER, false, false, palette); // Left-middle-upper tile
+            setTile(x, y + 1, tilesetIndex + LM_UPPER, false, false, palette, layer); // Left-middle-upper tile
             for (int i = 1; i < width - 1; ++i){
-                drawTile(x + i, y + 1, tilesetIndex + MIDDLE_UPPER, false, false, palette); // Middle upper
+                setTile(x + i, y + 1, tilesetIndex + MIDDLE_UPPER, false, false, palette, layer); // Middle upper
             }
-            drawTile(x + (width - 1), y + 1, tilesetIndex + RM_UPPER, false, false, palette); // Right-middle-upper tile
+            setTile(x + (width - 1), y + 1, tilesetIndex + RM_UPPER, false, false, palette, layer); // Right-middle-upper tile
         }
 
         // Calculate the bottomY position
@@ -496,59 +523,59 @@ void drawNineSliceWindow(int x, int y, int width, int height){
 
         // Draw center rows
         for (int j = 2; j < height - 1; ++j){
-            drawTile(x, y + j, tilesetIndex + LM, false, false, palette); // Left-middle tile
+            setTile(x, y + j, tilesetIndex + LM, false, false, palette, layer); // Left-middle tile
             for (int i = 1; i < width - 1; ++i){
-                drawTile(x + i, y + j, tilesetIndex + CENTER, false, false, palette); // Center
+                setTile(x + i, y + j, tilesetIndex + CENTER, false, false, palette, layer); // Center
             }
-            drawTile(x + (width - 1), y + j, tilesetIndex + RM, false, false, palette); // Right-middle tile
+            setTile(x + (width - 1), y + j, tilesetIndex + RM, false, false, palette, layer); // Right-middle tile
         }
 
         // Draw the bottom-middle row (mirrored)
         if (height > 4){
-            drawTile(x, bottomY - 1, tilesetIndex + LM_UPPER, false, true, palette); // Left-middle-lower tile (flipped vertically)
+            setTile(x, bottomY - 1, tilesetIndex + LM_UPPER, false, true, palette, layer); // Left-middle-lower tile (flipped vertically)
             for (int i = 1; i < width - 1; ++i){
-                drawTile(x + i, bottomY - 1, tilesetIndex + MIDDLE_UPPER, false, true, palette); // Middle lower (flipped vertically)
+                setTile(x + i, bottomY - 1, tilesetIndex + MIDDLE_UPPER, false, true, palette, layer); // Middle lower (flipped vertically)
             }
-            drawTile(x + (width - 1), bottomY - 1, tilesetIndex + RM_UPPER, false, true, palette); // Right-middle-lower tile (flipped vertically)
+            setTile(x + (width - 1), bottomY - 1, tilesetIndex + RM_UPPER, false, true, palette, layer); // Right-middle-lower tile (flipped vertically)
         }
 
         // Draw the bottom row
         if (width > 2)
-            drawTile(x + 1, bottomY, tilesetIndex + TL_2, false, true, palette); // Bottom-left corner Part 2 (flipped vertically)
+            setTile(x + 1, bottomY, tilesetIndex + TL_2, false, true, palette, layer); // Bottom-left corner Part 2 (flipped vertically)
         if (width > 3)
-            drawTile(x + 2, bottomY, tilesetIndex + TL_3, false, true, palette); // Bottom-left corner Part 3 (flipped vertically)
+            setTile(x + 2, bottomY, tilesetIndex + TL_3, false, true, palette, layer); // Bottom-left corner Part 3 (flipped vertically)
         for (int i = 3; i < width - 3; ++i){
-            drawTile(x + i, bottomY, tilesetIndex + TOP_MIDDLE, false, true, palette); // Bottom middle (flipped vertically)
+            setTile(x + i, bottomY, tilesetIndex + TOP_MIDDLE, false, true, palette, layer); // Bottom middle (flipped vertically)
         }
         if (width >= 3)
-            drawTile(x + (width - 3), bottomY, tilesetIndex + TR_1, false, true, palette); // Bottom-right corner Part 1 (flipped vertically)
+            setTile(x + (width - 3), bottomY, tilesetIndex + TR_1, false, true, palette, layer); // Bottom-right corner Part 1 (flipped vertically)
         if (width >= 2)
-            drawTile(x + (width - 2), bottomY, tilesetIndex + TR_2, false, true, palette); // Bottom-right corner Part 2 (flipped vertically)
+            setTile(x + (width - 2), bottomY, tilesetIndex + TR_2, false, true, palette, layer); // Bottom-right corner Part 2 (flipped vertically)
 
         // Draw the top row
         for (int i = 3; i < width - 3; ++i){
-            drawTile(x + i, y, tilesetIndex + TOP_MIDDLE, false, false, palette); // Top middle
+            setTile(x + i, y, tilesetIndex + TOP_MIDDLE, false, false, palette, layer); // Top middle
         }
 
         if (width >= 3)
-            drawTile(x + (width - 3), y, tilesetIndex + TR_1, false, false, palette); // Top-right corner Part 1
+            setTile(x + (width - 3), y, tilesetIndex + TR_1, false, false, palette, layer); // Top-right corner Part 1
         if (width >= 2)
-            drawTile(x + 1, y, tilesetIndex + TL_2, false, false, palette); // Top-left corner Part 2
+            setTile(x + 1, y, tilesetIndex + TL_2, false, false, palette, layer); // Top-left corner Part 2
         if (width >= 3)
-            drawTile(x + 2, y, tilesetIndex + TL_3, false, false, palette); // Top-left corner Part 3
+            setTile(x + 2, y, tilesetIndex + TL_3, false, false, palette, layer); // Top-left corner Part 3
 
         if (width >= 2)
-            drawTile(x + (width - 2), y, tilesetIndex + TR_2, false, false, palette); // Top-right corner Part 2
+            setTile(x + (width - 2), y, tilesetIndex + TR_2, false, false, palette, layer); // Top-right corner Part 2
 
-        drawTile(x + (width - 1), bottomY, tilesetIndex + TR_3, false, true, palette); // Bottom-right corner Part 3 (flipped vertically)
-        drawTile(x, bottomY, tilesetIndex + TL_1, false, true, palette); // Bottom-left corner Part 1 (flipped vertically)
+        setTile(x + (width - 1), bottomY, tilesetIndex + TR_3, false, true, palette, layer); // Bottom-right corner Part 3 (flipped vertically)
+        setTile(x, bottomY, tilesetIndex + TL_1, false, true, palette, layer); // Bottom-left corner Part 1 (flipped vertically)
 
-        drawTile(x + (width - 1), y, tilesetIndex + TR_3, false, false, palette); // Top-right corner Part 3
-        drawTile(x, y, tilesetIndex + TL_1, false, false, palette); // Top-left corner Part 1
+        setTile(x + (width - 1), y, tilesetIndex + TR_3, false, false, palette, layer); // Top-right corner Part 3
+        setTile(x, y, tilesetIndex + TL_1, false, false, palette, layer); // Top-left corner Part 1
     } else {
         for (int i = 0; i < width; ++i){
-            drawTile(x + i, y, tilesetIndex + LASER_TOP, false, false, palette);
-            drawTile(x + i, y + 1, tilesetIndex + LASER_BOTTOM, false, false, palette);
+            setTile(x + i, y, tilesetIndex + LASER_TOP, false, false, palette, layer);
+            setTile(x + i, y + 1, tilesetIndex + LASER_BOTTOM, false, false, palette, layer);
         }
     }
 }
@@ -556,7 +583,7 @@ void drawNineSliceWindow(int x, int y, int width, int height){
 /// @brief Draws a nine slice window for the main menu's Menu Page window; Width and Height params are in terms of 8x8 tiles
 /// @param width 
 /// @param height 
-void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height){
+void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int layer){
    int tilesetIndex = MENU_GFX_START;
     int palette = 2;
 
@@ -564,43 +591,43 @@ void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height){
     int middleHeight = height - 2;
 
     // Draw the top-left tile
-    drawTile(x, y, tilesetIndex + SEC_TOP_LEFT, false, false, palette);
+    setTile(x, y, tilesetIndex + SEC_TOP_LEFT, false, false, palette, layer);
 
     // Draw the top-middle tiles
     for (int i = 0; i < middleWidth; i++){
-        drawTile(x + 1 + i, y, tilesetIndex + SEC_TOP_MIDDLE, false, false, palette);
+        setTile(x + 1 + i, y, tilesetIndex + SEC_TOP_MIDDLE, false, false, palette, layer);
     }
 
     // Draw the top-right tile
-    drawTile(x + 1 + middleWidth, y, tilesetIndex + SEC_TOP_LEFT, true, false, palette);
+    setTile(x + 1 + middleWidth, y, tilesetIndex + SEC_TOP_LEFT, true, false, palette, layer);
 
     // Draw the left tiles
     for (int i = 0; i < middleHeight; i++){
-        drawTile(x, y + 1 + i, tilesetIndex + SEC_LEFT, false, false, palette);
+        setTile(x, y + 1 + i, tilesetIndex + SEC_LEFT, false, false, palette, layer);
     }
 
     // Draw the center tiles
     for (int yOffset = 0; yOffset < middleHeight; yOffset++){
         for (int xOffset = 0; xOffset < middleWidth; xOffset++){
-            drawTile(x + 1 + xOffset, y + 1 + yOffset, tilesetIndex + SEC_CENTER, false, false, palette);
+            setTile(x + 1 + xOffset, y + 1 + yOffset, tilesetIndex + SEC_CENTER, false, false, palette, layer);
         }
     }
 
     // Draw the right tiles
     for (int i = 0; i < middleHeight; i++){
-        drawTile(x + 1 + middleWidth, y + 1 + i, tilesetIndex + SEC_LEFT, true, false, palette);
+        setTile(x + 1 + middleWidth, y + 1 + i, tilesetIndex + SEC_LEFT, true, false, palette, layer);
     }
 
     // Draw the bottom-left tile
-    drawTile(x, y + 1 + middleHeight, tilesetIndex + SEC_TOP_LEFT, false, true, palette);
+    setTile(x, y + 1 + middleHeight, tilesetIndex + SEC_TOP_LEFT, false, true, palette, layer);
 
     // Draw the bottom-middle tiles
     for (int i = 0; i < middleWidth; i++){
-        drawTile(x + 1 + i, y + 1 + middleHeight, tilesetIndex + SEC_TOP_MIDDLE, false, true, palette);
+        setTile(x + 1 + i, y + 1 + middleHeight, tilesetIndex + SEC_TOP_MIDDLE, false, true, palette, layer);
     }
 
     // Draw the bottom-right tile
-    drawTile(x + 1 + middleWidth, y + 1 + middleHeight, tilesetIndex + SEC_TOP_LEFT, true, true, palette);
+    setTile(x + 1 + middleWidth, y + 1 + middleHeight, tilesetIndex + SEC_TOP_LEFT, true, true, palette, layer);
 }
 
 int menuExecNewGame(){
@@ -671,23 +698,27 @@ void loadGFX(u32 VRAMCharBlock, u32 VRAMTileIndex, void *graphicsBasePointer, u3
 }
 
 void updateBGScrollRegisters(u16 bg0XPos, u16 bg0YPos, u16 bg1XPos, u16 bg1YPos){
+	// Send the buffer to get processed
+	IOData[0].position = (void *)(&REG_BG0HOFS);
+	IOData[0].buffer = IOBuffer0;
+	IOData[0].size = 4;
+
 	IOBuffer0[0] = bg0XPos;
 	IOBuffer0[1] = bg0YPos;
 	IOBuffer0[2] = bg1XPos;
 	IOBuffer0[3] = bg1YPos;
-
-	// Send the buffer to get processed
-	IOData[0].position = (void *)(&REG_BG0HOFS);
-	IOData[0].buffer = IOBuffer0;
-	IOData[0].size = 2;
+	IOBuffer0[4] = 0;
+	IOBuffer0[5] = 0;
+	IOBuffer0[6] = 0;
+	IOBuffer0[7] = 0;
 }
 
-int lerp(int a, int b, int t) {
+int lerp(int a, int b, int t){
     return a + (t * (b - a) / FIXED_POINT_SCALE);
 }
 
-int easeInOut(int t) {
-    if (t < FIXED_POINT_SCALE / 2) {
+int easeInOut(int t){
+    if (t < FIXED_POINT_SCALE / 2){
         return 2 * t * t / FIXED_POINT_SCALE;
     } else {
         int temp = t - FIXED_POINT_SCALE;
@@ -705,4 +736,16 @@ void displayPressStart(){
 	objectBuffer[PRESS_START_SPRITE3].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(121);
 	objectBuffer[PRESS_START_SPRITE3].attr1 = ATTR1_SIZE_32x8 | ATTR1_X(142);
 	objectBuffer[PRESS_START_SPRITE3].attr2 = ATTR2_ID(PRESS_START_GFX_START + 8) | ATTR2_PRIO(0) | ATTR2_PALBANK(PRESS_START_PAL_START);
+}
+
+void skipToMenu(){
+	//mainMenuData.actionTarget = 0;
+	//mainMenuData.actionTimer = 0;
+	//mainMenuData.state = FLASH_WHITE;
+	
+	currentScene.state = NORMAL;
+	mainMenuData.state = TITLE_FLY_OUT;
+	mainMenuData.actionTimer = 1;
+	mainMenuData.actionTarget = 32;
+	displayPressStart();
 }
