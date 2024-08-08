@@ -355,7 +355,9 @@ void mainMenuNormal(){
 			//endAsset(currentAssetIndex);
 			//currentAssetIndex = playNewAsset(BGM_ID_MAIN_MENU);
 			mainMenuData.menuBG.xPos = 512 - 2;
-			mainMenuData.menuBG.yPos = 0;//240;//512 - 0;
+			mainMenuData.menuBG.yPos = 0;
+			loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, (void *)menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 0);
+			loadGFX(MENU_CHARDATA, MENU_TEXT_FOCUSED_GFX_START, (void *)menu_action_focusedTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 1);
 		}
 		else{
 			mainMenuData.actionTimer++;
@@ -412,8 +414,7 @@ void mainMenuNormal(){
 		break;
 	case MAIN_MENU_HOLD:
 		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
-			loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, (void *)menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 0);//menuExecNewGame();
-			loadGFX(MENU_CHARDATA, MENU_TEXT_FOCUSED_GFX_START, (void *)menu_action_focusedTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 1);//menuExecNewGame();
+
 		}
 
 		tilemapData[1].position = &se_mem[MENU_TILEMAP];
