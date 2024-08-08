@@ -177,7 +177,7 @@ void mainMenuEnd();
 void scrollStarryBG();
 void drawNineSliceWindow(int x, int y, int width, int height);
 void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height);
-void drawTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical);
+void drawTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical, int palette);
 int snapToGrid(int value);
 void startMatch();
 int menuExecNewGame();
