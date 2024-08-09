@@ -93,6 +93,7 @@
 #define FIXED_POINT_SCALE 1000
 #define BGM_ID_TITLE 10
 #define BGM_ID_MAIN_MENU 0
+#define SFX_ID_MENU_CONFIRM_C 4
 
 #define MENU_TEXT_LAYER_ID 1
 

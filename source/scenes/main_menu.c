@@ -12,6 +12,8 @@ Scene mainMenuScene = {
 };
 
 int dataRange[] = {0, 100};
+static u8 currentBGMIndex = 0;
+static u8 currentSFXIndex = 0;
 
 // Initialize the Menu Pages
 MenuPage menuPages[6] = {
@@ -146,9 +148,8 @@ void mainMenuInitialize(){
 }
 
 void mainMenuNormal(){
-	static u8 currentAssetIndex = 0;
 	static u8 currentAsset = 0;
-	extern u16 numAssets;
+	extern u16 numBGM;
 	switch(mainMenuData.state){
 	case FLASH_WHITE:
 		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
@@ -166,7 +167,7 @@ void mainMenuNormal(){
 			mainMenuData.actionTimer++;
 
 			if (mainMenuData.actionTimer == 16)
-				currentAssetIndex = playNewAsset(BGM_ID_TITLE);
+				currentBGMIndex = playNewSound(BGM_ID_TITLE, true);
 			IOBuffer1[0] = mainMenuData.actionTimer >> 1;
 		}
 		// Update fade values
@@ -345,6 +346,9 @@ void mainMenuNormal(){
 			mainMenuData.actionTimer = 1;
 			mainMenuData.actionTarget = 30;
 			drawPressStart();
+			
+			endAsset(currentBGMIndex);
+			currentSFXIndex = playNewSound(SFX_ID_MENU_CONFIRM_C, false);
 
 			yStart = mainMenuData.starryBG.yPos * FIXED_POINT_SCALE; // Start position (scaled)
 			yTarget = -4504 * FIXED_POINT_SCALE; // Target position (scaled)
@@ -389,8 +393,7 @@ void mainMenuNormal(){
 		if(mainMenuData.actionTimer >= mainMenuData.actionTarget){
 			mainMenuData.state = MAIN_MENU_FLY_IN;
 			
-			endAsset(currentAssetIndex);
-			currentAssetIndex = playNewAsset(BGM_ID_MAIN_MENU);
+			currentBGMIndex = playNewSound(BGM_ID_MAIN_MENU, true);
 			mainMenuData.menuBG.xPos = 512 - 2;
 			mainMenuData.menuBG.yPos = 0;
 			loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, (void *)menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 0);
@@ -852,6 +855,7 @@ void skipToMenu(){
 	//mainMenuData.actionTimer = 0;
 	//mainMenuData.state = FLASH_WHITE;
 	
+
 	currentScene.state = NORMAL;
 	mainMenuData.state = TITLE_FLY_OUT;
 	mainMenuData.actionTimer = 1;
