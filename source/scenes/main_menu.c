@@ -170,8 +170,8 @@ void mainMenuNormal(){
 		else{
 			mainMenuData.actionTimer++;
 
-			if (mainMenuData.actionTimer == 16)
-				playNewAsset(BGM_ID_TITLE);
+			//if (mainMenuData.actionTimer == 16)
+			//	currentAssetIndex = playNewAsset(BGM_ID_TITLE);
 			IOBuffer1[0] = mainMenuData.actionTimer >> 1;
 		}
 		// Update fade values
@@ -218,7 +218,7 @@ void mainMenuNormal(){
 			
 			// Queue IOBuffer1 for controlling fade on REG_BLDY in the next state (TITLE_FLASH)
 			IOBuffer1[0] = 0;
-		} else{
+		}else{
 			// Increment actionTimer
 			mainMenuData.actionTimer++;
 		}
@@ -245,11 +245,6 @@ void mainMenuNormal(){
 			mainMenuData.actionTimer++;
 			IOBuffer1[0] = (mainMenuData.actionTimer * 2) >> 1;
 		}
-		// Update fade values
-		//IOData[1].position = (void *)&REG_BLDY;
-		//IOData[1].buffer = IOBuffer1;
-		//IOData[1].size = 1;
-
 		// Hide the flying comet sprite
 		objectBuffer[FLYING_COMET_SPRITE].attr0 = ATTR0_HIDE;
 
@@ -324,7 +319,12 @@ void mainMenuNormal(){
 		break;
 	case TITLE_HOLD:
 		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
-			skipToMenu();
+			
+			mainMenuData.state = TITLE_AFTER_PRESS_START;
+			mainMenuData.actionTimer = 1;
+			mainMenuData.actionTarget = 30;
+			displayPressStart();
+
 			yStart = mainMenuData.starryBG.yPos * FIXED_POINT_SCALE; // Start position (scaled)
 			yTarget = -4504 * FIXED_POINT_SCALE; // Target position (scaled)
 			titleCardYStart = mainMenuData.titleCardBG.yPos * FIXED_POINT_SCALE;
@@ -340,7 +340,6 @@ void mainMenuNormal(){
 		else{
 			hidePressStart();
 		}
-		
 		// Make the starry background scroll up-left
 		scrollStarryBG(-1, -1);
 
@@ -350,12 +349,31 @@ void mainMenuNormal(){
 		OAMData.buffer = objectBuffer;
 		OAMData.size = sizeof(objectBuffer) >> 2;
 		break;
+	case TITLE_AFTER_PRESS_START:
+		if(mainMenuData.actionTimer >= mainMenuData.actionTarget){
+			hidePressStart();
+			skipToMenu();
+		}else{
+			mainMenuData.actionTimer++;
+		}
+
+		// Rapidly blink the "Press Start" graphic
+		if(mainMenuData.actionTimer % 16 >= 8){
+			displayPressStart();
+		}else{
+			hidePressStart();
+		}
+
+		OAMData.position = (void *)oam_mem;
+		OAMData.buffer = objectBuffer;
+		OAMData.size = sizeof(objectBuffer) >> 2;
+		break;
 	case TITLE_FLY_OUT:
 		if(mainMenuData.actionTimer >= mainMenuData.actionTarget){
 			mainMenuData.state = MAIN_MENU_FLY_IN;
 			
-			endAsset(currentAssetIndex);
-			currentAssetIndex = playNewAsset(BGM_ID_MAIN_MENU);
+			//endAsset(currentAssetIndex);
+			//currentAssetIndex = playNewAsset(BGM_ID_MAIN_MENU);
 			mainMenuData.menuBG.xPos = 512 - 2;
 			mainMenuData.menuBG.yPos = 0;
 			loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, (void *)menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 0);
@@ -377,13 +395,6 @@ void mainMenuNormal(){
 			mainMenuData.starryBG.yPos = lerp(yStart, yTarget, easedT) / FIXED_POINT_SCALE;
 			mainMenuData.titleCardBG.yPos = lerp(titleCardYStart, titleCardYTarget, easedT2) / FIXED_POINT_SCALE;
 			mainMenuData.actionTimer++;
-		}
-		
-		if(mainMenuData.actionTimer % 16 >= 8 && mainMenuData.actionTimer < 80){
-			displayPressStart();
-		}
-		else{
-			hidePressStart();
 		}
 		
 		// Sprite positioning
@@ -616,7 +627,7 @@ void drawNineSliceWindow(int x, int y, int width, int height, int layer){
 
         setTile(x + (width - 1), y, tilesetIndex + TR_3, false, false, palette, layer); // Top-right corner Part 3
         setTile(x, y, tilesetIndex + TL_1, false, false, palette, layer); // Top-left corner Part 1
-    } else {
+    }else{
         for (int i = 0; i < width; ++i){
             setTile(x + i, y, tilesetIndex + LASER_TOP, false, false, palette, layer);
             setTile(x + i, y + 1, tilesetIndex + LASER_BOTTOM, false, false, palette, layer);
@@ -780,7 +791,7 @@ int easeInOut(int t, int factor){
     int halfFactor = factor / 2;
     if (t < FIXED_POINT_SCALE / 2){
         return (halfFactor * t * t) / FIXED_POINT_SCALE;
-    } else {
+    }else{
         int temp = t - FIXED_POINT_SCALE;
         return (halfFactor * -temp * temp) / FIXED_POINT_SCALE + FIXED_POINT_SCALE;
     }
@@ -825,5 +836,4 @@ void skipToMenu(){
 	mainMenuData.state = TITLE_FLY_OUT;
 	mainMenuData.actionTimer = 1;
 	mainMenuData.actionTarget = 300;
-	displayPressStart();
 }
