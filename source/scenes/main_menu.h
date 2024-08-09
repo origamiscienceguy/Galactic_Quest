@@ -174,7 +174,7 @@ typedef struct{
 // Define the MenuPage struct with an array of MenuPageItem
 typedef struct{
     MenuPageItem items[MAX_MENU_ITEMS];  // Fixed-size array of MenuPageItem
-    size_t itemCount;                    // Number of items currently in the array
+    s32 itemCount;                    // Number of items currently in the array
 	char* pageName;
 	u8 tileX;
 	u8 tileY;

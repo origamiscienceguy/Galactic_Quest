@@ -676,18 +676,24 @@ void drawSelectAShipMenu(OBJ_ATTR *spriteBuffer){
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 3].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 80) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
 	
 	//setup the body sprites
-	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 4].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(bodyYPos + 32);
-	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 4].attr1 = ATTR1_SIZE_64 | ATTR1_X(xPos1 & 0x1ff);
-	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 4].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 88) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
-	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 5].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_TALL | ATTR0_Y(bodyYPos + 32);
-	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 5].attr1 = ATTR1_SIZE_64 | ATTR1_X((xPos1 + 64) & 0x1ff);
-	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 5].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 152) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
-	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 6].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(bodyYPos + 96);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 4].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_TALL | ATTR0_Y(bodyYPos + 35);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 4].attr1 = ATTR1_SIZE_64 | ATTR1_X((xPos1 + 43) & 0x1ff);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 4].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 280) | ATTR2_PRIO(0) | ATTR2_PALBANK(0);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 5].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_TALL | ATTR0_Y(bodyYPos + 99);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 5].attr1 = ATTR1_SIZE_64 | ATTR1_X((xPos1 + 43) & 0x1ff);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 5].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 312) | ATTR2_PRIO(0) | ATTR2_PALBANK(0);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 6].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(bodyYPos + 32);
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 6].attr1 = ATTR1_SIZE_64 | ATTR1_X(xPos1 & 0x1ff);
-	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 6].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 184) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
-	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 7].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_TALL | ATTR0_Y(bodyYPos + 96);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 6].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 88) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 7].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_TALL | ATTR0_Y(bodyYPos + 32);
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 7].attr1 = ATTR1_SIZE_64 | ATTR1_X((xPos1 + 64) & 0x1ff);
-	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 7].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 248) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 7].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 152) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 8].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(bodyYPos + 96);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 8].attr1 = ATTR1_SIZE_64 | ATTR1_X(xPos1 & 0x1ff);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 8].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 184) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 9].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_TALL | ATTR0_Y(bodyYPos + 96);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 9].attr1 = ATTR1_SIZE_64 | ATTR1_X((xPos1 + 64) & 0x1ff);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 9].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 248) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
 	
 	//add the scrolling arrows
 	if(isScrollingMenu){
@@ -1300,7 +1306,7 @@ void processCamera(){
 	
 	//queue the character data for menus
 	characterData[1].buffer = characterBuffer1;
-	characterData[1].size = 1536;
+	characterData[1].size = 2048;
 	characterData[1].position = &tile_mem_obj[0][OBJ_SELECT_A_SHIP_GFX + 88];
 	
 	//queue the OAM data for all of the sprites
@@ -2164,6 +2170,35 @@ void updateSelectAShip(u8 *shipList){
 		tilePointer = list_ships_focused_rightTiles;
 		memcpy32(bufferPointer, tilePointer, 64);
 	}
+	
+	//draw the health, top
+	bufferPointer = characterBuffer1 + 6144;
+	for(u8 currentIndex = topOption; currentIndex < topOption + 4; currentIndex++){
+		//if all ships have been rendered, render the rest as transparent
+		if(currentIndex >= numberOfShips){
+			memset32(bufferPointer, 0, 64);
+		}
+		//if this ship is not selected
+		else{
+			tilePointer = &list_numbers_32x16Tiles[128 * mapData.ships[shipList[currentIndex]].health];
+			memcpy32(bufferPointer, tilePointer, 64);
+		}
+		bufferPointer += 256;
+	}
+	
+	//draw the health, bottom
+	for(u8 currentIndex = topOption + 4; currentIndex < topOption + 8; currentIndex++){
+		//if all ships have been rendered, render the rest as transparent
+		if(currentIndex >= numberOfShips){
+			memset32(bufferPointer, 0, 64);
+		}
+		//if this ship is not selected
+		else{
+			tilePointer = &list_numbers_32x16Tiles[128 * mapData.ships[shipList[currentIndex]].health];
+			memcpy32(bufferPointer, tilePointer, 64);
+		}
+		bufferPointer += 256;
+	}
 }
 
 //a temprary function to initialize a test map.
@@ -2178,7 +2213,7 @@ void initMap(){
 				mapData.ships[index].type = (j % 7);
 				mapData.ships[index].state = READY_VISIBLE;
 				mapData.ships[index].team = team;
-				mapData.ships[index].health = 100;
+				mapData.ships[index].health = index;
 				mapData.ships[index].xPos = xPos + i;
 				mapData.ships[index].yPos = yPos;
 				mapData.ships[index].xVel = 1;
