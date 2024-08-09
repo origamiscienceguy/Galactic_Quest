@@ -2,6 +2,8 @@
 
 IntroData introData;
 
+u32 currentBGM;
+
 Scene introScene = {
 	.initialize = &introInitialize,
 	.intro = 0,
@@ -34,6 +36,8 @@ void introInitialize(){
 	introData.actionTarget = 16;
 	
 	currentScene.state = NORMAL;
+	
+	currentBGM = playNewAsset(_musOpening);
 }
 
 void introNormal(){
@@ -155,4 +159,5 @@ void introNormal(){
 void introEnd(){
 	currentScene.scenePointer = sceneList[MAIN_MENU];
 	currentScene.state = INITIALIZE;
+	endAsset(currentBGM);
 }
