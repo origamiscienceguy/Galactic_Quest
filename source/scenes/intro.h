@@ -6,9 +6,9 @@
 #include "audio_engine_external.h"
 
 //constants
-#define GBAJAM_WAIT_FRAMES 200
-#define AUDIO_BY_WAIT_FRAMES 200
-#define PIXEL_PLAY_STUDIOS_WAIT_FRAMES 200
+#define GBAJAM_WAIT_FRAMES 300
+#define AUDIO_BY_WAIT_FRAMES 300
+#define PIXEL_PLAY_STUDIOS_WAIT_FRAMES 300
 
 //enums
 enum IntroState{

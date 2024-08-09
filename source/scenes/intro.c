@@ -147,8 +147,7 @@ void introNormal(){
 	}
 	
 	if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
-		currentScene.scenePointer = sceneList[MAIN_MENU];
-		currentScene.state = INITIALIZE;
+		currentScene.state = END;
 	}
 	
 	IOData[0].position = (void *)&REG_BLDY;
