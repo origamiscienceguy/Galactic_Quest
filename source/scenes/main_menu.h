@@ -6,8 +6,6 @@
 #include "audio_engine_external.h"
 
 //constants
-#define TITLE_DEBUG_MODE 0
-
 #define STARRY_IMAGE_CHARDATA 0
 #define STARRY_IMAGE_TILEMAP 28
 #define STARRY_IMAGE_PAL_START 0
@@ -190,6 +188,7 @@ int yStart, yTarget, titleCardYStart, titleCardYTarget, titleRevealFadeDirection
 
 //local functions
 void mainMenuInitialize();
+void mainMenuReinitialize();
 void mainMenuNormal();
 void mainMenuEnd();
 

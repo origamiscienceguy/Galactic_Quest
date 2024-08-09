@@ -142,9 +142,6 @@ void mainMenuInitialize(){
 	mainMenuData.starryBG.yScrollTimerTarget = 32+16+2+53;
 	mainMenuData.starryBG.yScrollStartPos = TITLE_CAM_PAN_BOTTOM; // Start position (scaled)
 	mainMenuData.starryBG.yScrollTargetPos = TITLE_CAM_PAN_TOP; // Target position (scaled)
-
-	if (TITLE_DEBUG_MODE >= 1)
-		skipToMenu();
 }
 
 void mainMenuNormal(){
@@ -340,24 +337,7 @@ void mainMenuNormal(){
 		updateObjBuffer();
 		break;
 	case TITLE_HOLD:
-		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
-			
-			mainMenuData.state = TITLE_AFTER_PRESS_START;
-			mainMenuData.actionTimer = 1;
-			mainMenuData.actionTarget = 30;
-			drawPressStart();
-			
-			endAsset(currentBGMIndex);
-			currentSFXIndex = playNewSound(SFX_ID_MENU_CONFIRM_C, false);
-
-			yStart = mainMenuData.starryBG.yPos * FIXED_POINT_SCALE; // Start position (scaled)
-			yTarget = -4504 * FIXED_POINT_SCALE; // Target position (scaled)
-			titleCardYStart = mainMenuData.titleCardBG.yPos * FIXED_POINT_SCALE;
-			titleCardYTarget = (mainMenuData.titleCardBG.yPos + 140) * FIXED_POINT_SCALE;
-		}
-		else{
-			mainMenuData.actionTimer++;
-		}
+		mainMenuData.actionTimer++;
 		
 		if(mainMenuData.actionTimer % 128 < 64){
 			drawPressStart();
@@ -515,7 +495,65 @@ void mainMenuNormal(){
 	default:
 		break;
 	}
-	
+
+	if (mainMenuData.state < TITLE_AFTER_PRESS_START) {
+		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
+			
+			REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_OBJ | DCNT_OBJ_1D;
+			//clear the titlecard tilemap
+			memset32(tilemapBuffer0, 0, sizeof(tilemapBuffer0) >> 2);
+			tilemapData[1].size = sizeof(tilemapBuffer0) >> 2;
+			tilemapData[1].buffer = tilemapBuffer0;
+			tilemapData[1].position = &se_mem[TITLE_CARD_TILEMAP];
+
+			mainMenuData.state = TITLE_AFTER_PRESS_START;
+			mainMenuData.actionTimer = 1;
+			mainMenuData.actionTarget = 30;
+			
+			// Reset the title card's coordinates
+			mainMenuData.titleCardBG.xPos = 512 - 15;
+			mainMenuData.titleCardBG.yPos = 512 - 43;
+
+			// Send the Title BG tilemap
+			tilemapData[1].position = &se_mem[TITLE_CARD_TILEMAP];
+			tilemapData[1].buffer = (void *)sprTitleLogoMap;
+			tilemapData[1].size = sizeof(sprTitleLogoMap) >> 2;
+			
+			// Load the Press Start graphics
+			memcpy32(&paletteBufferObj[PRESS_START_PAL_START << 4], sprTitlePressStartTextPal, sizeof(sprTitlePressStartTextPal) >> 2);
+			paletteData[1].size = 16;
+			paletteData[1].position = pal_obj_mem;
+			paletteData[1].buffer = (void *)paletteBufferObj;
+			
+			memcpy32(&characterBuffer4[0], sprTitlePressStartTextTiles, sizeof(sprTitlePressStartTextTiles) >> 2);
+			characterData[4].position = tile_mem[PRESS_START_CHARDATA];
+			characterData[4].buffer = (void *)characterBuffer4;
+			characterData[4].size = sizeof(characterBuffer4) >> 2;
+		
+			// Update fade values
+			IOBuffer1[0] = 0;
+			IOData[1].position = (void *)&REG_BLDY;
+			IOData[1].buffer = IOBuffer1;
+			IOData[1].size = 1;
+
+			// Hide the flying comet sprite and star blocker sprite
+			objectBuffer[FLYING_COMET_SPRITE].attr0 = ATTR0_HIDE;
+			objectBuffer[STAR_BLOCKER_SPRITE].attr0 = ATTR0_HIDE;
+
+			endAsset(currentBGMIndex);
+			currentSFXIndex = playNewSound(SFX_ID_MENU_CONFIRM_C, false);
+
+			yStart = mainMenuData.starryBG.yPos * FIXED_POINT_SCALE; // Start position (scaled)
+			yTarget = -4504 * FIXED_POINT_SCALE; // Target position (scaled)
+			titleCardYStart = mainMenuData.titleCardBG.yPos * FIXED_POINT_SCALE;
+			titleCardYTarget = (mainMenuData.titleCardBG.yPos + 140) * FIXED_POINT_SCALE;
+
+			updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.titleCardBG.xPos, mainMenuData.titleCardBG.yPos);
+		}
+	}
+}
+
+void mainMenuReinitialize(){
 }
 
 void mainMenuEnd(){
