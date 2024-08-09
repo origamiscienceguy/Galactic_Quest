@@ -56,6 +56,15 @@
 #define MENU_TEXT_FOCUSED_GFX_SIZE 156
 #define MENU_TEXT_FOCUSED_PAL_START 2
 
+#define BUTTON_PROMPT_PAL 3
+#define BUTTON_PROMPT_GFX_START (MENU_TEXT_FOCUSED_GFX_START + MENU_TEXT_FOCUSED_GFX_SIZE)
+#define BUTTON_PROMPT_GFX_SIZE 16
+
+#define MENU_TITLE_TEXT_PAL 3
+#define MENU_TITLE_TEXT_GFX_START (BUTTON_PROMPT_GFX_START + BUTTON_PROMPT_GFX_SIZE)
+#define MENU_TITLE_TEXT_GFX_SIZE 32
+
+
 #define STARRY_BG_MAX_VEL 
 
 #define TILE_SIZE 8
@@ -210,6 +219,9 @@ extern const unsigned short tsMenuUITiles[320];
 extern const unsigned short tsMenuUIPal[16];
 extern const unsigned short menu_action_focusedTiles[8320];
 extern const unsigned short menu_actionTiles[8320];
+extern const unsigned short page_name_ui_64x16Tiles[2560];
+extern const unsigned short menu_button_promptsTiles[256];
+extern const unsigned short menu_button_promptsPal[16];
 int yStart, yTarget, titleCardYStart, titleCardYTarget, titleRevealFadeDirection;
 
 //local functions
