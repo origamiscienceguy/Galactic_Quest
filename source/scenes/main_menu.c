@@ -601,12 +601,18 @@ void updateMainMenu(){
 			menuPage = &menuPages[mDat.currMenuPage];
 			// Allow Up/Down to navigate the menu; wrap around if we hit the upper/lower limits
 			// Combine both up and down input checks into a single operation
-			int moveY = 0;
+			int moveY = 0, moveX = 0;
 			if((inputs.pressed & KEY_UP) && !(inputs.pressed & KEY_DOWN)){
 				moveY = -1;
 			}
 			else if((inputs.pressed & KEY_DOWN) && !(inputs.pressed & KEY_UP)){
 				moveY = 1;
+			}
+			if((inputs.pressed & KEY_RIGHT) && !(inputs.pressed & KEY_LEFT)){
+				moveX = -1;
+			}
+			else if((inputs.pressed & KEY_LEFT) && !(inputs.pressed & KEY_RIGHT)){
+				moveX = 1;
 			}
 
 			// Navigate the menu; wrap around if we hit an edge
@@ -658,7 +664,9 @@ void drawMainMenu(){
 		//Clear the menu tilemap every frame
 		memset32(tilemapBuffer1, 0, 512);
 		
-		// Write to tilemap layer 1 using tilemapBuffer1
+		// Draw the Menu Page Window
+		drawSecondaryNineSliceWindowStyle(10, 2, 10, 4, 1);
+
 		if (mDat.windowState != MMWS_INITIAL_ZIPPING)
 			drawNineSliceWindow(mDat.windowTileXPos, mDat.windowTileYPos, mDat.winSliceWidth, mDat.winSliceHeight, 1);
 		else
@@ -675,7 +683,7 @@ void drawMainMenu(){
 				for(int i = 0; i < menuPage->itemCount; ++i){
 					MenuPageItem* thisMenuElement = &menuPage->items[i];
 					bool cursorOnElement = (mDat.menuCursorPos == i);
-					drawMenuTextSegment(mDat.winSliceWidth, 10, 8 + (2 * i), thisMenuElement->textGFXIndex, 2, cursorOnElement);
+					drawMenuTextSegment(mDat.winSliceWidth, mDat.windowTileXPos, mDat.windowTileYPos + 2 + (2 * i), thisMenuElement->textGFXIndex, 2, cursorOnElement);
 				}
 				break;
 			case MMWS_ZIPPING:
@@ -697,7 +705,7 @@ void drawMainMenu(){
 		};*/
 
 
-		// Queue the tilemap with our drawing functions
+		// Queue the tilemap with our drawing functions, using tilemapBuffer1
 		tilemapData[1].position = se_mem[MENU_TILEMAP];
 		tilemapData[1].buffer = (void *)tilemapBuffer1;
 		tilemapData[1].size = 512;
