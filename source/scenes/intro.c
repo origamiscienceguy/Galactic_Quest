@@ -62,6 +62,7 @@ void introNormal(){
 		else{
 			introData.actionTimer++;
 		}
+		IOBuffer0[0] = 0;
 		break;
 	case GBAJAM_LEAVE:
 			if(introData.actionTimer == introData.actionTarget){
@@ -96,6 +97,7 @@ void introNormal(){
 		else{
 			introData.actionTimer++;
 		}
+		IOBuffer0[0] = 0;
 		break;
 	case AUDIO_ENGINE_LEAVE:
 			if(introData.actionTimer == introData.actionTarget){
@@ -130,12 +132,13 @@ void introNormal(){
 		else{
 			introData.actionTimer++;
 		}
+		IOBuffer0[0] = 0;
 		break;
 	case STUDIO_LEAVE:
 		if(introData.actionTimer == introData.actionTarget){
-			introData.state = BEFORE_FINAL_TRANSITION;
+			introData.state = BLACK_SCREEN_HOLD;
 			introData.actionTimer = 0;
-			introData.actionTarget = FINAL_TRANSITION_WAIT_FRAMES;
+			introData.actionTarget = BLACK_SCREEN_HOLD_WAIT_FRAMES;
 			memset32(pal_bg_mem, 0, 128);
 			memset32(m4_mem, 0, 8192);
 		}
@@ -143,6 +146,18 @@ void introNormal(){
 			IOBuffer0[0] = introData.actionTimer;
 			introData.actionTimer++;
 		}
+		break;
+	case BLACK_SCREEN_HOLD:
+		if(introData.actionTimer == introData.actionTarget){
+			introData.state = BEFORE_FINAL_TRANSITION;
+			introData.actionTimer = 0;
+			introData.actionTarget = FINAL_TRANSITION_WAIT_FRAMES;
+		}
+		else{
+			IOBuffer0[0] = introData.actionTimer;
+			introData.actionTimer++;
+		}
+		IOBuffer0[0] = 0;
 		break;
 	case BEFORE_FINAL_TRANSITION:
 		if(introData.actionTimer == introData.actionTarget){
