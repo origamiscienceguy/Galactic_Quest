@@ -543,16 +543,19 @@ void initMainMenu(){
 	mDat.currMenuPage = 0;
 	mDat.menuCursorPos = 0;
 
-	mDat.windowTileXPos = 10;
+	mDat.windowTileXPos = 22;
 	mDat.windowTileYPos = 10;
 	mDat.winSliceWidth = 10;
 	mDat.winSliceHeight = 1;
-	mDat.windowTargetWidth = 1;
-	mDat.windowTargetHeight = 1;
-	mDat.windowState = MMWS_ZIPPING;
+	mDat.windowTargetWidth = 10;
+	mDat.windowTargetHeight = 10;
+	mDat.windowState = MMWS_INITIAL_ZIPPING;
 
 	mDat.menuBG.xPos = 0;
 	mDat.menuBG.yPos = 0;
+
+	mDat.zipSpeed = 3;
+	mDat.wrappedAround = true;
 }
 
 void updateMainMenu(){
@@ -581,10 +584,17 @@ void updateMainMenu(){
 				if (mDat.windowTileYPos + 1 < 19)
 					mDat.windowTileYPos++;
 			} else {
-				mDat.winSliceHeight = mDat.windowTargetHeight;
+				mDat.winSliceHeight = 1;//mDat.windowTargetHeight;
 				//mDat.winSliceHeight += 2;
-				//mDat.windowTileYPos -= 2;
+				mDat.windowTileYPos -= 2;
 				mDat.windowState = MMWS_ZIPPING;
+				mDat.zipSpeed = 3;
+
+				
+				menuPage = &menuPages[mDat.currMenuPage];
+				mDat.windowTargetWidth = menuPage->tileWidth;
+				mDat.windowTargetHeight = menuPage->tileHeight;
+				mDat.wrappedAround = false;
 			}
 			break;
 		case MMWS_READY:
@@ -615,23 +625,31 @@ void updateMainMenu(){
 			
 			if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
 				
+				mDat.windowState = MMWS_CLOSING;
 			}
 			break;
+		case MMWS_INITIAL_ZIPPING:
 		case MMWS_ZIPPING:
 			//mDat.winSliceWidth = 1;
-			mDat.windowTileXPos--;
-			if (mDat.windowTileXPos < 0)
-				mDat.windowTileXPos = 29;
+			mDat.windowTileXPos-= mDat.zipSpeed;
+			
+			if (mDat.windowTileXPos < 0) {
+				if (!mDat.wrappedAround) {
+					mDat.windowTileXPos = 29;
+					mDat.wrappedAround = true;
+				} 
+			} else {
+				if (mDat.wrappedAround) {
+					if (mDat.windowTileXPos < mDat.windowTargetWidth) {
+						mDat.windowTileXPos = mDat.windowTargetWidth;
+						mDat.wrappedAround = true;
+						mDat.windowActionTimer = 0;
+						mDat.windowState = MMWS_OPENING;
+					}
+				}
+			}
 
 			mDat.windowActionTimer++;
-			/*
-			menuPage = &menuPages[mDat.currMenuPage];
-			mDat.winSliceHeight = 1;
-			mDat.windowTargetWidth = menuPage->tileWidth;
-			mDat.windowTargetHeight = menuPage->tileHeight;
-			mDat.windowActionTimer = 0;
-			mDat.windowState = MMWS_OPENING;
-			*/
 			break;
 	}
 }
@@ -641,7 +659,10 @@ void drawMainMenu(){
 		memset32(tilemapBuffer1, 0, 512);
 		
 		// Write to tilemap layer 1 using tilemapBuffer1
-		drawNineSliceWindow(mDat.windowTileXPos, mDat.windowTileYPos, mDat.winSliceWidth, mDat.winSliceHeight, 1);
+		if (mDat.windowState != MMWS_INITIAL_ZIPPING)
+			drawNineSliceWindow(mDat.windowTileXPos, mDat.windowTileYPos, mDat.winSliceWidth, mDat.winSliceHeight, 1);
+		else
+			drawLaserRow(mDat.windowTileXPos, mDat.windowTileYPos, mDat.winSliceWidth, 1, false);
 		
 		switch(mDat.windowState) {
 			default:
@@ -654,11 +675,13 @@ void drawMainMenu(){
 				for(int i = 0; i < menuPage->itemCount; ++i){
 					MenuPageItem* thisMenuElement = &menuPage->items[i];
 					bool cursorOnElement = (mDat.menuCursorPos == i);
-					//drawMenuTextSegment(mDat.winSliceWidth, 10, 8 + (2 * i), thisMenuElement->textGFXIndex, 2, cursorOnElement);
+					drawMenuTextSegment(mDat.winSliceWidth, 10, 8 + (2 * i), thisMenuElement->textGFXIndex, 2, cursorOnElement);
 				}
 				break;
 			case MMWS_ZIPPING:
+			case MMWS_INITIAL_ZIPPING:
 				break;
+			
 		}
 		
 		// Example array of MenuPageItem
@@ -817,7 +840,7 @@ void drawNineSliceWindow(int x, int y, int width, int height, int layer) {
         setTile(wrapX(x), bottomY, tilesetIndex + TL_1, false, true, palette, layer); // Bottom-left corner Part 1 (flipped vertically)
         setTile(wrapX(x), y, tilesetIndex + TL_1, false, false, palette, layer); // Top-left corner Part 1
     } else {
-		drawLaserRow(x, y, width, tilesetIndex, palette, layer);
+		drawLaserRow(x, y, width, layer, true);
     }
 }
 
@@ -832,12 +855,23 @@ bool isInBounds(int y) {
 }
 
 // Draw the LASER_TOP and LASER_BOTTOM tiles with wrapping
-void drawLaserRow(int x, int y, int width, int tilesetIndex, int palette, int layer) {
-    for (int i = 0; i < width; ++i) {
-        int wrappedX = wrapX(x + i);
+void drawLaserRow(int x, int y, int width, int layer, bool wrapAround) {
+	int tilesetIndex = MENU_GFX_START;
+    int palette = 2;
+	for (int i = 0; i < width; ++i) {
+        int drawX = x + i;
+
+        // Handle wrapping or boundary checking based on the boolean flag
+        if (wrapAround) {
+            drawX = wrapX(drawX);
+        } else if (!isInBounds(drawX)) {
+            continue; // Skip drawing if out of bounds and not wrapping
+        }
+
+        // Check bounds for y position (should be within the range 0-29)
         if (isInBounds(y) && isInBounds(y + 1)) {
-            setTile(wrappedX, y, tilesetIndex + LASER_TOP, false, false, palette, layer);
-            setTile(wrappedX, y + 1, tilesetIndex + LASER_BOTTOM, false, false, palette, layer);
+            setTile(drawX, y, tilesetIndex + LASER_TOP, false, false, palette, layer);
+            setTile(drawX, y + 1, tilesetIndex + LASER_BOTTOM, false, false, palette, layer);
         }
     }
 }

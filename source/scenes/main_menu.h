@@ -102,6 +102,7 @@ enum MainMenuWindowState {
 	MMWS_CLOSING,
 	MMWS_READY,
 	MMWS_ZIPPING,
+	MMWS_INITIAL_ZIPPING
 };
 
 enum MenuPageIndex{
@@ -147,7 +148,9 @@ typedef struct MainMenuData{
 	u8 windowTileYPos;
 	u8 windowTargetWidth;
 	u8 windowTargetHeight;
+	bool wrappedAround;
 	u8 windowActionTimer;
+	u8 zipSpeed;
 }MainMenuData;
 
 typedef int (*FunctionPtr)(void);
@@ -228,7 +231,7 @@ void setTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical
 void drawNineSliceWindow(int x, int y, int width, int height, int layer);
 int wrapX(int x);
 bool isInBounds(int y);
-void drawLaserRow(int x, int y, int width, int tilesetIndex, int palette, int layer);
+void drawLaserRow(int x, int y, int width, int layer, bool wrapAround);
 void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int layer);
 void drawMenuTextSegment(int nineSliceWidth, int tileXPos, int tileYPos, int menuElementPosition, int palette, bool highlighted);
 
