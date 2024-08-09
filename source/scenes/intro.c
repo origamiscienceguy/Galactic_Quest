@@ -68,7 +68,7 @@ void introNormal(){
 			if(introData.actionTimer == introData.actionTarget){
 			introData.state = AUDIO_ENGINE_ENTER;
 			introData.actionTimer = 0;
-			introData.actionTarget = 16;
+			introData.actionTarget = 17;
 			memcpy32(pal_bg_mem, Intro_Audio_enginePal, sizeof(Intro_Audio_enginePal) >> 2);
 			memcpy32(m4_mem, Intro_Audio_engineBitmap, sizeof(Intro_Audio_engineBitmap) >> 2);
 		}
@@ -92,7 +92,7 @@ void introNormal(){
 		if(introData.actionTimer == introData.actionTarget){
 			introData.state = AUDIO_ENGINE_LEAVE;
 			introData.actionTimer = 0;
-			introData.actionTarget = 16;
+			introData.actionTarget = 17;
 		}
 		else{
 			introData.actionTimer++;
@@ -127,7 +127,7 @@ void introNormal(){
 		if(introData.actionTimer == introData.actionTarget){
 			introData.state = STUDIO_LEAVE;
 			introData.actionTimer = 0;
-			introData.actionTarget = 16;
+			introData.actionTarget = 17;
 		}
 		else{
 			introData.actionTimer++;
