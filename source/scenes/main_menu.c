@@ -145,6 +145,13 @@ void mainMenuInitialize(){
 }
 
 void mainMenuNormal(){
+
+	//temporary debug input
+	if(inputs.pressed & KEY_START){
+		currentScene.scenePointer = sceneList[GAMEPLAY];
+		currentScene.state = INITIALIZE;
+		endAsset(currentBGMIndex);
+	}
 	static u8 currentAsset = 0;
 	extern u16 numSounds;
 	switch(mainMenuData.state){
