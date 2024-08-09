@@ -126,8 +126,9 @@ void mainMenuInitialize(){
 	
 	memcpy32(&paletteBufferObj[FLYING_COMET_PAL_START << 4], shootingStarPal, sizeof(shootingStarPal) >> 2);
 	memcpy32(&paletteBufferObj[STAR_BLOCKER_PAL_START << 4], starBlockerPal, sizeof(starBlockerPal) >> 2);
+	memcpy32(&paletteBufferObj[BUTTON_PROMPT_PAL << 4], menu_button_promptsPal, sizeof(menu_button_promptsPal) >> 2);
 	
-	paletteData[1].size = 16;
+	paletteData[1].size = 32;
 	paletteData[1].position = pal_obj_mem;
 	paletteData[1].buffer = (void *)paletteBufferObj;
 	
