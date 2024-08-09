@@ -59,6 +59,9 @@
 #define STARRY_BG_MAX_VEL 
 
 #define TILE_SIZE 8
+#define TILEMAP_WIDTH 30
+#define TILEMAP_HEIGHT 20
+
 //define the maximum number of menu items on a single page
 #define MAX_MENU_ITEMS 10
 
@@ -81,10 +84,10 @@
 #define LASER_BOTTOM 15
 
 //define constants for the secondary nine-slice tile indices
-#define SEC_TOP_LEFT 20
-#define SEC_TOP_MIDDLE 21
-#define SEC_LEFT 22
-#define SEC_CENTER 23
+#define SEC_TOP_LEFT 16
+#define SEC_TOP_MIDDLE 17
+#define SEC_LEFT 18
+#define SEC_CENTER 19
 
 #define TITLE_CAM_PAN_BOTTOM 250
 #define TITLE_CAM_PAN_TOP 104

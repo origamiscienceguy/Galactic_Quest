@@ -672,7 +672,7 @@ void drawMainMenu(){
 		memset32(tilemapBuffer1, 0, 512);
 		
 		// Draw the Menu Page Window
-		drawSecondaryNineSliceWindowStyle(10, 2, 10, 4, 1);
+		drawSecondaryNineSliceWindowStyle(10, 2, 10, 2, 1);
 
 		if (mDat.windowState != MMWS_INITIAL_ZIPPING)
 			drawNineSliceWindow(mDat.windowTileXPos, mDat.windowTileYPos, mDat.winSliceWidth, mDat.winSliceHeight, 1);
@@ -894,51 +894,43 @@ void drawLaserRow(int x, int y, int width, int layer, bool wrapAround) {
 /// @brief Draws a nine slice window for the main menu's Menu Page window; Width and Height params are in terms of 8x8 tiles
 /// @param width 
 /// @param height 
-void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int layer){
-   	int tilesetIndex = MENU_GFX_START;
-    int palette = 2;
+void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int layer) {
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            int tileX = (x + j) % TILEMAP_WIDTH;
+            int tileY = (y + i) % TILEMAP_HEIGHT;
+            int tileIndex = MENU_GFX_START + SEC_CENTER; // Default to center tile
+            bool flipHorizontal = false;
+            bool flipVertical = false;
 
-    int middleWidth = width - 2;
-    int middleHeight = height - 2;
+            // Determine which tile to draw based on position in the nine-slice grid
+            if (i == 0 && j == 0) {
+                tileIndex = MENU_GFX_START + SEC_TOP_LEFT;
+            } else if (i == 0 && j == width - 1) {
+                tileIndex = MENU_GFX_START + SEC_TOP_LEFT;
+                flipHorizontal = true; // Flip for top-right corner
+            } else if (i == 0) {
+                tileIndex = MENU_GFX_START + SEC_TOP_MIDDLE;
+            } else if (i == height - 1 && j == 0) {
+                tileIndex = MENU_GFX_START + SEC_TOP_LEFT;
+                flipVertical = true; // Flip for bottom-left corner
+            } else if (i == height - 1 && j == width - 1) {
+                tileIndex = MENU_GFX_START + SEC_TOP_LEFT;
+                flipHorizontal = true; // Flip for bottom-right corner
+                flipVertical = true;
+            } else if (i == height - 1) {
+                tileIndex = MENU_GFX_START + SEC_TOP_MIDDLE;
+                flipVertical = true; // Flip for bottom edge
+            } else if (j == 0) {
+                tileIndex = MENU_GFX_START + SEC_LEFT;
+            } else if (j == width - 1) {
+                tileIndex = MENU_GFX_START + SEC_LEFT;
+                flipHorizontal = true; // Flip for right edge
+            }
 
-    // Draw the top-left tile
-    setTile(x, y, tilesetIndex + SEC_TOP_LEFT, false, false, palette, layer);
-
-    // Draw the top-middle tiles
-    for (int i = 0; i < middleWidth; i++){
-        setTile(x + 1 + i, y, tilesetIndex + SEC_TOP_MIDDLE, false, false, palette, layer);
-    }
-
-    // Draw the top-right tile
-    setTile(x + 1 + middleWidth, y, tilesetIndex + SEC_TOP_LEFT, true, false, palette, layer);
-
-    // Draw the left tiles
-    for (int i = 0; i < middleHeight; i++){
-        setTile(x, y + 1 + i, tilesetIndex + SEC_LEFT, false, false, palette, layer);
-    }
-
-    // Draw the center tiles
-    for (int yOffset = 0; yOffset < middleHeight; yOffset++){
-        for (int xOffset = 0; xOffset < middleWidth; xOffset++){
-            setTile(x + 1 + xOffset, y + 1 + yOffset, tilesetIndex + SEC_CENTER, false, false, palette, layer);
+            setTile(tileX, tileY, tileIndex, flipHorizontal, flipVertical, 2, layer);
         }
     }
-
-    // Draw the right tiles
-    for (int i = 0; i < middleHeight; i++){
-        setTile(x + 1 + middleWidth, y + 1 + i, tilesetIndex + SEC_LEFT, true, false, palette, layer);
-    }
-
-    // Draw the bottom-left tile
-    setTile(x, y + 1 + middleHeight, tilesetIndex + SEC_TOP_LEFT, false, true, palette, layer);
-
-    // Draw the bottom-middle tiles
-    for (int i = 0; i < middleWidth; i++){
-        setTile(x + 1 + i, y + 1 + middleHeight, tilesetIndex + SEC_TOP_MIDDLE, false, true, palette, layer);
-    }
-
-    // Draw the bottom-right tile
-    setTile(x + 1 + middleWidth, y + 1 + middleHeight, tilesetIndex + SEC_TOP_LEFT, true, true, palette, layer);
 }
 
 void drawMenuTextSegment(int nineSliceWidth, int tileXPos, int tileYPos, int menuElementPosition, int palette, bool highlighted){
