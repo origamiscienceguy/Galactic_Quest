@@ -7,7 +7,7 @@ cu8 _sfxMenuConfirmA_Priority = 0;
 //type in the priority of each channel in this asset. Leave unused channels as blank, or set to 0
 cu8 _sfxMenuConfirmA_ChannelPriority[MAX_DMA_CHANNELS] = { 
 	80,		// Channel 1
-	80,		// Channel 2
+	79,		// Channel 2
 	0,		// Channel 3
 	0,		// Channel 4
 	0,		// Channel 5

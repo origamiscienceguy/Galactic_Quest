@@ -113,12 +113,12 @@ enum MenuPageIndex{
 };
 
 typedef enum{
-    SCRIPT_RUNNER,
-    PAGE_TRANSFER,
-    SLIDER,
-	SHIFT,
-	TOGGLE,
-	SOUND_TESTER,
+    ME_SCRIPT_RUNNER,
+    ME_PAGE_TRANSFER,
+    ME_SLIDER,
+	ME_SHIFT,
+	ME_TOGGLE,
+	ME_SOUND_TESTER,
 }MenuElement;
 
 //structs
@@ -152,6 +152,7 @@ typedef struct MainMenuData{
 	u8 windowTargetWidth;
 	u8 windowTargetHeight;
 	bool wrappedAround;
+	bool showPageWindow;
 	u8 windowActionTimer;
 	u8 zipSpeed;
 }MainMenuData;
@@ -170,7 +171,7 @@ typedef struct{
     char* itemName;
     MenuElement menuElement;
     MenuElementData data;
-    enum{ FUNC_PTR, INT, INT_ARRAY } dataType; // To keep track of the type stored
+    enum{ MPIDT_FUNC_PTR, MPIDT_INT, MPIDT_INT_ARRAY } dataType; // To keep track of the type stored
 	int textGFXIndex;				// The graphic row that this text appears on in the tileset
 } MenuPageItem;
 

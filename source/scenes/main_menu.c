@@ -20,9 +20,9 @@ MenuPage* menuPage;
 MenuPage menuPages[6] = {
 	{
 		.items = {
-			{"Play Game", PAGE_TRANSFER, .data.intVal = (int)MPI_PLAY_GAME, .dataType = INT, .textGFXIndex = 0},
-			{"Extras", PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = INT, .textGFXIndex = 2},
-			{"Options", PAGE_TRANSFER, .data.intVal = (int)MPI_OPTIONS, .dataType = INT, .textGFXIndex = 4}
+			{"Play Game", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_PLAY_GAME, .dataType = MPIDT_INT, .textGFXIndex = 0},
+			{"Options", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_OPTIONS, .dataType = MPIDT_INT, .textGFXIndex = 2},
+			{"Extras", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = MPIDT_INT, .textGFXIndex = 4}
 		},
 		.itemCount = 3,
 		.pageName = "MAIN MENU",
@@ -33,22 +33,22 @@ MenuPage menuPages[6] = {
 	},
 	{
 		.items = {
-			{"New Game", SCRIPT_RUNNER, .data.functionPtr = menuExecNewGame, .dataType = FUNC_PTR, .textGFXIndex = 6},
-			{"Continue", SCRIPT_RUNNER, .data.functionPtr = menuExecContinue, .dataType = FUNC_PTR, .textGFXIndex = 8},
-			{"Load Game", SCRIPT_RUNNER, .data.functionPtr = menuExecLoadGame, .dataType = FUNC_PTR, .textGFXIndex = 10},
-			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT, .textGFXIndex = 12}
+			{"New Game", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecNewGame, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 6},
+			{"Continue", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecContinue, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 8},
+			{"Load Game", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecLoadGame, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 10},
+			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = MPIDT_INT, .textGFXIndex = 12}
 		},
 		.itemCount = 4,
 		.pageName = "PLAY GAME",
 		.tileX = 10,
 		.tileY = 6,
 		.tileWidth = 10,
-		.tileHeight = 10
+		.tileHeight = 12
 	},{
 		.items = {
-			{"Sound Test", PAGE_TRANSFER, .data.intVal = (int)MPI_SOUND_TEST, .dataType = INT, .textGFXIndex = 36},
-			{"Credits", PAGE_TRANSFER, .data.intVal = (int)MPI_CREDITS, .dataType = INT, .textGFXIndex = 38},
-			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT, .textGFXIndex = 12}
+			{"Sound Test", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_SOUND_TEST, .dataType = MPIDT_INT, .textGFXIndex = 36},
+			{"Credits", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_CREDITS, .dataType = MPIDT_INT, .textGFXIndex = 38},
+			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = MPIDT_INT, .textGFXIndex = 12}
 		},
 		.itemCount = 3,
 		.pageName = "EXTRAS",
@@ -59,35 +59,35 @@ MenuPage menuPages[6] = {
 	},
 	{
 		.items = {
-			{"Master Volume", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY, .textGFXIndex = 14},
-			{"BGM", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY, .textGFXIndex = 16},
-			{"SFX", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY, .textGFXIndex = 18},
-			{"Apply Changes", SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = FUNC_PTR, .textGFXIndex = 120},
-			{"Abort", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT, .textGFXIndex = 22}
+			{"Master Volume", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 14},
+			{"BGM", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 16},
+			{"SFX", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 18},
+			{"Apply Changes", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 120},
+			{"Abort", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = MPIDT_INT, .textGFXIndex = 22}
 		},
 		.itemCount = 5,
 		.pageName = "OPTIONS",
 		.tileX = 10,
 		.tileY = 6,
 		.tileWidth = 10,
-		.tileHeight = 10
+		.tileHeight = 14
 	},
 	{
 		.items = {
-			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = INT, .textGFXIndex = 12}
+			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = MPIDT_INT, .textGFXIndex = 12}
 		},
 		.itemCount = 1,
 		.pageName = "CREDITS",
 		.tileX = 10,
 		.tileY = 6,
-		.tileWidth = 10,
+		.tileWidth = 12,
 		.tileHeight = 10
 	},
 	{
 		.items = {
-			{"BGM", SOUND_TESTER, .data.functionPtr = menuExecPlayBGM, .dataType = FUNC_PTR, .textGFXIndex = 16},
-			{"SFX", SOUND_TESTER, .data.functionPtr = menuExecPlaySFX, .dataType = FUNC_PTR, .textGFXIndex = 18},
-			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = INT}
+			{"BGM", ME_SOUND_TESTER, .data.functionPtr = menuExecPlayBGM, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 16},
+			{"SFX", ME_SOUND_TESTER, .data.functionPtr = menuExecPlaySFX, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 18},
+			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = MPIDT_INT}
 		},
 		.itemCount = 3,
 		.pageName = "SOUND TEST",
@@ -401,8 +401,8 @@ void mainMenuNormal(){
 			currentBGMIndex = playNewSound(_musMainMenu);
 			mDat.menuBG.xPos = 512 - 2;
 			mDat.menuBG.yPos = 0;
-			loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, (void *)menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 0);
-			loadGFX(MENU_CHARDATA, MENU_TEXT_FOCUSED_GFX_START, (void *)menu_action_focusedTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 1);
+			loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, (void *)menu_actionTiles, MENU_TEXT_TILE_WIDTH * 0, MENU_TEXT_TILE_WIDTH * 6, 0);
+			loadGFX(MENU_CHARDATA, MENU_TEXT_FOCUSED_GFX_START, (void *)menu_action_focusedTiles, MENU_TEXT_TILE_WIDTH * 0, MENU_TEXT_TILE_WIDTH * 6, 1);
 		}else{
 			// Make the starry background scroll up, *very* quickly. Use quadratic interpolation
 
@@ -563,6 +563,8 @@ void initMainMenu(){
 
 	mDat.zipSpeed = 3;
 	mDat.wrappedAround = true;
+
+	mDat.showPageWindow = false;
 }
 
 void updateMainMenu(){
@@ -597,10 +599,82 @@ void updateMainMenu(){
 				mDat.windowState = MMWS_ZIPPING;
 				mDat.zipSpeed = 3;
 
-				
-				menuPage = &menuPages[mDat.currMenuPage];
-				mDat.windowTargetWidth = menuPage->tileWidth;
-				mDat.windowTargetHeight = menuPage->tileHeight;
+/*
+		.items = {
+			{"Master Volume", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY, .textGFXIndex = 14},
+			{"BGM", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY, .textGFXIndex = 16},
+			{"SFX", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY, .textGFXIndex = 18},
+			{"Apply Changes", SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = FUNC_PTR, .textGFXIndex = 120},
+			{"Abort", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT, .textGFXIndex = 22}
+		},
+		.itemCount = 5,
+		.pageName = "OPTIONS",
+		.tileX = 10,
+		.tileY = 6,
+		.tileWidth = 10,
+		.tileHeight = 10
+
+
+				.items = {
+			{"Sound Test", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_SOUND_TEST, .dataType = MPIDT_INT, .textGFXIndex = 36},
+			{"Credits", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_CREDITS, .dataType = MPIDT_INT, .textGFXIndex = 38},
+			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = MPIDT_INT, .textGFXIndex = 12}
+		},
+		*/
+				MenuElementData* dat = &menuPage->items[mDat.menuCursorPos].data;  // Corrected: Accessing array element directly
+				FunctionPtr datFunctPtr;
+				int datIntVal;
+				int* datIntArr;
+
+				switch(menuPage->items[mDat.menuCursorPos].dataType) {  // Corrected: Accessing array element directly
+					case MPIDT_FUNC_PTR:
+						datFunctPtr = dat->functionPtr;
+						break;
+					case MPIDT_INT:
+						datIntVal = dat->intVal;
+						break;
+					case MPIDT_INT_ARRAY:
+						datIntArr = dat->intArray;
+						break;
+				}
+
+				switch(menuPage->items[mDat.menuCursorPos].menuElement) {  // Corrected: Accessing array element directly
+					case ME_SCRIPT_RUNNER:
+						// Handle SCRIPT_RUNNER case
+						break;
+					case ME_PAGE_TRANSFER:
+						mDat.currMenuPage = datIntVal;
+						menuPage = &menuPages[mDat.currMenuPage];
+						mDat.windowTargetWidth = menuPage->tileWidth;
+						mDat.windowTargetHeight = menuPage->tileHeight;
+
+						int gfxPosY = menuPage->items[mDat.menuCursorPos].textGFXIndex;  // Corrected: Accessing array element directly
+						int numItems = menuPage->itemCount;
+						
+						mDat.menuCursorPos = 0;
+
+						///TODO: fix this bs
+						for (int i = 0; i < numItems; i++) {
+							loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, (void *)menu_actionTiles, MENU_TEXT_TILE_WIDTH * gfxPosY, MENU_TEXT_TILE_WIDTH * 2, 0);
+							loadGFX(MENU_CHARDATA, MENU_TEXT_FOCUSED_GFX_START, (void *)menu_action_focusedTiles, MENU_TEXT_TILE_WIDTH * gfxPosY, MENU_TEXT_TILE_WIDTH * 2, 1);
+						}
+						break;
+					case ME_SLIDER:
+						// Handle SLIDER case
+						break;
+					case ME_SHIFT:
+						// Handle SHIFT case
+						break;
+					case ME_TOGGLE:
+						// Handle TOGGLE case
+						break;
+					case ME_SOUND_TESTER:
+						// Handle SOUND_TESTER case
+						break;
+				}
+
+				mDat.windowTargetWidth = menuPage->tileWidth;    // Corrected: Direct assignment
+				mDat.windowTargetHeight = menuPage->tileHeight;  // Corrected: Direct assignment
 				mDat.wrappedAround = false;
 			}
 			break;
@@ -637,7 +711,7 @@ void updateMainMenu(){
 			}
 			
 			if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
-				
+				playNewSound(_sfxMenuConfirmA);
 				mDat.windowState = MMWS_CLOSING;
 			}
 			break;
@@ -672,7 +746,8 @@ void drawMainMenu(){
 		memset32(tilemapBuffer1, 0, 512);
 		
 		// Draw the Menu Page Window
-		drawSecondaryNineSliceWindowStyle(10, 2, 10, 2, 1);
+		if (mDat.showPageWindow)
+			drawSecondaryNineSliceWindowStyle(10, 2, 10, 2, 1);
 
 		if (mDat.windowState != MMWS_INITIAL_ZIPPING)
 			drawNineSliceWindow(mDat.windowTileXPos, mDat.windowTileYPos, mDat.winSliceWidth, mDat.winSliceHeight, 1);
@@ -686,7 +761,10 @@ void drawMainMenu(){
 			case MMWS_CLOSING:
 				break;
 			case MMWS_READY:
+				if (!mDat.showPageWindow)
+					mDat.showPageWindow = true;
 				menuPage = &menuPages[mDat.currMenuPage];
+
 				for(int i = 0; i < menuPage->itemCount; ++i){
 					MenuPageItem* thisMenuElement = &menuPage->items[i];
 					bool cursorOnElement = (mDat.menuCursorPos == i);
@@ -981,13 +1059,13 @@ void printMenuPageItem(const MenuPageItem* item){
     //printf("Enum: %d\n", item->dataType);
     
     switch (item->dataType){
-        case FUNC_PTR:
+        case MPIDT_FUNC_PTR:
             //printf("Function return value: %d\n", item->data.functionPtr());
             break;
-        case INT:
+        case MPIDT_INT:
             //printf("Integer value: %d\n", item->data.intVal);
             break;
-        case INT_ARRAY:
+        case MPIDT_INT_ARRAY:
             //printf("Integer array: ");
             // Assuming the size of the array is known or can be tracked
             // This placeholder assumes 4 elements for demonstration
