@@ -132,12 +132,23 @@ void introNormal(){
 		}
 		break;
 	case STUDIO_LEAVE:
-			if(introData.actionTimer == introData.actionTarget){
+		if(introData.actionTimer == introData.actionTarget){
+			introData.state = BEFORE_FINAL_TRANSITION;
+			introData.actionTimer = 0;
+			introData.actionTarget = FINAL_TRANSITION_WAIT_FRAMES;
+			memset32(pal_bg_mem, 0, 128);
+			memset32(m4_mem, 0, 8192);
+		}
+		else{
+			IOBuffer0[0] = introData.actionTimer;
+			introData.actionTimer++;
+		}
+		break;
+	case BEFORE_FINAL_TRANSITION:
+		if(introData.actionTimer == introData.actionTarget){
 			currentScene.state = END;
 			introData.actionTimer = 0;
 			introData.actionTarget = 16;
-			memset32(pal_bg_mem, 0, 128);
-			memset32(m4_mem, 0, 8192);
 		}
 		else{
 			IOBuffer0[0] = introData.actionTimer;
