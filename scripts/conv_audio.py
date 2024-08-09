@@ -517,8 +517,7 @@ except ValueError:
 	pass
 
 #setup the global lists
-processedBGMAssetList = []
-processedSFXAssetList = []
+processedSoundAssetList = []
 originalSamplesList = []
 
 #delete and recreate audio_list.c
@@ -547,8 +546,8 @@ for currentProcessedAssetFile in processedAssetListDelete:
 gitignore = open(os.path.join(processedAssetDir, '.gitkeep'), "w")
 gitignore.close()
 
-ProcessAssetList(bgmList, processedBGMAssetList, originalBGMAssetDir, True)
-ProcessAssetList(sfxList, processedSFXAssetList, originalSFXAssetDir, False)
+ProcessAssetList(bgmList, processedSoundAssetList, originalBGMAssetDir, True)
+ProcessAssetList(sfxList, processedSoundAssetList, originalSFXAssetDir, False)
 
 
 #write the list of every sample to the audio_list file
@@ -562,39 +561,21 @@ for i in range(len(originalSamplesList)):
 audioList.write("cu16 numSamples = " + str(len(originalSamplesList)) + ";\n\n")
 
 #write the list of every BGM asset to the audio_list file
-for i in range(len(processedBGMAssetList)):
-	audioList.write("extern AssetData " + processedBGMAssetList[i] + "Asset;\n")
-audioList.write("\nAssetData *bgmList[] = {\n\t")
-for i in range(len(processedBGMAssetList)):
-	if i != len(processedBGMAssetList) - 1:
-		audioList.write("&" + processedBGMAssetList[i] + "Asset, ")
+for i in range(len(processedSoundAssetList)):
+	audioList.write("extern AssetData " + processedSoundAssetList[i] + "Asset;\n")
+audioList.write("\nAssetData *soundList[] = {\n\t")
+for i in range(len(processedSoundAssetList)):
+	if i != len(processedSoundAssetList) - 1:
+		audioList.write("&" + processedSoundAssetList[i] + "Asset, ")
 	else:
-		audioList.write("&" + processedBGMAssetList[i] + "Asset\n};\n\n")
+		audioList.write("&" + processedSoundAssetList[i] + "Asset\n};\n\n")
 	
-audioList.write("cu16 numBGM = " + str(len(processedBGMAssetList)) + ";\n\n")
+audioList.write("cu16 numSounds = " + str(len(processedSoundAssetList)) + ";\n\n")
 
-#write an enum for every BGM asset
-for i in range(len(processedBGMAssetList)):
-	audioAssets.write(processedBGMAssetList[i] + ", \t\t\t// " + str(i) + "\n\t")
-
-
-#write the list of every SFX asset to the audio_list file
-for i in range(len(processedSFXAssetList)):
-	audioList.write("extern AssetData " + processedSFXAssetList[i] + "Asset;\n")
-audioList.write("\nAssetData *sfxList[] = {\n\t")
-for i in range(len(processedSFXAssetList)):
-	if i != len(processedSFXAssetList) - 1:
-		audioList.write("&" + processedSFXAssetList[i] + "Asset, ")
-	else:
-		audioList.write("&" + processedSFXAssetList[i] + "Asset\n};\n\n")
-	
-audioList.write("cu16 numSFX = " + str(len(processedSFXAssetList)) + ";\n\n")
-audioAssets.write("\n\t")
-#write an enum for every BGM asset
-for i in range(len(processedSFXAssetList)):
-	audioAssets.write(processedSFXAssetList[i] + ", \t\t\t// " + str(i) + "\n\t")
+#write an enum for every Sound asset
+for i in range(len(processedSoundAssetList)):
+	audioAssets.write(processedSoundAssetList[i] + ", \t\t\t// " + str(i) + "\n\t")
 audioAssets.write("\n};\n\n#endif")
-
 
 audioAssets.close()
 audioList.close()

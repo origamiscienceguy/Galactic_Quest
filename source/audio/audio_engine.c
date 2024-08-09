@@ -78,7 +78,7 @@ void audioInitialize(){
 }
 
 //starts a new asset playing, based on the id into the audio_list asset list.
-u8 playNewSound(u16 assetID, bool isBGM){
+u8 playNewSound(u16 assetID){
 	
 	u8 lowestPriority = 0xff;
 	u8 lowestIndex = 0;
@@ -100,10 +100,7 @@ u8 playNewSound(u16 assetID, bool isBGM){
 	}
 	
 	//check if this asset has a higher priority than the lowest-priority asset currently playing, exit
-	
-	// Define a pointer to hold the base of either bgmList or sfxList
-    AssetData **soundList = isBGM ? bgmList : sfxList;
-	
+
 	if(*soundList[assetID]->assetPriority < lowestPriority){
 		return 0xff;
 	}
@@ -118,7 +115,6 @@ u8 playNewSound(u16 assetID, bool isBGM){
 	
 	soundPointer->asset = soundList[assetID];
 	soundPointer->assetID = assetID;
-	soundPointer->isBGM = isBGM;
 	soundPointer->rowNum = 0;
 	soundPointer->patternOffset = 0;
 	soundPointer->orderIndex = 0;

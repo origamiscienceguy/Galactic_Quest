@@ -89,9 +89,6 @@
 #define TITLE_CAM_PAN_BOTTOM 250
 #define TITLE_CAM_PAN_TOP 104
 #define FIXED_POINT_SCALE 1000
-#define BGM_ID_TITLE 10
-#define BGM_ID_MAIN_MENU 0
-#define SFX_ID_MENU_CONFIRM_C 4
 
 #define MENU_TEXT_LAYER_ID 1
 
@@ -134,6 +131,10 @@ typedef struct MainMenuData{
 	u16 actionTarget;
 	s16 xPos;
 	s16 yPos;
+	int winSliceWidth;
+	int winSliceHeight;
+	int currMenuPage;
+	u8 menuCursorPos;
 }MainMenuData;
 
 typedef int (*FunctionPtr)(void);
@@ -151,6 +152,7 @@ typedef struct{
     MenuElement menuElement;
     MenuElementData data;
     enum{ FUNC_PTR, INT, INT_ARRAY } dataType; // To keep track of the type stored
+	int textGFXIndex;				// The graphic row that this text appears on in the tileset
 } MenuPageItem;
 
 // Define the MenuPage struct with an array of MenuPageItem
@@ -188,7 +190,6 @@ int yStart, yTarget, titleCardYStart, titleCardYTarget, titleRevealFadeDirection
 
 //local functions
 void mainMenuInitialize();
-void mainMenuReinitialize();
 void mainMenuNormal();
 void mainMenuEnd();
 
@@ -198,14 +199,19 @@ void drawStarBlocker(int yPos);
 
 void scrollStarryBG(int addedX, int addedY);
 void interpolateStarryBG();
-void drawNineSliceWindow(int x, int y, int width, int height, int layer);
-void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int layer);
-void setTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical, int palette, int layer);
 void updateBGScrollRegisters(u16 bg0XPos, u16 bg0YPos, u16 bg1XPos, u16 bg1YPos);
 void startMatch();
 void skipToMenu();
 void updateObjBuffer();
+
+void initMainMenu();
+void updateMainMenu();
+void drawMainMenu();
+void setTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical, int palette, int layer);
+void drawNineSliceWindow(int x, int y, int width, int height, int layer);
+void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int layer);
 void drawMenuTextSegment(int nineSliceWidth, int tileXPos, int tileYPos, int menuElementPosition, int palette, bool highlighted);
+
 int menuExecNewGame();
 int menuExecContinue();
 int menuExecLoadGame();
@@ -215,13 +221,11 @@ int menuExecPlaySFX();
 
 void loadGFX(u32 VRAMCharBlock, u32 VRAMTileIndex, void *graphicsBasePointer, u32 graphicsTileOffset, u32 numTilesToSend, u32 queueChannel);
 
-
 int easeInOut(int t, int power);
 int easeOutQuint(int t);
 int lerp(int a, int b, int t);
 
 void printMenuPageItem(const MenuPageItem* item);
-void printMenuPage(const MenuPage* menuPage);
 
 size_t menuSize;
 

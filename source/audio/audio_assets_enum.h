@@ -14,21 +14,20 @@ enum AudioAssetName{
 	_musThemeD_Battle, 			// 8
 	_musThemeD_Peace, 			// 9
 	_musTitle, 			// 10
-	
-	_sfxCursorMove, 			// 0
-	_sfxMenuCancel, 			// 1
-	_sfxMenuConfirmA, 			// 2
-	_sfxMenuConfirmB, 			// 3
-	_sfxMenuConfirmC, 			// 4
-	_sfxMenuMove, 			// 5
-	_sfxShipDmgL, 			// 6
-	_sfxShipDmgM, 			// 7
-	_sfxShipDmgS, 			// 8
-	_sfxShipExplodeL, 			// 9
-	_sfxShipExplodeM, 			// 10
-	_sfxShipExplodeS, 			// 11
-	_sfxShipIdle, 			// 12
-	_sfxShipMove, 			// 13
+	_sfxCursorMove, 			// 11
+	_sfxMenuCancel, 			// 12
+	_sfxMenuConfirmA, 			// 13
+	_sfxMenuConfirmB, 			// 14
+	_sfxMenuConfirmC, 			// 15
+	_sfxMenuMove, 			// 16
+	_sfxShipDmgL, 			// 17
+	_sfxShipDmgM, 			// 18
+	_sfxShipDmgS, 			// 19
+	_sfxShipExplodeL, 			// 20
+	_sfxShipExplodeM, 			// 21
+	_sfxShipExplodeS, 			// 22
+	_sfxShipIdle, 			// 23
+	_sfxShipMove, 			// 24
 	
 };
 

@@ -37,7 +37,7 @@ void introInitialize(){
 	
 	currentScene.state = NORMAL;
 	
-	currentBGM = playNewSound(_musOpening, true);
+	currentBGM = playNewSound(_musOpening);
 }
 
 void introNormal(){

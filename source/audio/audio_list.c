@@ -504,13 +504,6 @@ extern AssetData _musThemeC_PeaceAsset;
 extern AssetData _musThemeD_BattleAsset;
 extern AssetData _musThemeD_PeaceAsset;
 extern AssetData _musTitleAsset;
-
-AssetData *bgmList[] = {
-	&_musMainMenuAsset, &_musOpeningAsset, &_musThemeA_BattleAsset, &_musThemeA_PeaceAsset, &_musThemeBAsset, &_musThemeB_BattleAsset, &_musThemeC_BattleAsset, &_musThemeC_PeaceAsset, &_musThemeD_BattleAsset, &_musThemeD_PeaceAsset, &_musTitleAsset
-};
-
-cu16 numBGM = 11;
-
 extern AssetData _sfxCursorMoveAsset;
 extern AssetData _sfxMenuCancelAsset;
 extern AssetData _sfxMenuConfirmAAsset;
@@ -526,9 +519,9 @@ extern AssetData _sfxShipExplodeSAsset;
 extern AssetData _sfxShipIdleAsset;
 extern AssetData _sfxShipMoveAsset;
 
-AssetData *sfxList[] = {
-	&_sfxCursorMoveAsset, &_sfxMenuCancelAsset, &_sfxMenuConfirmAAsset, &_sfxMenuConfirmBAsset, &_sfxMenuConfirmCAsset, &_sfxMenuMoveAsset, &_sfxShipDmgLAsset, &_sfxShipDmgMAsset, &_sfxShipDmgSAsset, &_sfxShipExplodeLAsset, &_sfxShipExplodeMAsset, &_sfxShipExplodeSAsset, &_sfxShipIdleAsset, &_sfxShipMoveAsset
+AssetData *soundList[] = {
+	&_musMainMenuAsset, &_musOpeningAsset, &_musThemeA_BattleAsset, &_musThemeA_PeaceAsset, &_musThemeBAsset, &_musThemeB_BattleAsset, &_musThemeC_BattleAsset, &_musThemeC_PeaceAsset, &_musThemeD_BattleAsset, &_musThemeD_PeaceAsset, &_musTitleAsset, &_sfxCursorMoveAsset, &_sfxMenuCancelAsset, &_sfxMenuConfirmAAsset, &_sfxMenuConfirmBAsset, &_sfxMenuConfirmCAsset, &_sfxMenuMoveAsset, &_sfxShipDmgLAsset, &_sfxShipDmgMAsset, &_sfxShipDmgSAsset, &_sfxShipExplodeLAsset, &_sfxShipExplodeMAsset, &_sfxShipExplodeSAsset, &_sfxShipIdleAsset, &_sfxShipMoveAsset
 };
 
-cu16 numSFX = 14;
+cu16 numSounds = 25;
 

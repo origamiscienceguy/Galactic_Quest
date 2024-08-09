@@ -99,15 +99,15 @@ void criticalUpdates(){
 	if(inputs.pressed & KEY_SELECT){
 		static u8 currentAssetIndex = 0;
 		static u8 currentAsset = 0;
-		extern u16 numBGM;
+		extern u16 numSounds;
 		endAsset(currentAssetIndex);
-		if((currentAsset + 1) >= numBGM){
+		if((currentAsset + 1) >= numSounds){
 			currentAsset = 0;
-			currentAssetIndex = playNewSound(currentAsset, true);
+			currentAssetIndex = playNewSound(currentAsset);
 		}
 		else{
 			currentAsset++;
-			currentAssetIndex = playNewSound(currentAsset, true);
+			currentAssetIndex = playNewSound(currentAsset);
 		}
 	}
 	
@@ -118,7 +118,7 @@ void criticalUpdates(){
 		if(playingState == 1){
 			playingState = 2;
 			if(!isAssetPlaying(_ThemeC_Peace, battleAssetIndex)){
-				battleAssetIndex = playNewSound(_ThemeC_Peace, true);
+				battleAssetIndex = playNewSound(_ThemeC_Peace);
 				setAssetVolume(battleAssetIndex, 0);
 				syncAsset(battleAssetIndex, peaceAssetIndex);
 			}
@@ -130,7 +130,7 @@ void criticalUpdates(){
 		}
 		else{
 			playingState = 1;
-			peaceAssetIndex = playNewSound(_ThemeC_Battle, true);
+			peaceAssetIndex = playNewSound(_ThemeC_Battle);
 		}
 	}*/
 	

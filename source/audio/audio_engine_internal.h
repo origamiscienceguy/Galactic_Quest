@@ -230,7 +230,6 @@ typedef struct CurrentChannelSettings{
 typedef struct CurrentSoundSettings{
 	AssetData *asset; //pointer to the asset that is currently playing
 	AssetGlobalEffects globalEffects; //memory for any global effects that need it
-	bool isBGM; //defines whether this asset is a BGM or SFX
 	u8 globalVolume; //the current global volume of the asset
 	u16 assetID; //the index of the asset that is currently playing
 	u8 rowNum; //the current row being processed
@@ -258,10 +257,10 @@ extern u8 audioProgress;
 
 //external data
 extern AudioSample *sampleList[];
-extern AssetData *bgmList[];
+extern AssetData *soundList[];
 extern AssetData *sfxList[];
 extern cu16 numSamples;
-extern cu16 numBGM;
+extern cu16 numSounds;
 extern cu16 pitchTable[];
 extern cu16 envelopeInverseTable[];
 extern cu16 tempoTable[];

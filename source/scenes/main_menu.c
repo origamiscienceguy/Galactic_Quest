@@ -19,53 +19,53 @@ static u8 currentSFXIndex = 0;
 MenuPage menuPages[6] = {
 	{
 		.items = {
-			{"Play Game", PAGE_TRANSFER, .data.intVal = (int)MPI_PLAY_GAME, .dataType = INT},
-			{"Extras", PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = INT},
-			{"Options", PAGE_TRANSFER, .data.intVal = (int)MPI_OPTIONS, .dataType = INT}
+			{"Play Game", PAGE_TRANSFER, .data.intVal = (int)MPI_PLAY_GAME, .dataType = INT, .textGFXIndex = 0},
+			{"Extras", PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = INT, .textGFXIndex = 2},
+			{"Options", PAGE_TRANSFER, .data.intVal = (int)MPI_OPTIONS, .dataType = INT, .textGFXIndex = 4}
 		},
 		.itemCount = 3,
 		.pageName = "MAIN MENU"
 	},
 	{
 		.items = {
-			{"New Game", SCRIPT_RUNNER, .data.functionPtr = menuExecNewGame, .dataType = FUNC_PTR},
-			{"Continue", SCRIPT_RUNNER, .data.functionPtr = menuExecContinue, .dataType = FUNC_PTR},
-			{"Load Game", SCRIPT_RUNNER, .data.functionPtr = menuExecLoadGame, .dataType = FUNC_PTR},
-			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT}
+			{"New Game", SCRIPT_RUNNER, .data.functionPtr = menuExecNewGame, .dataType = FUNC_PTR, .textGFXIndex = 6},
+			{"Continue", SCRIPT_RUNNER, .data.functionPtr = menuExecContinue, .dataType = FUNC_PTR, .textGFXIndex = 8},
+			{"Load Game", SCRIPT_RUNNER, .data.functionPtr = menuExecLoadGame, .dataType = FUNC_PTR, .textGFXIndex = 10},
+			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT, .textGFXIndex = 12}
 		},
 		.itemCount = 4,
 		.pageName = "PLAY GAME"
 	},{
 		.items = {
-			{"Sound Test", PAGE_TRANSFER, .data.intVal = (int)MPI_SOUND_TEST, .dataType = INT},
-			{"Credits", PAGE_TRANSFER, .data.intVal = (int)MPI_CREDITS, .dataType = INT},
-			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT}
+			{"Sound Test", PAGE_TRANSFER, .data.intVal = (int)MPI_SOUND_TEST, .dataType = INT, .textGFXIndex = 36},
+			{"Credits", PAGE_TRANSFER, .data.intVal = (int)MPI_CREDITS, .dataType = INT, .textGFXIndex = 38},
+			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT, .textGFXIndex = 12}
 		},
 		.itemCount = 3,
 		.pageName = "EXTRAS"
 	},
 	{
 		.items = {
-			{"Master Volume", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY},
-			{"BGM", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY},
-			{"SFX", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY},
-			{"Apply Changes", SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = FUNC_PTR},
-			{"Abort", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT}
+			{"Master Volume", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY, .textGFXIndex = 14},
+			{"BGM", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY, .textGFXIndex = 16},
+			{"SFX", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY, .textGFXIndex = 18},
+			{"Apply Changes", SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = FUNC_PTR, .textGFXIndex = 120},
+			{"Abort", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT, .textGFXIndex = 22}
 		},
 		.itemCount = 5,
 		.pageName = "OPTIONS"
 	},
 	{
 		.items = {
-			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = INT}
+			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = INT, .textGFXIndex = 12}
 		},
 		.itemCount = 1,
 		.pageName = "CREDITS"
 	},
 	{
 		.items = {
-			{"BGM", SOUND_TESTER, .data.functionPtr = menuExecPlayBGM, .dataType = FUNC_PTR},
-			{"SFX", SOUND_TESTER, .data.functionPtr = menuExecPlaySFX, .dataType = FUNC_PTR},
+			{"BGM", SOUND_TESTER, .data.functionPtr = menuExecPlayBGM, .dataType = FUNC_PTR, .textGFXIndex = 16},
+			{"SFX", SOUND_TESTER, .data.functionPtr = menuExecPlaySFX, .dataType = FUNC_PTR, .textGFXIndex = 18},
 			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = INT}
 		},
 		.itemCount = 3,
@@ -146,7 +146,7 @@ void mainMenuInitialize(){
 
 void mainMenuNormal(){
 	static u8 currentAsset = 0;
-	extern u16 numBGM;
+	extern u16 numSounds;
 	switch(mainMenuData.state){
 	case FLASH_WHITE:
 		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
@@ -159,12 +159,11 @@ void mainMenuNormal(){
 			mainMenuData.state = FADE_TO_TITLE;
 
 			IOBuffer1[0] = 16;
-		}
-		else{
+		}else{
 			mainMenuData.actionTimer++;
 
 			if (mainMenuData.actionTimer == 16)
-				currentBGMIndex = playNewSound(BGM_ID_TITLE, true);
+				currentBGMIndex = playNewSound(_musTitle);
 			IOBuffer1[0] = mainMenuData.actionTimer >> 1;
 		}
 		// Update fade values
@@ -186,8 +185,7 @@ void mainMenuNormal(){
 			mainMenuData.actionTarget = 2;
 			mainMenuData.actionTimer = 0;
 			IOBuffer1[0] = 0;
-		}
-		else{
+		}else{
 			mainMenuData.actionTimer++;
 			IOBuffer1[0] = 16 - mainMenuData.actionTimer;
 		}
@@ -234,14 +232,13 @@ void mainMenuNormal(){
 			tilemapData[1].position = &se_mem[TITLE_CARD_TILEMAP];
 			tilemapData[1].buffer = (void *)sprTitleLogoMap;
 			tilemapData[1].size = sizeof(sprTitleLogoMap) >> 2;
-		}
-		else{
+		}else{
 			mainMenuData.actionTimer++;
 			IOBuffer1[0] = (mainMenuData.actionTimer * 2) >> 1;
 		}
 		
 		// 39 frames before the final destination, start displaying the star sprite at its designated position
-		if (mainMenuData.actionTimer > mainMenuData.actionTarget - 40) {
+		if (mainMenuData.actionTimer > mainMenuData.actionTarget - 40){
 			int index = mainMenuData.actionTimer - (mainMenuData.actionTarget - 40);
 			if (index >= 0 && index <= 31) // Ensure index is within bounds
 				drawStarBlocker(starBlockerYPos[index - 1]);
@@ -249,7 +246,7 @@ void mainMenuNormal(){
 				drawStarBlocker(9);
 		}
 
-		if (mainMenuData.actionTimer >= mainMenuData.actionTarget - 16) {
+		if (mainMenuData.actionTimer >= mainMenuData.actionTarget - 16){
 			// Queue IOBuffer1 for controlling fade on REG_BLDY in the next state (TITLE_REVEAL)
 			
 			if (IOBuffer1[0] + 2 * titleRevealFadeDirection <= 16 &&
@@ -279,8 +276,7 @@ void mainMenuNormal(){
 			mainMenuData.state = TITLE_FLYING_COMET_ANIMATION;
 			mainMenuData.actionTarget = 64;
 			mainMenuData.actionTimer = 0;
-		}
-		else{
+		}else{
 			mainMenuData.actionTimer++;
 
 			// Control the fading values, utilizing IOBuffer1
@@ -306,8 +302,7 @@ void mainMenuNormal(){
 			objectBuffer[STAR_BLOCKER_SPRITE].attr0 = ATTR0_HIDE;
 			mainMenuData.actionTimer = 0;
 			mainMenuData.actionTarget = 220;
-		}
-		else{
+		}else{
 			u8 starFrame = mainMenuData.actionTimer >> 2;
 			objectBuffer[FLYING_COMET_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(shootingStarYPos[starFrame]);
 			objectBuffer[FLYING_COMET_SPRITE].attr1 = ATTR1_SIZE_64 | ATTR1_X(shootingStarXPos[starFrame]);
@@ -330,8 +325,7 @@ void mainMenuNormal(){
 			characterData[4].position = tile_mem[PRESS_START_CHARDATA];
 			characterData[4].buffer = (void *)characterBuffer4;
 			characterData[4].size = sizeof(characterBuffer4) >> 2;
-		}
-		else{
+		}else{
 			mainMenuData.actionTimer++;
 		}
 		updateObjBuffer();
@@ -341,8 +335,7 @@ void mainMenuNormal(){
 		
 		if(mainMenuData.actionTimer % 128 < 64){
 			drawPressStart();
-		}
-		else{
+		}else{
 			hidePressStart();
 		}
 		// Make the starry background scroll up-left
@@ -373,7 +366,7 @@ void mainMenuNormal(){
 		if(mainMenuData.actionTimer >= mainMenuData.actionTarget){
 			mainMenuData.state = MAIN_MENU_FLY_IN;
 			
-			currentBGMIndex = playNewSound(BGM_ID_MAIN_MENU, true);
+			currentBGMIndex = playNewSound(_musMainMenu);
 			mainMenuData.menuBG.xPos = 512 - 2;
 			mainMenuData.menuBG.yPos = 0;
 			loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, (void *)menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 0);
@@ -399,7 +392,7 @@ void mainMenuNormal(){
 		
 		updateObjBuffer();
 		
-		if (mainMenuData.actionTimer > 40) {
+		if (mainMenuData.actionTimer > 40){
 			// Hide the title card after 40 frames in this state
 			memset32(tilemapBuffer1, 0, sizeof(sprTitleLogoMap) >> 2);
 			tilemapData[1].size = sizeof(sprTitleLogoMap) >> 2;
@@ -411,26 +404,14 @@ void mainMenuNormal(){
 		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.titleCardBG.xPos, mainMenuData.titleCardBG.yPos);
 		break;
 	case MAIN_MENU_FLY_IN:
-		// Example array of MenuPageItem
-
-		/*
-		MenuPage menuPage = {
-			.items = {
-				{"Function Item", SCRIPT_RUNNER, .data.functionPtr = exampleFunction, .dataType = FUNC_PTR},
-				{"Integer Item", PAGE_TRANSFER, .data.intValue = 123, .dataType = INT},
-				{"Integer Array Item", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY}
-			},
-			.itemCount = 3
-		};*/
-
-		// Print the items in the MenuPage
-		printMenuPage(&menuPages[MPI_MAIN_MENU]);
-
 		// Set the Menu State to "MAIN_MENU_HOLD and re-init its timers"
 		mainMenuData.actionTarget = 32;
 		mainMenuData.actionTimer = 0;
 		mainMenuData.state = MAIN_MENU_HOLD;
 		
+		initMainMenu();
+		drawMainMenu();
+
 		// Make the starry background scroll left
 		scrollStarryBG(-1, 0);
 
@@ -438,42 +419,22 @@ void mainMenuNormal(){
 		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.menuBG.xPos, mainMenuData.menuBG.yPos);
 		break;
 	case MAIN_MENU_HOLD:
-		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
+		updateMainMenu();
 
-		}
-
-		int winSliceWidth = 10;
-
-		// Write to tilemap layer 1 using tilemapBuffer1
-		drawNineSliceWindow(10, 6, winSliceWidth, 10, 1);
-		
-		drawMenuTextSegment(winSliceWidth, 10, 8, 0, 2, false);
-		drawMenuTextSegment(winSliceWidth, 10, 10, 1, 2, true);
-		drawMenuTextSegment(winSliceWidth, 10, 12, 2, 2, false);
-		
-		tilemapData[1].position = &se_mem[MENU_TILEMAP];
-		tilemapData[1].buffer = (void *)tilemapBuffer1;
-		tilemapData[1].size = 512;
-
-		// Write to tilemap layer 2 using tilemapBuffer2
-		//drawNineSliceWindow(10, 6, 9, 9, 2);
-
-		//tilemapData[2].position = &se_mem[MENU_TILEMAP];
-		//tilemapData[2].buffer = (void *)tilemapBuffer2;
-		//tilemapData[2].size = 512;
+		drawMainMenu();
 
 		// Make the starry background scroll up-left
 		scrollStarryBG(-1, 0);
 
 		// Queue BG Scroll registers for the Starry BG and Menu Positions
 		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.menuBG.xPos, mainMenuData.menuBG.yPos);
+		
 		break;
 	case MAIN_MENU_FLY_OUT:
 		if(mainMenuData.actionTimer >= mainMenuData.actionTarget){
 			// Start the match
 			mainMenuEnd();
-		}
-		else{
+		}else{
 			mainMenuData.actionTimer++;
 		}
 		
@@ -496,7 +457,7 @@ void mainMenuNormal(){
 		break;
 	}
 
-	if (mainMenuData.state < TITLE_AFTER_PRESS_START) {
+	if (mainMenuData.state < TITLE_AFTER_PRESS_START){
 		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
 			
 			REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_OBJ | DCNT_OBJ_1D;
@@ -541,7 +502,7 @@ void mainMenuNormal(){
 			objectBuffer[STAR_BLOCKER_SPRITE].attr0 = ATTR0_HIDE;
 
 			endAsset(currentBGMIndex);
-			currentSFXIndex = playNewSound(SFX_ID_MENU_CONFIRM_C, false);
+			currentSFXIndex = playNewSound(_sfxMenuConfirmC);
 
 			yStart = mainMenuData.starryBG.yPos * FIXED_POINT_SCALE; // Start position (scaled)
 			yTarget = -4504 * FIXED_POINT_SCALE; // Target position (scaled)
@@ -553,7 +514,80 @@ void mainMenuNormal(){
 	}
 }
 
-void mainMenuReinitialize(){
+void initMainMenu(){
+	mainMenuData.currMenuPage = 0;
+	mainMenuData.winSliceWidth = 10;
+	mainMenuData.menuCursorPos = 0;
+}
+
+void updateMainMenu(){
+	MenuPage* menuPage = &menuPages[mainMenuData.currMenuPage];
+
+	// Allow Up/Down to navigate the menu; wrap around if we hit the upper/lower limits
+	// Combine both up and down input checks into a single operation
+	int moveY = 0;
+	if((inputs.pressed & KEY_UP) && !(inputs.pressed & KEY_DOWN)){
+		moveY = -1;
+	}
+	else if((inputs.pressed & KEY_DOWN) && !(inputs.pressed & KEY_UP)){
+		moveY = 1;
+	}
+
+	// Navigate the menu; wrap around if we hit an edge
+	if (moveY != 0) {
+		playNewSound(_sfxMenuMove);
+		if((mainMenuData.menuCursorPos + moveY) < 0){
+			mainMenuData.menuCursorPos = menuPage->itemCount - 1;
+		}
+		else if ((mainMenuData.menuCursorPos + moveY) > (menuPage->itemCount - 1)){
+			mainMenuData.menuCursorPos = 0;
+		}
+		else{
+			mainMenuData.menuCursorPos += moveY;
+		}
+	}
+	
+	if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
+		
+	}
+}
+
+void drawMainMenu(){
+
+		// Write to tilemap layer 1 using tilemapBuffer1
+		drawNineSliceWindow(10, 6, mainMenuData.winSliceWidth, 10, 1);
+		
+
+		
+		// Example array of MenuPageItem
+
+		/*
+		MenuPage menuPage = {
+			.items = {
+				{"Function Item", SCRIPT_RUNNER, .data.functionPtr = exampleFunction, .dataType = FUNC_PTR},
+				{"Integer Item", PAGE_TRANSFER, .data.intValue = 123, .dataType = INT},
+				{"Integer Array Item", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY}
+			},
+			.itemCount = 3
+		};*/
+
+		MenuPage* menuPage = &menuPages[mainMenuData.currMenuPage];
+		for(int i = 0; i < menuPage->itemCount; ++i){
+			MenuPageItem* thisMenuElement = &menuPage->items[i];
+			bool cursorOnElement = (mainMenuData.menuCursorPos == i);
+			drawMenuTextSegment(mainMenuData.winSliceWidth, 10, 8 + (2 * i), thisMenuElement->textGFXIndex, 2, cursorOnElement);
+		}
+
+		tilemapData[1].position = &se_mem[MENU_TILEMAP];
+		tilemapData[1].buffer = (void *)tilemapBuffer1;
+		tilemapData[1].size = 512;
+
+		// Write to tilemap layer 2 using tilemapBuffer2
+		//drawNineSliceWindow(10, 6, 9, 9, 2);
+
+		//tilemapData[2].position = &se_mem[MENU_TILEMAP];
+		//tilemapData[2].buffer = (void *)tilemapBuffer2;
+		//tilemapData[2].size = 512;
 }
 
 void mainMenuEnd(){
@@ -591,7 +625,7 @@ void interpolateStarryBG(){
 void setTile(int x, int y, int drawingTileIndex, bool flipHorizontal, bool flipVertical, int palette, int layer){
     u16* tilemapBuffer;
 
-    switch(layer) {
+    switch(layer){
         default:
             tilemapBuffer = tilemapBuffer0;
             break;
@@ -747,9 +781,9 @@ void drawMenuTextSegment(int nineSliceWidth, int tileXPos, int tileYPos, int men
 	else
 		tilesetIndex = MENU_TEXT_FOCUSED_GFX_START;
 	
-	for (int row = 0; row < 2; row++) {
-		for (int tileXOff = 0; tileXOff < MENU_TEXT_TILE_WIDTH; tileXOff++) {
-			int vramIndex = tilesetIndex + tileXOff + (menuElementPosition * MENU_TEXT_TILE_WIDTH * 2) + (row * MENU_TEXT_TILE_WIDTH);
+	for (int row = 0; row < 2; row++){
+		for (int tileXOff = 0; tileXOff < MENU_TEXT_TILE_WIDTH; tileXOff++){
+			int vramIndex = tilesetIndex + tileXOff + (menuElementPosition * MENU_TEXT_TILE_WIDTH) + (row * MENU_TEXT_TILE_WIDTH);
 			setTile(tileXPos + tileXOff, tileYPos + row, vramIndex, false, false, palette, MENU_TEXT_LAYER_ID);
 		}
 	}
@@ -806,12 +840,6 @@ void printMenuPageItem(const MenuPageItem* item){
     }
 }
 
-void printMenuPage(const MenuPage* menuPage){
-    for (size_t i = 0; i < menuPage->itemCount; ++i){
-        printMenuPageItem(&menuPage->items[i]);
-    }
-}
-
 //example usage to load the portion of the image starting 6 tile rows down, and 8 tile rows deep.
 //loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8);
 
@@ -852,7 +880,7 @@ int easeInOut(int t, int factor){
     }
 }
 
-int easeOutQuint(int t) {
+int easeOutQuint(int t){
     // Convert t to a floating-point value in fixed-point arithmetic
     int tInverse = FIXED_POINT_SCALE - t;
     int tInverseSquared = (tInverse * tInverse) / FIXED_POINT_SCALE;
