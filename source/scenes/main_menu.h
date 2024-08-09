@@ -93,8 +93,15 @@
 #define MENU_TEXT_LAYER_ID 1
 
 //enums
-enum MainMenuState{
+enum TitleSceneState{
 	FLASH_WHITE, FADE_TO_TITLE, TITLE_PAN_UP, TITLE_FLASH, TITLE_REVEAL, TITLE_FLYING_COMET_ANIMATION, TITLE_BEFORE_HOLD, TITLE_HOLD, TITLE_AFTER_PRESS_START, TITLE_FLY_OUT, MAIN_MENU_FLY_IN, MAIN_MENU_HOLD, MAIN_MENU_FLY_OUT, 
+};
+
+enum MainMenuWindowState {
+	MMWS_OPENING,
+	MMWS_CLOSING,
+	MMWS_READY,
+	MMWS_ZIPPING,
 };
 
 enum MenuPageIndex{
@@ -108,7 +115,7 @@ typedef enum{
 	SHIFT,
 	TOGGLE,
 	SOUND_TESTER,
-} MenuElement;
+}MenuElement;
 
 //structs
 typedef struct BGData{
@@ -123,7 +130,8 @@ typedef struct BGData{
 }BGData;
 
 typedef struct MainMenuData{
-	enum MainMenuState state;
+	enum TitleSceneState state;
+	enum MainMenuWindowState windowState;
 	BGData starryBG;
 	BGData titleCardBG;
 	BGData menuBG;
@@ -135,6 +143,11 @@ typedef struct MainMenuData{
 	int winSliceHeight;
 	int currMenuPage;
 	u8 menuCursorPos;
+	int windowTileXPos;
+	u8 windowTileYPos;
+	u8 windowTargetWidth;
+	u8 windowTargetHeight;
+	u8 windowActionTimer;
 }MainMenuData;
 
 typedef int (*FunctionPtr)(void);
@@ -160,6 +173,10 @@ typedef struct{
     MenuPageItem items[MAX_MENU_ITEMS];  // Fixed-size array of MenuPageItem
     size_t itemCount;                    // Number of items currently in the array
 	char* pageName;
+	u8 tileX;
+	u8 tileY;
+	u8 tileWidth;
+	u8 tileHeight;
 } MenuPage;
 
 //globals
@@ -209,6 +226,9 @@ void updateMainMenu();
 void drawMainMenu();
 void setTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical, int palette, int layer);
 void drawNineSliceWindow(int x, int y, int width, int height, int layer);
+int wrapX(int x);
+bool isInBounds(int y);
+void drawLaserRow(int x, int y, int width, int tilesetIndex, int palette, int layer);
 void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int layer);
 void drawMenuTextSegment(int nineSliceWidth, int tileXPos, int tileYPos, int menuElementPosition, int palette, bool highlighted);
 

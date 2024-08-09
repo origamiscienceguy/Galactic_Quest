@@ -1,6 +1,6 @@
 #include "main_menu.h"
 
-MainMenuData mainMenuData;
+MainMenuData mDat;
 
 Scene mainMenuScene = {
 	.initialize = &mainMenuInitialize,
@@ -16,6 +16,7 @@ static u8 currentBGMIndex = 0;
 static u8 currentSFXIndex = 0;
 
 // Initialize the Menu Pages
+MenuPage* menuPage;
 MenuPage menuPages[6] = {
 	{
 		.items = {
@@ -24,7 +25,11 @@ MenuPage menuPages[6] = {
 			{"Options", PAGE_TRANSFER, .data.intVal = (int)MPI_OPTIONS, .dataType = INT, .textGFXIndex = 4}
 		},
 		.itemCount = 3,
-		.pageName = "MAIN MENU"
+		.pageName = "MAIN MENU",
+		.tileX = 10,
+		.tileY = 6,
+		.tileWidth = 10,
+		.tileHeight = 10
 	},
 	{
 		.items = {
@@ -34,7 +39,11 @@ MenuPage menuPages[6] = {
 			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT, .textGFXIndex = 12}
 		},
 		.itemCount = 4,
-		.pageName = "PLAY GAME"
+		.pageName = "PLAY GAME",
+		.tileX = 10,
+		.tileY = 6,
+		.tileWidth = 10,
+		.tileHeight = 10
 	},{
 		.items = {
 			{"Sound Test", PAGE_TRANSFER, .data.intVal = (int)MPI_SOUND_TEST, .dataType = INT, .textGFXIndex = 36},
@@ -42,7 +51,11 @@ MenuPage menuPages[6] = {
 			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT, .textGFXIndex = 12}
 		},
 		.itemCount = 3,
-		.pageName = "EXTRAS"
+		.pageName = "EXTRAS",
+		.tileX = 10,
+		.tileY = 6,
+		.tileWidth = 10,
+		.tileHeight = 10
 	},
 	{
 		.items = {
@@ -53,14 +66,22 @@ MenuPage menuPages[6] = {
 			{"Abort", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT, .textGFXIndex = 22}
 		},
 		.itemCount = 5,
-		.pageName = "OPTIONS"
+		.pageName = "OPTIONS",
+		.tileX = 10,
+		.tileY = 6,
+		.tileWidth = 10,
+		.tileHeight = 10
 	},
 	{
 		.items = {
 			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = INT, .textGFXIndex = 12}
 		},
 		.itemCount = 1,
-		.pageName = "CREDITS"
+		.pageName = "CREDITS",
+		.tileX = 10,
+		.tileY = 6,
+		.tileWidth = 10,
+		.tileHeight = 10
 	},
 	{
 		.items = {
@@ -69,7 +90,11 @@ MenuPage menuPages[6] = {
 			{"Back", PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = INT}
 		},
 		.itemCount = 3,
-		.pageName = "SOUND TEST"
+		.pageName = "SOUND TEST",
+		.tileX = 10,
+		.tileY = 6,
+		.tileWidth = 10,
+		.tileHeight = 10
 	}
 };
 
@@ -79,16 +104,16 @@ void mainMenuInitialize(){
 	REG_BG1CNT = BG_4BPP | BG_SBB(TITLE_CARD_TILEMAP) | BG_CBB(TITLE_CARD_CHARDATA) | BG_PRIO(2) | BG_REG_32x32; //title screen layer
 	REG_BLDCNT = BLD_TOP(BLD_BG2 | BLD_BACKDROP | BLD_OBJ) | BLD_WHITE;
 	REG_BLDY = BLDY(0);
-	mainMenuData.starryBG.xPos = 512 - 16;
-	REG_BG0HOFS = mainMenuData.starryBG.xPos;
-	mainMenuData.starryBG.yPos = TITLE_CAM_PAN_BOTTOM;
-	mainMenuData.titleCardBG.xPos = 512 - 15;
-	mainMenuData.titleCardBG.yPos = 512 - 43;
-	mainMenuData.menuBG.xPos = 0;
-	mainMenuData.menuBG.yPos = 0;
-	REG_BG0VOFS = mainMenuData.starryBG.yPos;
-	REG_BG1HOFS = mainMenuData.titleCardBG.xPos;
-	REG_BG1VOFS = mainMenuData.titleCardBG.yPos;
+	mDat.starryBG.xPos = 512 - 16;
+	REG_BG0HOFS = mDat.starryBG.xPos;
+	mDat.starryBG.yPos = TITLE_CAM_PAN_BOTTOM;
+	mDat.titleCardBG.xPos = 512 - 15;
+	mDat.titleCardBG.yPos = 512 - 43;
+	mDat.menuBG.xPos = 0;
+	mDat.menuBG.yPos = 0;
+	REG_BG0VOFS = mDat.starryBG.yPos;
+	REG_BG1HOFS = mDat.titleCardBG.xPos;
+	REG_BG1VOFS = mDat.titleCardBG.yPos;
 	
 	//send the palettes
 	memcpy32(&paletteBufferBg[STARRY_IMAGE_PAL_START << 4], main_menu_starfieldPal, sizeof(main_menu_starfieldPal) >> 2);
@@ -132,39 +157,39 @@ void mainMenuInitialize(){
 	tilemapData[0].buffer = (void *)main_menu_starfieldMetaTiles;
 	tilemapData[0].size = sizeof(main_menu_starfieldMetaTiles) >> 2;
 	
-	mainMenuData.actionTarget = 32;
-	mainMenuData.actionTimer = 0;
-	mainMenuData.state = FLASH_WHITE;
+	mDat.actionTarget = 32;
+	mDat.actionTimer = 0;
+	mDat.state = FLASH_WHITE;
 	currentScene.state = NORMAL;
 
 	// Prepare values for the starryBG to start panning upward, even during the fade-in transition
-	mainMenuData.starryBG.yScrollTimerCurrent = 0;
-	mainMenuData.starryBG.yScrollTimerTarget = 32+16+2+53;
-	mainMenuData.starryBG.yScrollStartPos = TITLE_CAM_PAN_BOTTOM; // Start position (scaled)
-	mainMenuData.starryBG.yScrollTargetPos = TITLE_CAM_PAN_TOP; // Target position (scaled)
+	mDat.starryBG.yScrollTimerCurrent = 0;
+	mDat.starryBG.yScrollTimerTarget = 32+16+2+53;
+	mDat.starryBG.yScrollStartPos = TITLE_CAM_PAN_BOTTOM; // Start position (scaled)
+	mDat.starryBG.yScrollTargetPos = TITLE_CAM_PAN_TOP; // Target position (scaled)
 }
 
 void mainMenuNormal(){
 	static u8 currentAsset = 0;
 	extern u16 numSounds;
-	switch(mainMenuData.state){
+	switch(mDat.state){
 	case FLASH_WHITE:
-		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
+		if(mDat.actionTimer == mDat.actionTarget){
 			//Enable bg0, bg1, sprite layer, and sets the hardware to mode 0 (4 tiled bg mode)
 			// https://problemkaputt.de/gbatek.htm#lcdiodisplaycontrol
 			REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_OBJ | DCNT_OBJ_1D;
 			drawStarBlocker(9);
-			mainMenuData.actionTarget = 16;
-			mainMenuData.actionTimer = 0;
-			mainMenuData.state = FADE_TO_TITLE;
+			mDat.actionTarget = 16;
+			mDat.actionTimer = 0;
+			mDat.state = FADE_TO_TITLE;
 
 			IOBuffer1[0] = 16;
 		}else{
-			mainMenuData.actionTimer++;
+			mDat.actionTimer++;
 
-			if (mainMenuData.actionTimer == 16)
+			if (mDat.actionTimer == 16)
 				currentBGMIndex = playNewSound(_musTitle);
-			IOBuffer1[0] = mainMenuData.actionTimer >> 1;
+			IOBuffer1[0] = mDat.actionTimer >> 1;
 		}
 		// Update fade values
 		IOData[1].position = (void *)&REG_BLDY;
@@ -177,17 +202,17 @@ void mainMenuNormal(){
 
 		// Update the BG Positions (using IOBuffer0)
 		interpolateStarryBG();
-		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.titleCardBG.xPos, mainMenuData.titleCardBG.yPos);
+		updateBGScrollRegisters(mDat.starryBG.xPos, mDat.starryBG.yPos, mDat.titleCardBG.xPos, mDat.titleCardBG.yPos);
 		break;
 	case FADE_TO_TITLE:
-		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
-			mainMenuData.state = TITLE_PAN_UP;
-			mainMenuData.actionTarget = 2;
-			mainMenuData.actionTimer = 0;
+		if(mDat.actionTimer == mDat.actionTarget){
+			mDat.state = TITLE_PAN_UP;
+			mDat.actionTarget = 2;
+			mDat.actionTimer = 0;
 			IOBuffer1[0] = 0;
 		}else{
-			mainMenuData.actionTimer++;
-			IOBuffer1[0] = 16 - mainMenuData.actionTimer;
+			mDat.actionTimer++;
+			IOBuffer1[0] = 16 - mDat.actionTimer;
 		}
 
 		// Update fade values
@@ -202,58 +227,58 @@ void mainMenuNormal(){
 
 		// Update the BG Positions (using IOBuffer0)
 		interpolateStarryBG();
-		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.titleCardBG.xPos, mainMenuData.titleCardBG.yPos);
+		updateBGScrollRegisters(mDat.starryBG.xPos, mDat.starryBG.yPos, mDat.titleCardBG.xPos, mDat.titleCardBG.yPos);
 		break;
 	case TITLE_PAN_UP:
-		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
-			mainMenuData.state = TITLE_FLASH;
-			mainMenuData.actionTarget = 53;
-			mainMenuData.actionTimer = 0;
+		if(mDat.actionTimer == mDat.actionTarget){
+			mDat.state = TITLE_FLASH;
+			mDat.actionTarget = 53;
+			mDat.actionTimer = 0;
 			titleRevealFadeDirection = 1;
 
 			// Queue IOBuffer1 for controlling fade on REG_BLDY in the next state (TITLE_FLASH)
 			IOBuffer1[0] = 0;
 		}else{
 			// Increment actionTimer
-			mainMenuData.actionTimer++;
+			mDat.actionTimer++;
 		}
 
 		// Update the BG Positions (using IOBuffer0)
 		interpolateStarryBG();
-		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.titleCardBG.xPos, mainMenuData.titleCardBG.yPos);
+		updateBGScrollRegisters(mDat.starryBG.xPos, mDat.starryBG.yPos, mDat.titleCardBG.xPos, mDat.titleCardBG.yPos);
 		break;
 	case TITLE_FLASH:
-		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
-			mainMenuData.state = TITLE_REVEAL;
-			mainMenuData.actionTarget = 46;
-			mainMenuData.actionTimer = 0;
+		if(mDat.actionTimer == mDat.actionTarget){
+			mDat.state = TITLE_REVEAL;
+			mDat.actionTarget = 46;
+			mDat.actionTimer = 0;
 
 			// Send the Title BG tilemap
 			tilemapData[1].position = &se_mem[TITLE_CARD_TILEMAP];
 			tilemapData[1].buffer = (void *)sprTitleLogoMap;
 			tilemapData[1].size = sizeof(sprTitleLogoMap) >> 2;
 		}else{
-			mainMenuData.actionTimer++;
-			IOBuffer1[0] = (mainMenuData.actionTimer * 2) >> 1;
+			mDat.actionTimer++;
+			IOBuffer1[0] = (mDat.actionTimer * 2) >> 1;
 		}
 		
 		// 39 frames before the final destination, start displaying the star sprite at its designated position
-		if (mainMenuData.actionTimer > mainMenuData.actionTarget - 40){
-			int index = mainMenuData.actionTimer - (mainMenuData.actionTarget - 40);
+		if (mDat.actionTimer > mDat.actionTarget - 40){
+			int index = mDat.actionTimer - (mDat.actionTarget - 40);
 			if (index >= 0 && index <= 31) // Ensure index is within bounds
 				drawStarBlocker(starBlockerYPos[index - 1]);
 			else
 				drawStarBlocker(9);
 		}
 
-		if (mainMenuData.actionTimer >= mainMenuData.actionTarget - 16){
+		if (mDat.actionTimer >= mDat.actionTarget - 16){
 			// Queue IOBuffer1 for controlling fade on REG_BLDY in the next state (TITLE_REVEAL)
 			
 			if (IOBuffer1[0] + 2 * titleRevealFadeDirection <= 16 &&
 				IOBuffer1[0] + 2 * titleRevealFadeDirection >= 0)
 				IOBuffer1[0] = clamp(IOBuffer1[0] + 2 * titleRevealFadeDirection, 0, 16);
 
-			if (mainMenuData.actionTimer >= mainMenuData.actionTarget - 10)
+			if (mDat.actionTimer >= mDat.actionTarget - 10)
 				titleRevealFadeDirection = -1;
 			
 			// Update fade values
@@ -269,19 +294,19 @@ void mainMenuNormal(){
 
 		// Update the BG Positions (using IOBuffer0)
 		interpolateStarryBG();
-		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.titleCardBG.xPos, mainMenuData.titleCardBG.yPos);
+		updateBGScrollRegisters(mDat.starryBG.xPos, mDat.starryBG.yPos, mDat.titleCardBG.xPos, mDat.titleCardBG.yPos);
 		break;
 	case TITLE_REVEAL:
-		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
-			mainMenuData.state = TITLE_FLYING_COMET_ANIMATION;
-			mainMenuData.actionTarget = 64;
-			mainMenuData.actionTimer = 0;
+		if(mDat.actionTimer == mDat.actionTarget){
+			mDat.state = TITLE_FLYING_COMET_ANIMATION;
+			mDat.actionTarget = 64;
+			mDat.actionTimer = 0;
 		}else{
-			mainMenuData.actionTimer++;
+			mDat.actionTimer++;
 
 			// Control the fading values, utilizing IOBuffer1
 			if (IOBuffer1[0] > 0)
-				IOBuffer1[0] = 16 - mainMenuData.actionTimer * 2;
+				IOBuffer1[0] = 16 - mDat.actionTimer * 2;
 			else
 				IOBuffer1[0] = 0;
 		}
@@ -296,26 +321,26 @@ void mainMenuNormal(){
 		updateObjBuffer();
 		break;
 	case TITLE_FLYING_COMET_ANIMATION:
-		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
-			mainMenuData.state = TITLE_BEFORE_HOLD;
+		if(mDat.actionTimer == mDat.actionTarget){
+			mDat.state = TITLE_BEFORE_HOLD;
 			objectBuffer[FLYING_COMET_SPRITE].attr0 = ATTR0_HIDE;
 			objectBuffer[STAR_BLOCKER_SPRITE].attr0 = ATTR0_HIDE;
-			mainMenuData.actionTimer = 0;
-			mainMenuData.actionTarget = 220;
+			mDat.actionTimer = 0;
+			mDat.actionTarget = 220;
 		}else{
-			u8 starFrame = mainMenuData.actionTimer >> 2;
+			u8 starFrame = mDat.actionTimer >> 2;
 			objectBuffer[FLYING_COMET_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(shootingStarYPos[starFrame]);
 			objectBuffer[FLYING_COMET_SPRITE].attr1 = ATTR1_SIZE_64 | ATTR1_X(shootingStarXPos[starFrame]);
 			objectBuffer[FLYING_COMET_SPRITE].attr2 = ATTR2_ID((starFrame << 5) + FLYING_COMET_GFX_START) | ATTR2_PRIO(3) | ATTR2_PALBANK(0);
-			mainMenuData.actionTimer++;
+			mDat.actionTimer++;
 		}
 		updateObjBuffer();
 		break;
 	case TITLE_BEFORE_HOLD:
-		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
-			mainMenuData.state = TITLE_HOLD;
-			mainMenuData.actionTimer = 0;
-			mainMenuData.actionTarget = 0;
+		if(mDat.actionTimer == mDat.actionTarget){
+			mDat.state = TITLE_HOLD;
+			mDat.actionTimer = 0;
+			mDat.actionTarget = 0;
 			memcpy32(&paletteBufferObj[PRESS_START_PAL_START << 4], sprTitlePressStartTextPal, sizeof(sprTitlePressStartTextPal) >> 2);
 			paletteData[1].size = 16;
 			paletteData[1].position = pal_obj_mem;
@@ -326,14 +351,14 @@ void mainMenuNormal(){
 			characterData[4].buffer = (void *)characterBuffer4;
 			characterData[4].size = sizeof(characterBuffer4) >> 2;
 		}else{
-			mainMenuData.actionTimer++;
+			mDat.actionTimer++;
 		}
 		updateObjBuffer();
 		break;
 	case TITLE_HOLD:
-		mainMenuData.actionTimer++;
+		mDat.actionTimer++;
 		
-		if(mainMenuData.actionTimer % 128 < 64){
+		if(mDat.actionTimer % 128 < 64){
 			drawPressStart();
 		}else{
 			hidePressStart();
@@ -341,20 +366,20 @@ void mainMenuNormal(){
 		// Make the starry background scroll up-left
 		scrollStarryBG(-1, -1);
 
-		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.titleCardBG.xPos, mainMenuData.titleCardBG.yPos);
+		updateBGScrollRegisters(mDat.starryBG.xPos, mDat.starryBG.yPos, mDat.titleCardBG.xPos, mDat.titleCardBG.yPos);
 		
 		updateObjBuffer();
 		break;
 	case TITLE_AFTER_PRESS_START:
-		if(mainMenuData.actionTimer >= mainMenuData.actionTarget){
+		if(mDat.actionTimer >= mDat.actionTarget){
 			hidePressStart();
 			skipToMenu();
 		}else{
-			mainMenuData.actionTimer++;
+			mDat.actionTimer++;
 		}
 
 		// Rapidly blink the "Press Start" graphic
-		if(mainMenuData.actionTimer % 16 >= 8){
+		if(mDat.actionTimer % 16 >= 8){
 			drawPressStart();
 		}else{
 			hidePressStart();
@@ -363,20 +388,20 @@ void mainMenuNormal(){
 		updateObjBuffer();
 		break;
 	case TITLE_FLY_OUT:
-		if(mainMenuData.actionTimer >= mainMenuData.actionTarget){
-			mainMenuData.state = MAIN_MENU_FLY_IN;
+		if(mDat.actionTimer >= mDat.actionTarget){
+			mDat.state = MAIN_MENU_FLY_IN;
 			
 			currentBGMIndex = playNewSound(_musMainMenu);
-			mainMenuData.menuBG.xPos = 512 - 2;
-			mainMenuData.menuBG.yPos = 0;
+			mDat.menuBG.xPos = 512 - 2;
+			mDat.menuBG.yPos = 0;
 			loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, (void *)menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 0);
 			loadGFX(MENU_CHARDATA, MENU_TEXT_FOCUSED_GFX_START, (void *)menu_action_focusedTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 1);
 		}else{
 			// Make the starry background scroll up, *very* quickly. Use quadratic interpolation
 
 			// Calculate the interpolation factor t, with proper scaling
-			int actionTimerScaled = mainMenuData.actionTimer * FIXED_POINT_SCALE;
-			int actionTargetScaled = mainMenuData.actionTarget * FIXED_POINT_SCALE;
+			int actionTimerScaled = mDat.actionTimer * FIXED_POINT_SCALE;
+			int actionTargetScaled = mDat.actionTarget * FIXED_POINT_SCALE;
 			int t = (actionTimerScaled * FIXED_POINT_SCALE) / actionTargetScaled;
 			int t2 = t * 8;
 
@@ -385,14 +410,14 @@ void mainMenuNormal(){
 			int easedT2 = easeInOut(t2, 4);
 
 			// Calculate the interpolated position and update yPos
-			mainMenuData.starryBG.yPos = lerp(yStart, yTarget, easedT) / FIXED_POINT_SCALE;
-			mainMenuData.titleCardBG.yPos = lerp(titleCardYStart, titleCardYTarget, easedT2) / FIXED_POINT_SCALE;
-			mainMenuData.actionTimer++;
+			mDat.starryBG.yPos = lerp(yStart, yTarget, easedT) / FIXED_POINT_SCALE;
+			mDat.titleCardBG.yPos = lerp(titleCardYStart, titleCardYTarget, easedT2) / FIXED_POINT_SCALE;
+			mDat.actionTimer++;
 		}
 		
 		updateObjBuffer();
 		
-		if (mainMenuData.actionTimer > 40){
+		if (mDat.actionTimer > 40){
 			// Hide the title card after 40 frames in this state
 			memset32(tilemapBuffer1, 0, sizeof(sprTitleLogoMap) >> 2);
 			tilemapData[1].size = sizeof(sprTitleLogoMap) >> 2;
@@ -401,13 +426,13 @@ void mainMenuNormal(){
 		}
 
 		// Queue BG Scroll registers for the Starry BG and Menu Positions
-		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.titleCardBG.xPos, mainMenuData.titleCardBG.yPos);
+		updateBGScrollRegisters(mDat.starryBG.xPos, mDat.starryBG.yPos, mDat.titleCardBG.xPos, mDat.titleCardBG.yPos);
 		break;
 	case MAIN_MENU_FLY_IN:
 		// Set the Menu State to "MAIN_MENU_HOLD and re-init its timers"
-		mainMenuData.actionTarget = 32;
-		mainMenuData.actionTimer = 0;
-		mainMenuData.state = MAIN_MENU_HOLD;
+		mDat.actionTarget = 32;
+		mDat.actionTimer = 0;
+		mDat.state = MAIN_MENU_HOLD;
 		
 		initMainMenu();
 		drawMainMenu();
@@ -416,7 +441,7 @@ void mainMenuNormal(){
 		scrollStarryBG(-1, 0);
 
 		// Queue BG Scroll registers for the Starry BG and Menu Positions
-		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.menuBG.xPos, mainMenuData.menuBG.yPos);
+		updateBGScrollRegisters(mDat.starryBG.xPos, mDat.starryBG.yPos, mDat.menuBG.xPos, mDat.menuBG.yPos);
 		break;
 	case MAIN_MENU_HOLD:
 		updateMainMenu();
@@ -427,15 +452,15 @@ void mainMenuNormal(){
 		scrollStarryBG(-1, 0);
 
 		// Queue BG Scroll registers for the Starry BG and Menu Positions
-		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.menuBG.xPos, mainMenuData.menuBG.yPos);
+		updateBGScrollRegisters(mDat.starryBG.xPos, mDat.starryBG.yPos, mDat.menuBG.xPos, mDat.menuBG.yPos);
 		
 		break;
 	case MAIN_MENU_FLY_OUT:
-		if(mainMenuData.actionTimer >= mainMenuData.actionTarget){
+		if(mDat.actionTimer >= mDat.actionTarget){
 			// Start the match
 			mainMenuEnd();
 		}else{
-			mainMenuData.actionTimer++;
+			mDat.actionTimer++;
 		}
 		
 		/*
@@ -451,13 +476,13 @@ void mainMenuNormal(){
 		scrollStarryBG(-1, -1);
 
 		// Queue BG Scroll registers for the Starry BG and Menu Positions
-		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.menuBG.xPos, mainMenuData.menuBG.yPos);
+		updateBGScrollRegisters(mDat.starryBG.xPos, mDat.starryBG.yPos, mDat.menuBG.xPos, mDat.menuBG.yPos);
 		break;
 	default:
 		break;
 	}
 
-	if (mainMenuData.state < TITLE_AFTER_PRESS_START){
+	if (mDat.state < TITLE_AFTER_PRESS_START){
 		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
 			
 			REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_OBJ | DCNT_OBJ_1D;
@@ -467,13 +492,13 @@ void mainMenuNormal(){
 			tilemapData[1].buffer = tilemapBuffer0;
 			tilemapData[1].position = &se_mem[TITLE_CARD_TILEMAP];
 
-			mainMenuData.state = TITLE_AFTER_PRESS_START;
-			mainMenuData.actionTimer = 1;
-			mainMenuData.actionTarget = 30;
+			mDat.state = TITLE_AFTER_PRESS_START;
+			mDat.actionTimer = 1;
+			mDat.actionTarget = 30;
 			
 			// Reset the title card's coordinates
-			mainMenuData.titleCardBG.xPos = 512 - 15;
-			mainMenuData.titleCardBG.yPos = 512 - 43;
+			mDat.titleCardBG.xPos = 512 - 15;
+			mDat.titleCardBG.yPos = 512 - 43;
 
 			// Send the Title BG tilemap
 			tilemapData[1].position = &se_mem[TITLE_CARD_TILEMAP];
@@ -504,60 +529,137 @@ void mainMenuNormal(){
 			endAsset(currentBGMIndex);
 			currentSFXIndex = playNewSound(_sfxMenuConfirmC);
 
-			yStart = mainMenuData.starryBG.yPos * FIXED_POINT_SCALE; // Start position (scaled)
+			yStart = mDat.starryBG.yPos * FIXED_POINT_SCALE; // Start position (scaled)
 			yTarget = -4504 * FIXED_POINT_SCALE; // Target position (scaled)
-			titleCardYStart = mainMenuData.titleCardBG.yPos * FIXED_POINT_SCALE;
-			titleCardYTarget = (mainMenuData.titleCardBG.yPos + 140) * FIXED_POINT_SCALE;
+			titleCardYStart = mDat.titleCardBG.yPos * FIXED_POINT_SCALE;
+			titleCardYTarget = (mDat.titleCardBG.yPos + 140) * FIXED_POINT_SCALE;
 
-			updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.titleCardBG.xPos, mainMenuData.titleCardBG.yPos);
+			updateBGScrollRegisters(mDat.starryBG.xPos, mDat.starryBG.yPos, mDat.titleCardBG.xPos, mDat.titleCardBG.yPos);
 		}
 	}
 }
 
 void initMainMenu(){
-	mainMenuData.currMenuPage = 0;
-	mainMenuData.winSliceWidth = 10;
-	mainMenuData.menuCursorPos = 0;
+	mDat.currMenuPage = 0;
+	mDat.menuCursorPos = 0;
+
+	mDat.windowTileXPos = 10;
+	mDat.windowTileYPos = 10;
+	mDat.winSliceWidth = 10;
+	mDat.winSliceHeight = 1;
+	mDat.windowTargetWidth = 1;
+	mDat.windowTargetHeight = 1;
+	mDat.windowState = MMWS_ZIPPING;
+
+	mDat.menuBG.xPos = 0;
+	mDat.menuBG.yPos = 0;
 }
 
 void updateMainMenu(){
-	MenuPage* menuPage = &menuPages[mainMenuData.currMenuPage];
+	switch(mDat.windowState) {
+		default:
+		case MMWS_OPENING:
+			// Keep expanding the window height until it's the target size it needs to be; re-center as it expands
+			if (mDat.winSliceHeight + 2 < mDat.windowTargetHeight) {
+				mDat.winSliceHeight+=2;
+				//Ensure that this window never goes beyond the screen boundary
+				if (mDat.windowTileYPos - 1 >= 0)
+					mDat.windowTileYPos--;
+			} else {
+				mDat.winSliceHeight = mDat.windowTargetHeight;
+				//mDat.winSliceHeight += 2;
+				//mDat.windowTileYPos -= 2;
+				mDat.windowState = MMWS_READY;
+			}
+			mDat.windowActionTimer++;
+			break;
+		case MMWS_CLOSING:
+			// Keep expanding the window height until it's the target size it needs to be; re-center as it expands
+			if (mDat.winSliceHeight + 2 > 1) {
+				mDat.winSliceHeight-=2;
+				//Ensure that this window never goes beyond the screen boundary
+				if (mDat.windowTileYPos + 1 < 19)
+					mDat.windowTileYPos++;
+			} else {
+				mDat.winSliceHeight = mDat.windowTargetHeight;
+				//mDat.winSliceHeight += 2;
+				//mDat.windowTileYPos -= 2;
+				mDat.windowState = MMWS_ZIPPING;
+			}
+			break;
+		case MMWS_READY:
+			menuPage = &menuPages[mDat.currMenuPage];
+			// Allow Up/Down to navigate the menu; wrap around if we hit the upper/lower limits
+			// Combine both up and down input checks into a single operation
+			int moveY = 0;
+			if((inputs.pressed & KEY_UP) && !(inputs.pressed & KEY_DOWN)){
+				moveY = -1;
+			}
+			else if((inputs.pressed & KEY_DOWN) && !(inputs.pressed & KEY_UP)){
+				moveY = 1;
+			}
 
-	// Allow Up/Down to navigate the menu; wrap around if we hit the upper/lower limits
-	// Combine both up and down input checks into a single operation
-	int moveY = 0;
-	if((inputs.pressed & KEY_UP) && !(inputs.pressed & KEY_DOWN)){
-		moveY = -1;
-	}
-	else if((inputs.pressed & KEY_DOWN) && !(inputs.pressed & KEY_UP)){
-		moveY = 1;
-	}
+			// Navigate the menu; wrap around if we hit an edge
+			if (moveY != 0) {
+				playNewSound(_sfxMenuMove);
+				if((mDat.menuCursorPos + moveY) < 0){
+					mDat.menuCursorPos = menuPage->itemCount - 1;
+				}
+				else if ((mDat.menuCursorPos + moveY) > (menuPage->itemCount - 1)){
+					mDat.menuCursorPos = 0;
+				}
+				else{
+					mDat.menuCursorPos += moveY;
+				}
+			}
+			
+			if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
+				
+			}
+			break;
+		case MMWS_ZIPPING:
+			//mDat.winSliceWidth = 1;
+			mDat.windowTileXPos--;
+			if (mDat.windowTileXPos < 0)
+				mDat.windowTileXPos = 29;
 
-	// Navigate the menu; wrap around if we hit an edge
-	if (moveY != 0) {
-		playNewSound(_sfxMenuMove);
-		if((mainMenuData.menuCursorPos + moveY) < 0){
-			mainMenuData.menuCursorPos = menuPage->itemCount - 1;
-		}
-		else if ((mainMenuData.menuCursorPos + moveY) > (menuPage->itemCount - 1)){
-			mainMenuData.menuCursorPos = 0;
-		}
-		else{
-			mainMenuData.menuCursorPos += moveY;
-		}
-	}
-	
-	if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
-		
+			mDat.windowActionTimer++;
+			/*
+			menuPage = &menuPages[mDat.currMenuPage];
+			mDat.winSliceHeight = 1;
+			mDat.windowTargetWidth = menuPage->tileWidth;
+			mDat.windowTargetHeight = menuPage->tileHeight;
+			mDat.windowActionTimer = 0;
+			mDat.windowState = MMWS_OPENING;
+			*/
+			break;
 	}
 }
 
 void drawMainMenu(){
-
-		// Write to tilemap layer 1 using tilemapBuffer1
-		drawNineSliceWindow(10, 6, mainMenuData.winSliceWidth, 10, 1);
+		//Clear the menu tilemap every frame
+		memset32(tilemapBuffer1, 0, 512);
 		
-
+		// Write to tilemap layer 1 using tilemapBuffer1
+		drawNineSliceWindow(mDat.windowTileXPos, mDat.windowTileYPos, mDat.winSliceWidth, mDat.winSliceHeight, 1);
+		
+		switch(mDat.windowState) {
+			default:
+			case MMWS_OPENING:
+				break;
+			case MMWS_CLOSING:
+				break;
+			case MMWS_READY:
+				menuPage = &menuPages[mDat.currMenuPage];
+				for(int i = 0; i < menuPage->itemCount; ++i){
+					MenuPageItem* thisMenuElement = &menuPage->items[i];
+					bool cursorOnElement = (mDat.menuCursorPos == i);
+					//drawMenuTextSegment(mDat.winSliceWidth, 10, 8 + (2 * i), thisMenuElement->textGFXIndex, 2, cursorOnElement);
+				}
+				break;
+			case MMWS_ZIPPING:
+				break;
+		}
 		
 		// Example array of MenuPageItem
 
@@ -571,23 +673,11 @@ void drawMainMenu(){
 			.itemCount = 3
 		};*/
 
-		MenuPage* menuPage = &menuPages[mainMenuData.currMenuPage];
-		for(int i = 0; i < menuPage->itemCount; ++i){
-			MenuPageItem* thisMenuElement = &menuPage->items[i];
-			bool cursorOnElement = (mainMenuData.menuCursorPos == i);
-			drawMenuTextSegment(mainMenuData.winSliceWidth, 10, 8 + (2 * i), thisMenuElement->textGFXIndex, 2, cursorOnElement);
-		}
 
-		tilemapData[1].position = &se_mem[MENU_TILEMAP];
+		// Queue the tilemap with our drawing functions
+		tilemapData[1].position = se_mem[MENU_TILEMAP];
 		tilemapData[1].buffer = (void *)tilemapBuffer1;
 		tilemapData[1].size = 512;
-
-		// Write to tilemap layer 2 using tilemapBuffer2
-		//drawNineSliceWindow(10, 6, 9, 9, 2);
-
-		//tilemapData[2].position = &se_mem[MENU_TILEMAP];
-		//tilemapData[2].buffer = (void *)tilemapBuffer2;
-		//tilemapData[2].size = 512;
 }
 
 void mainMenuEnd(){
@@ -597,29 +687,29 @@ void mainMenuEnd(){
 
 void scrollStarryBG(int addedX, int addedY){
 	if(currentScene.sceneCounter % 8 <= 0){
-		mainMenuData.starryBG.xPos -= addedX;		
+		mDat.starryBG.xPos -= addedX;		
 	}
 	if(currentScene.sceneCounter % 8 <= 0){
-		mainMenuData.starryBG.yPos -= addedY;
+		mDat.starryBG.yPos -= addedY;
 	}
 }
 
 void interpolateStarryBG(){
 	// Calculate the interpolation factor t, with proper scaling
-	int actionTimerScaled = mainMenuData.starryBG.yScrollTimerCurrent * FIXED_POINT_SCALE;
-	int actionTargetScaled = mainMenuData.starryBG.yScrollTimerTarget * FIXED_POINT_SCALE;
+	int actionTimerScaled = mDat.starryBG.yScrollTimerCurrent * FIXED_POINT_SCALE;
+	int actionTargetScaled = mDat.starryBG.yScrollTimerTarget * FIXED_POINT_SCALE;
 	int t = (actionTimerScaled * FIXED_POINT_SCALE) / actionTargetScaled;
 
 	// Apply ease-in-out function
 	int easedT = easeInOut(t, 4);
 
 	// Calculate the interpolated position and update yPos
-	mainMenuData.starryBG.yPos = lerp(mainMenuData.starryBG.yScrollStartPos * FIXED_POINT_SCALE, mainMenuData.starryBG.yScrollTargetPos * FIXED_POINT_SCALE, easedT) / FIXED_POINT_SCALE;
+	mDat.starryBG.yPos = lerp(mDat.starryBG.yScrollStartPos * FIXED_POINT_SCALE, mDat.starryBG.yScrollTargetPos * FIXED_POINT_SCALE, easedT) / FIXED_POINT_SCALE;
 	
-	if (mainMenuData.starryBG.yScrollTimerCurrent < mainMenuData.starryBG.yScrollTimerTarget)
-		mainMenuData.starryBG.yScrollTimerCurrent++;
+	if (mDat.starryBG.yScrollTimerCurrent < mDat.starryBG.yScrollTimerTarget)
+		mDat.starryBG.yScrollTimerCurrent++;
 	else
-		mainMenuData.starryBG.yScrollTimerCurrent = mainMenuData.starryBG.yScrollTimerTarget;
+		mDat.starryBG.yScrollTimerCurrent = mDat.starryBG.yScrollTimerTarget;
 }
 
 void setTile(int x, int y, int drawingTileIndex, bool flipHorizontal, bool flipVertical, int palette, int layer){
@@ -648,78 +738,106 @@ void setTile(int x, int y, int drawingTileIndex, bool flipHorizontal, bool flipV
 /// @brief Draws a nine slice window for the centric main menu; Width and Height params are in terms of 8x8 tiles
 /// @param width 
 /// @param height 
-void drawNineSliceWindow(int x, int y, int width, int height, int layer){
+// Function to handle the correct wrapping and drawing for top-right and bottom-right tiles
+void drawNineSliceWindow(int x, int y, int width, int height, int layer) {
     int tilesetIndex = MENU_GFX_START;
     int palette = 2;
 
-    if (height > 1){
+    if (height > 1) {
         // Draw the top-middle row
-        if (height >= 2){
-            setTile(x, y + 1, tilesetIndex + LM_UPPER, false, false, palette, layer); // Left-middle-upper tile
-            for (int i = 1; i < width - 1; ++i){
-                setTile(x + i, y + 1, tilesetIndex + MIDDLE_UPPER, false, false, palette, layer); // Middle upper
+        if (height >= 2) {
+            setTile(wrapX(x), y + 1, tilesetIndex + LM_UPPER, false, false, palette, layer); // Left-middle-upper tile
+            for (int i = 1; i < width - 1; ++i) {
+                setTile(wrapX(x + i), y + 1, tilesetIndex + MIDDLE_UPPER, false, false, palette, layer); // Middle upper
             }
-            setTile(x + (width - 1), y + 1, tilesetIndex + RM_UPPER, false, false, palette, layer); // Right-middle-upper tile
+            setTile(wrapX(x + (width - 1)), y + 1, tilesetIndex + RM_UPPER, false, false, palette, layer); // Right-middle-upper tile
         }
 
         // Calculate the bottomY position
         int bottomY = y + (height - 1);
 
         // Draw center rows
-        for (int j = 2; j < height - 1; ++j){
-            setTile(x, y + j, tilesetIndex + LM, false, false, palette, layer); // Left-middle tile
-            for (int i = 1; i < width - 1; ++i){
-                setTile(x + i, y + j, tilesetIndex + CENTER, false, false, palette, layer); // Center
+        for (int j = 2; j < height - 1; ++j) {
+            setTile(wrapX(x), y + j, tilesetIndex + LM, false, false, palette, layer); // Left-middle tile
+            for (int i = 1; i < width - 1; ++i) {
+                setTile(wrapX(x + i), y + j, tilesetIndex + CENTER, false, false, palette, layer); // Center
             }
-            setTile(x + (width - 1), y + j, tilesetIndex + RM, false, false, palette, layer); // Right-middle tile
+            setTile(wrapX(x + (width - 1)), y + j, tilesetIndex + RM, false, false, palette, layer); // Right-middle tile
         }
 
         // Draw the bottom-middle row (mirrored)
-        if (height > 4){
-            setTile(x, bottomY - 1, tilesetIndex + LM_UPPER, false, true, palette, layer); // Left-middle-lower tile (flipped vertically)
-            for (int i = 1; i < width - 1; ++i){
-                setTile(x + i, bottomY - 1, tilesetIndex + MIDDLE_UPPER, false, true, palette, layer); // Middle lower (flipped vertically)
+        if (height > 4) {
+            setTile(wrapX(x), bottomY - 1, tilesetIndex + LM_UPPER, false, true, palette, layer); // Left-middle-lower tile (flipped vertically)
+            for (int i = 1; i < width - 1; ++i) {
+                setTile(wrapX(x + i), bottomY - 1, tilesetIndex + MIDDLE_UPPER, false, true, palette, layer); // Middle lower (flipped vertically)
             }
-            setTile(x + (width - 1), bottomY - 1, tilesetIndex + RM_UPPER, false, true, palette, layer); // Right-middle-lower tile (flipped vertically)
+            setTile(wrapX(x + (width - 1)), bottomY - 1, tilesetIndex + RM_UPPER, false, true, palette, layer); // Right-middle-lower tile (flipped vertically)
         }
 
         // Draw the bottom row
-        if (width > 2)
-            setTile(x + 1, bottomY, tilesetIndex + TL_2, false, true, palette, layer); // Bottom-left corner Part 2 (flipped vertically)
-        if (width > 3)
-            setTile(x + 2, bottomY, tilesetIndex + TL_3, false, true, palette, layer); // Bottom-left corner Part 3 (flipped vertically)
-        for (int i = 3; i < width - 3; ++i){
-            setTile(x + i, bottomY, tilesetIndex + TOP_MIDDLE, false, true, palette, layer); // Bottom middle (flipped vertically)
+        if (width > 2) {
+            setTile(wrapX(x + 1), bottomY, tilesetIndex + TL_2, false, true, palette, layer); // Bottom-left corner Part 2 (flipped vertically)
         }
-        if (width >= 3)
-            setTile(x + (width - 3), bottomY, tilesetIndex + TR_1, false, true, palette, layer); // Bottom-right corner Part 1 (flipped vertically)
-        if (width >= 2)
-            setTile(x + (width - 2), bottomY, tilesetIndex + TR_2, false, true, palette, layer); // Bottom-right corner Part 2 (flipped vertically)
+        if (width > 3) {
+            setTile(wrapX(x + 2), bottomY, tilesetIndex + TL_3, false, true, palette, layer); // Bottom-left corner Part 3 (flipped vertically)
+        }
+        for (int i = 3; i < width - 3; ++i) {
+            setTile(wrapX(x + i), bottomY, tilesetIndex + TOP_MIDDLE, false, true, palette, layer); // Bottom middle (flipped vertically)
+        }
+        if (width >= 3) {
+            setTile(wrapX(x + (width - 3)), bottomY, tilesetIndex + TR_1, false, true, palette, layer); // Bottom-right corner Part 1 (flipped vertically)
+        }
+        if (width >= 2) {
+            setTile(wrapX(x + (width - 2)), bottomY, tilesetIndex + TR_2, false, true, palette, layer); // Bottom-right corner Part 2 (flipped vertically)
+        }
 
         // Draw the top row
-        for (int i = 3; i < width - 3; ++i){
-            setTile(x + i, y, tilesetIndex + TOP_MIDDLE, false, false, palette, layer); // Top middle
+        for (int i = 3; i < width - 3; ++i) {
+            setTile(wrapX(x + i), y, tilesetIndex + TOP_MIDDLE, false, false, palette, layer); // Top middle
         }
 
-        if (width >= 3)
-            setTile(x + (width - 3), y, tilesetIndex + TR_1, false, false, palette, layer); // Top-right corner Part 1
-        if (width >= 2)
-            setTile(x + 1, y, tilesetIndex + TL_2, false, false, palette, layer); // Top-left corner Part 2
-        if (width >= 3)
-            setTile(x + 2, y, tilesetIndex + TL_3, false, false, palette, layer); // Top-left corner Part 3
+        if (width >= 3) {
+            setTile(wrapX(x + (width - 3)), y, tilesetIndex + TR_1, false, false, palette, layer); // Top-right corner Part 1
+        }
+        if (width >= 2) {
+            setTile(wrapX(x + 1), y, tilesetIndex + TL_2, false, false, palette, layer); // Top-left corner Part 2
+        }
+        if (width >= 3) {
+            setTile(wrapX(x + 2), y, tilesetIndex + TL_3, false, false, palette, layer); // Top-left corner Part 3
+        }
 
-        if (width >= 2)
-            setTile(x + (width - 2), y, tilesetIndex + TR_2, false, false, palette, layer); // Top-right corner Part 2
+        if (width >= 2) {
+            setTile(wrapX(x + (width - 2)), y, tilesetIndex + TR_2, false, false, palette, layer); // Top-right corner Part 2
+        }
 
-        setTile(x + (width - 1), bottomY, tilesetIndex + TR_3, false, true, palette, layer); // Bottom-right corner Part 3 (flipped vertically)
-        setTile(x, bottomY, tilesetIndex + TL_1, false, true, palette, layer); // Bottom-left corner Part 1 (flipped vertically)
+        // Correct top-right and bottom-right corners with wrapping
+        setTile(wrapX(x + (width - 1)), bottomY, tilesetIndex + TR_3, false, true, palette, layer); // Bottom-right corner Part 3 (flipped vertically)
+        setTile(wrapX(x + (width - 1)), y, tilesetIndex + TR_3, false, false, palette, layer); // Top-right corner Part 3
 
-        setTile(x + (width - 1), y, tilesetIndex + TR_3, false, false, palette, layer); // Top-right corner Part 3
-        setTile(x, y, tilesetIndex + TL_1, false, false, palette, layer); // Top-left corner Part 1
-    }else{
-        for (int i = 0; i < width; ++i){
-            setTile(x + i, y, tilesetIndex + LASER_TOP, false, false, palette, layer);
-            setTile(x + i, y + 1, tilesetIndex + LASER_BOTTOM, false, false, palette, layer);
+        setTile(wrapX(x), bottomY, tilesetIndex + TL_1, false, true, palette, layer); // Bottom-left corner Part 1 (flipped vertically)
+        setTile(wrapX(x), y, tilesetIndex + TL_1, false, false, palette, layer); // Top-left corner Part 1
+    } else {
+		drawLaserRow(x, y, width, tilesetIndex, palette, layer);
+    }
+}
+
+// Helper function to get wrapped x-coordinate
+int wrapX(int x) {
+    return (x + 30) % 30; // Ensure x is within [0, 29]
+}
+
+// Helper function to ensure y is within bounds
+bool isInBounds(int y) {
+    return y >= 0 && y < 30;
+}
+
+// Draw the LASER_TOP and LASER_BOTTOM tiles with wrapping
+void drawLaserRow(int x, int y, int width, int tilesetIndex, int palette, int layer) {
+    for (int i = 0; i < width; ++i) {
+        int wrappedX = wrapX(x + i);
+        if (isInBounds(y) && isInBounds(y + 1)) {
+            setTile(wrappedX, y, tilesetIndex + LASER_TOP, false, false, palette, layer);
+            setTile(wrappedX, y + 1, tilesetIndex + LASER_BOTTOM, false, false, palette, layer);
         }
     }
 }
@@ -790,9 +908,9 @@ void drawMenuTextSegment(int nineSliceWidth, int tileXPos, int tileYPos, int men
 }
 
 int menuExecNewGame(){
-	mainMenuData.state = MAIN_MENU_FLY_OUT;
-	mainMenuData.actionTimer = 0;
-	mainMenuData.actionTarget = 40; // Specifies the length of the actionTimer
+	mDat.state = MAIN_MENU_FLY_OUT;
+	mDat.actionTimer = 0;
+	mDat.actionTarget = 40; // Specifies the length of the actionTimer
 	return 0;
 }
 
@@ -923,9 +1041,9 @@ void skipToMenu(){
 	
 
 	currentScene.state = NORMAL;
-	mainMenuData.state = TITLE_FLY_OUT;
-	mainMenuData.actionTimer = 1;
-	mainMenuData.actionTarget = 300;
+	mDat.state = TITLE_FLY_OUT;
+	mDat.actionTimer = 1;
+	mDat.actionTarget = 300;
 }
 
 void updateObjBuffer(){
