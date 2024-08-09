@@ -213,7 +213,8 @@ void mainMenuNormal(){
 			mainMenuData.state = TITLE_FLASH;
 			mainMenuData.actionTarget = 53;
 			mainMenuData.actionTimer = 0;
-			
+			titleRevealFadeDirection = 1;
+
 			// Queue IOBuffer1 for controlling fade on REG_BLDY in the next state (TITLE_FLASH)
 			IOBuffer1[0] = 0;
 		}else{
@@ -230,9 +231,6 @@ void mainMenuNormal(){
 			mainMenuData.state = TITLE_REVEAL;
 			mainMenuData.actionTarget = 46;
 			mainMenuData.actionTimer = 0;
-
-			// Queue IOBuffer1 for controlling fade on REG_BLDY in the next state (TITLE_REVEAL)
-			IOBuffer1[0] = 16;
 
 			// Send the Title BG tilemap
 			tilemapData[1].position = &se_mem[TITLE_CARD_TILEMAP];
@@ -251,6 +249,23 @@ void mainMenuNormal(){
 				drawStarBlocker(starBlockerYPos[index - 1]);
 			else
 				drawStarBlocker(9);
+		}
+
+		if (mainMenuData.actionTimer >= mainMenuData.actionTarget - 16) {
+			// Queue IOBuffer1 for controlling fade on REG_BLDY in the next state (TITLE_REVEAL)
+			
+			if (IOBuffer1[0] + 2 * titleRevealFadeDirection <= 16 &&
+				IOBuffer1[0] + 2 * titleRevealFadeDirection >= 0)
+				IOBuffer1[0] = clamp(IOBuffer1[0] + 2 * titleRevealFadeDirection, 0, 16);
+
+			if (mainMenuData.actionTimer >= mainMenuData.actionTarget - 10)
+				titleRevealFadeDirection = -1;
+			
+			// Update fade values
+			IOData[1].position = (void *)&REG_BLDY;
+			IOData[1].buffer = IOBuffer1;
+			IOData[1].size = 1;
+			
 		}
 
 		// Hide the flying comet sprite
