@@ -31,11 +31,11 @@ def ProcessAssetList(assetList, processedAssetList, originalAssetDir, isBGM):
 				assetPriorityFile.write("#include \"audio_engine_settings.h\"\n#include \"tonc.h\"\n\n//type in the priority of this asset. Higher number means higher priority\ncu8 " + \
 				currentAssetFileName + "_Priority = 0;\n\n//type in the priority of each channel in this asset. Leave unused channels as blank, or set to 0\ncu8 " + \
 				currentAssetFileName + "_ChannelPriority[MAX_DMA_CHANNELS] = { ")
-				
+
 				if (isBGM):
-					assetPriorityFile.write("100, 100, 100, 100, 100, 100, 100, 100, 100, 100")
+					assetPriorityFile.write("\n\t100,\t\t// Channel 1\n\t99,\t\t\t// Channel 2\n\t98,\t\t\t// Channel 3\n\t97,\t\t\t// Channel 4\n\t96,\t\t\t// Channel 5\n\t95,\t\t\t// Channel 6\n\t94,\t\t\t// Channel 7\n\t93,\t\t\t// Channel 8\n\t51,\t\t\t// Channel 9\n\t50\t\t\t// Channel 10\n")
 				else:
-					assetPriorityFile.write("200, 200, 0, 0, 0, 0, 0, 0, 0, 0")
+					assetPriorityFile.write("\n\t80,\t\t// Channel 1\n\t80,\t\t// Channel 2\n\t0,\t\t// Channel 3\n\t0,\t\t// Channel 4\n\t0,\t\t// Channel 5\n\t0,\t\t// Channel 6\n\t0,\t\t// Channel 7\n\t0,\t\t// Channel 8\n\t0,\t\t// Channel 9\n\t0\t\t// Channel 10\n")
 				assetPriorityFile.write(" };")
 		else:
 			print("Skipping _Template.it Priority file generation...")
