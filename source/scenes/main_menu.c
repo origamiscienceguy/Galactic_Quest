@@ -98,7 +98,7 @@ void mainMenuInitialize(){
 	paletteData[0].buffer = paletteBufferBg;
 	
 	memcpy32(&paletteBufferObj[FLYING_COMET_PAL_START << 4], shootingStarPal, sizeof(shootingStarPal) >> 2);
-	memcpy32(&paletteBufferObj[FLYING_COMET_BLOCKER_PAL_START << 4], starBlockerPal, sizeof(starBlockerPal) >> 2);
+	memcpy32(&paletteBufferObj[STAR_BLOCKER_PAL_START << 4], starBlockerPal, sizeof(starBlockerPal) >> 2);
 	
 	paletteData[1].size = 16;
 	paletteData[1].position = pal_obj_mem;
@@ -152,15 +152,10 @@ void mainMenuNormal(){
 	switch(mainMenuData.state){
 	case FLASH_WHITE:
 		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
+			//Enable bg0, bg1, sprite layer, and sets the hardware to mode 0 (4 tiled bg mode)
+			// https://problemkaputt.de/gbatek.htm#lcdiodisplaycontrol
 			REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_OBJ | DCNT_OBJ_1D;
-			objectBuffer[FLYING_COMET_BLOCKER_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(9);
-			objectBuffer[FLYING_COMET_BLOCKER_SPRITE].attr1 = ATTR1_SIZE_32 | ATTR1_X(185);
-			objectBuffer[FLYING_COMET_BLOCKER_SPRITE].attr2 = ATTR2_ID(FLYING_COMET_BLOCKER_GFX_START) | ATTR2_PRIO(3) | ATTR2_PALBANK(1);
-			
-			oam_mem[FLYING_COMET_BLOCKER_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(9);
-			oam_mem[FLYING_COMET_BLOCKER_SPRITE].attr1 = ATTR1_SIZE_32 | ATTR1_X(185);
-			oam_mem[FLYING_COMET_BLOCKER_SPRITE].attr2 = ATTR2_ID(FLYING_COMET_BLOCKER_GFX_START) | ATTR2_PRIO(3) | ATTR2_PALBANK(1);
-			
+			drawStarBlocker(9);
 			mainMenuData.actionTarget = 16;
 			mainMenuData.actionTimer = 0;
 			mainMenuData.state = FADE_TO_TITLE;
@@ -170,8 +165,8 @@ void mainMenuNormal(){
 		else{
 			mainMenuData.actionTimer++;
 
-			//if (mainMenuData.actionTimer == 16)
-			//	currentAssetIndex = playNewAsset(BGM_ID_TITLE);
+			if (mainMenuData.actionTimer == 16)
+				currentAssetIndex = playNewAsset(BGM_ID_TITLE);
 			IOBuffer1[0] = mainMenuData.actionTimer >> 1;
 		}
 		// Update fade values
@@ -179,8 +174,9 @@ void mainMenuNormal(){
 		IOData[1].buffer = IOBuffer1;
 		IOData[1].size = 1;
 
-		// Hide the flying comet sprite
+		// Hide the flying comet sprite and star blocker sprite
 		objectBuffer[FLYING_COMET_SPRITE].attr0 = ATTR0_HIDE;
+		objectBuffer[STAR_BLOCKER_SPRITE].attr0 = ATTR0_HIDE;
 
 		// Update the BG Positions (using IOBuffer0)
 		interpolateStarryBG();
@@ -205,6 +201,8 @@ void mainMenuNormal(){
 
 		// Hide the flying comet sprite
 		objectBuffer[FLYING_COMET_SPRITE].attr0 = ATTR0_HIDE;
+		objectBuffer[STAR_BLOCKER_SPRITE].attr0 = ATTR0_HIDE;
+		updateObjBuffer();
 
 		// Update the BG Positions (using IOBuffer0)
 		interpolateStarryBG();
@@ -245,8 +243,19 @@ void mainMenuNormal(){
 			mainMenuData.actionTimer++;
 			IOBuffer1[0] = (mainMenuData.actionTimer * 2) >> 1;
 		}
+		
+		// 39 frames before the final destination, start displaying the star sprite at its designated position
+		if (mainMenuData.actionTimer > mainMenuData.actionTarget - 40) {
+			int index = mainMenuData.actionTimer - (mainMenuData.actionTarget - 40);
+			if (index >= 0 && index <= 31) // Ensure index is within bounds
+				drawStarBlocker(starBlockerYPos[index - 1]);
+			else
+				drawStarBlocker(9);
+		}
+
 		// Hide the flying comet sprite
 		objectBuffer[FLYING_COMET_SPRITE].attr0 = ATTR0_HIDE;
+		updateObjBuffer();
 
 		// Update the BG Positions (using IOBuffer0)
 		interpolateStarryBG();
@@ -275,12 +284,13 @@ void mainMenuNormal(){
 
 		// Hide the flying comet sprite
 		objectBuffer[FLYING_COMET_SPRITE].attr0 = ATTR0_HIDE;
+		updateObjBuffer();
 		break;
 	case TITLE_FLYING_COMET_ANIMATION:
 		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
 			mainMenuData.state = TITLE_BEFORE_HOLD;
 			objectBuffer[FLYING_COMET_SPRITE].attr0 = ATTR0_HIDE;
-			objectBuffer[FLYING_COMET_BLOCKER_SPRITE].attr0 = ATTR0_HIDE;
+			objectBuffer[STAR_BLOCKER_SPRITE].attr0 = ATTR0_HIDE;
 			mainMenuData.actionTimer = 0;
 			mainMenuData.actionTarget = 220;
 		}
@@ -291,9 +301,7 @@ void mainMenuNormal(){
 			objectBuffer[FLYING_COMET_SPRITE].attr2 = ATTR2_ID((starFrame << 5) + FLYING_COMET_GFX_START) | ATTR2_PRIO(3) | ATTR2_PALBANK(0);
 			mainMenuData.actionTimer++;
 		}
-		OAMData.position = (void *)oam_mem;
-		OAMData.buffer = objectBuffer;
-		OAMData.size = sizeof(objectBuffer) >> 2;
+		updateObjBuffer();
 		break;
 	case TITLE_BEFORE_HOLD:
 		if(mainMenuData.actionTimer == mainMenuData.actionTarget){
@@ -313,9 +321,7 @@ void mainMenuNormal(){
 		else{
 			mainMenuData.actionTimer++;
 		}
-		OAMData.position = (void *)oam_mem;
-		OAMData.buffer = objectBuffer;
-		OAMData.size = sizeof(objectBuffer) >> 2;
+		updateObjBuffer();
 		break;
 	case TITLE_HOLD:
 		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
@@ -323,7 +329,7 @@ void mainMenuNormal(){
 			mainMenuData.state = TITLE_AFTER_PRESS_START;
 			mainMenuData.actionTimer = 1;
 			mainMenuData.actionTarget = 30;
-			displayPressStart();
+			drawPressStart();
 
 			yStart = mainMenuData.starryBG.yPos * FIXED_POINT_SCALE; // Start position (scaled)
 			yTarget = -4504 * FIXED_POINT_SCALE; // Target position (scaled)
@@ -335,7 +341,7 @@ void mainMenuNormal(){
 		}
 		
 		if(mainMenuData.actionTimer % 128 < 64){
-			displayPressStart();
+			drawPressStart();
 		}
 		else{
 			hidePressStart();
@@ -345,9 +351,7 @@ void mainMenuNormal(){
 
 		updateBGScrollRegisters(mainMenuData.starryBG.xPos, mainMenuData.starryBG.yPos, mainMenuData.titleCardBG.xPos, mainMenuData.titleCardBG.yPos);
 		
-		OAMData.position = (void *)oam_mem;
-		OAMData.buffer = objectBuffer;
-		OAMData.size = sizeof(objectBuffer) >> 2;
+		updateObjBuffer();
 		break;
 	case TITLE_AFTER_PRESS_START:
 		if(mainMenuData.actionTimer >= mainMenuData.actionTarget){
@@ -359,21 +363,19 @@ void mainMenuNormal(){
 
 		// Rapidly blink the "Press Start" graphic
 		if(mainMenuData.actionTimer % 16 >= 8){
-			displayPressStart();
+			drawPressStart();
 		}else{
 			hidePressStart();
 		}
 
-		OAMData.position = (void *)oam_mem;
-		OAMData.buffer = objectBuffer;
-		OAMData.size = sizeof(objectBuffer) >> 2;
+		updateObjBuffer();
 		break;
 	case TITLE_FLY_OUT:
 		if(mainMenuData.actionTimer >= mainMenuData.actionTarget){
 			mainMenuData.state = MAIN_MENU_FLY_IN;
 			
-			//endAsset(currentAssetIndex);
-			//currentAssetIndex = playNewAsset(BGM_ID_MAIN_MENU);
+			endAsset(currentAssetIndex);
+			currentAssetIndex = playNewAsset(BGM_ID_MAIN_MENU);
 			mainMenuData.menuBG.xPos = 512 - 2;
 			mainMenuData.menuBG.yPos = 0;
 			loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, (void *)menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8, 0);
@@ -397,10 +399,7 @@ void mainMenuNormal(){
 			mainMenuData.actionTimer++;
 		}
 		
-		// Sprite positioning
-		OAMData.position = (void *)oam_mem;
-		OAMData.buffer = objectBuffer;
-		OAMData.size = sizeof(objectBuffer) >> 2;
+		updateObjBuffer();
 		
 		if (mainMenuData.actionTimer > 40) {
 			// Hide the title card after 40 frames in this state
@@ -809,7 +808,7 @@ int easeOutQuint(int t) {
     return FIXED_POINT_SCALE - tInverseQuintic;
 }
 
-void displayPressStart(){
+void drawPressStart(){
 	objectBuffer[PRESS_START_SPRITE1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(121);
 	objectBuffer[PRESS_START_SPRITE1].attr1 = ATTR1_SIZE_32x8 | ATTR1_X(78);
 	objectBuffer[PRESS_START_SPRITE1].attr2 = ATTR2_ID(PRESS_START_GFX_START) | ATTR2_PRIO(0) | ATTR2_PALBANK(PRESS_START_PAL_START);
@@ -819,6 +818,12 @@ void displayPressStart(){
 	objectBuffer[PRESS_START_SPRITE3].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(121);
 	objectBuffer[PRESS_START_SPRITE3].attr1 = ATTR1_SIZE_32x8 | ATTR1_X(142);
 	objectBuffer[PRESS_START_SPRITE3].attr2 = ATTR2_ID(PRESS_START_GFX_START + 8) | ATTR2_PRIO(0) | ATTR2_PALBANK(PRESS_START_PAL_START);
+}
+
+void drawStarBlocker(int yPos){
+	objectBuffer[STAR_BLOCKER_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(yPos);
+	objectBuffer[STAR_BLOCKER_SPRITE].attr1 = ATTR1_SIZE_32 | ATTR1_X(185);
+	objectBuffer[STAR_BLOCKER_SPRITE].attr2 = ATTR2_ID(STAR_BLOCKER_GFX_START) | ATTR2_PRIO(3) | ATTR2_PALBANK(1);
 }
 
 void hidePressStart(){
@@ -836,4 +841,10 @@ void skipToMenu(){
 	mainMenuData.state = TITLE_FLY_OUT;
 	mainMenuData.actionTimer = 1;
 	mainMenuData.actionTarget = 300;
+}
+
+void updateObjBuffer(){
+	OAMData.position = (void *)oam_mem;
+	OAMData.buffer = objectBuffer;
+	OAMData.size = sizeof(objectBuffer) >> 2;
 }

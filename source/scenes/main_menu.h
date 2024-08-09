@@ -30,11 +30,11 @@
 #define FLYING_COMET_GFX_SIZE 512
 
 #define STAR_BOCKER_CHARDATA 5
-#define FLYING_COMET_BLOCKER_PAL_START (FLYING_COMET_PAL_START + FLYING_COMET_PAL_SIZE)
-#define FLYING_COMET_BLOCKER_PAL_SIZE 1
-#define FLYING_COMET_BLOCKER_SPRITE 1
-#define FLYING_COMET_BLOCKER_GFX_START (FLYING_COMET_GFX_START + FLYING_COMET_GFX_SIZE)
-#define FLYING_COMET_BLOCKER_GFX_SIZE 1
+#define STAR_BLOCKER_PAL_START (FLYING_COMET_PAL_START + FLYING_COMET_PAL_SIZE)
+#define STAR_BLOCKER_PAL_SIZE 1
+#define STAR_BLOCKER_SPRITE 1
+#define STAR_BLOCKER_GFX_START (FLYING_COMET_GFX_START + FLYING_COMET_GFX_SIZE)
+#define STAR_BLOCKER_GFX_SIZE 1
 
 #define PRESS_START_CHARDATA 4
 #define PRESS_START_PAL_START 0
@@ -172,6 +172,7 @@ extern const unsigned short shootingStarTiles[8192];
 extern const unsigned short shootingStarPal[16];
 extern cu8 shootingStarXPos[16];
 extern cu8 shootingStarYPos[16];
+extern cu8 starBlockerYPos[31];
 extern const unsigned short starBlockerTiles[256];
 extern const unsigned short starBlockerPal[16];
 extern const unsigned short sprTitlePressStartTextTiles[192];
@@ -192,7 +193,8 @@ void mainMenuNormal();
 void mainMenuEnd();
 
 void hidePressStart();
-void displayPressStart();
+void drawPressStart();
+void drawStarBlocker(int yPos);
 
 void scrollStarryBG(int addedX, int addedY);
 void interpolateStarryBG();
@@ -202,6 +204,8 @@ void setTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical
 void updateBGScrollRegisters(u16 bg0XPos, u16 bg0YPos, u16 bg1XPos, u16 bg1YPos);
 void startMatch();
 void skipToMenu();
+void updateObjBuffer();
+void drawMenuTextSegment(int nineSliceWidth, int tileXPos, int tileYPos, int menuElementPosition, int palette, bool highlighted);
 int menuExecNewGame();
 int menuExecContinue();
 int menuExecLoadGame();
