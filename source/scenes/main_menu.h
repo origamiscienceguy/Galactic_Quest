@@ -22,19 +22,19 @@
 #define TITLE_CARD_GFX_START 0
 #define TITLE_CARD_GFX_SIZE 95
 
-#define SHOOTING_STAR_CHARDATA 4
-#define SHOOTING_STAR_PAL_START 0
-#define SHOOTING_STAR_PAL_SIZE 1
-#define SHOOTING_STAR_SPRITE 0
-#define SHOOTING_STAR_GFX_START 0
-#define SHOOTING_STAR_GFX_SIZE 512
+#define FLYING_COMET_CHARDATA 4
+#define FLYING_COMET_PAL_START 0
+#define FLYING_COMET_PAL_SIZE 1
+#define FLYING_COMET_SPRITE 0
+#define FLYING_COMET_GFX_START 0
+#define FLYING_COMET_GFX_SIZE 512
 
 #define STAR_BOCKER_CHARDATA 5
-#define STAR_BLOCKER_PAL_START (SHOOTING_STAR_PAL_START + SHOOTING_STAR_PAL_SIZE)
-#define STAR_BLOCKER_PAL_SIZE 1
-#define STAR_BLOCKER_SPRITE 1
-#define STAR_BLOCKER_GFX_START (SHOOTING_STAR_GFX_START + SHOOTING_STAR_GFX_SIZE)
-#define STAR_BLOCKER_GFX_SIZE 1
+#define FLYING_COMET_BLOCKER_PAL_START (FLYING_COMET_PAL_START + FLYING_COMET_PAL_SIZE)
+#define FLYING_COMET_BLOCKER_PAL_SIZE 1
+#define FLYING_COMET_BLOCKER_SPRITE 1
+#define FLYING_COMET_BLOCKER_GFX_START (FLYING_COMET_GFX_START + FLYING_COMET_GFX_SIZE)
+#define FLYING_COMET_BLOCKER_GFX_SIZE 1
 
 #define PRESS_START_CHARDATA 4
 #define PRESS_START_PAL_START 0
@@ -88,7 +88,8 @@
 #define SEC_LEFT 22
 #define SEC_CENTER 23
 
-#define TITLE_CAM_PAN_BOTTOM 250 // 512
+#define TITLE_CAM_PAN_BOTTOM 250
+#define TITLE_CAM_PAN_TOP 104
 #define FIXED_POINT_SCALE 1000
 #define BGM_ID_TITLE 10
 #define BGM_ID_MAIN_MENU 0
@@ -97,7 +98,7 @@
 
 //enums
 enum MainMenuState{
-	FLASH_WHITE, FADE_TO_TITLE, TITLE_WAIT_AT_BOTTOM, TITLE_PAN_UP, TITLE_FLASH, TITLE_REVEAL, TITLE_COMET_ANIMATION, TITLE_BEFORE_HOLD, TITLE_HOLD, TITLE_FLY_OUT, MAIN_MENU_FLY_IN, MAIN_MENU_HOLD, MAIN_MENU_FLY_OUT, 
+	FLASH_WHITE, FADE_TO_TITLE, TITLE_PAN_UP, TITLE_FLASH, TITLE_REVEAL, TITLE_FLYING_COMET_ANIMATION, TITLE_BEFORE_HOLD, TITLE_HOLD, TITLE_FLY_OUT, MAIN_MENU_FLY_IN, MAIN_MENU_HOLD, MAIN_MENU_FLY_OUT, 
 };
 
 enum MenuPageIndex{
@@ -119,6 +120,10 @@ typedef struct BGData{
 	u16 yPos;
 	s16 xVel;
 	s16 yVel;
+	u16 yScrollTimerCurrent;
+	u16 yScrollTimerTarget;
+	u16 yScrollStartPos;
+	u16 yScrollTargetPos;
 }BGData;
 
 typedef struct MainMenuData{
@@ -190,6 +195,7 @@ void hidePressStart();
 void displayPressStart();
 
 void scrollStarryBG(int addedX, int addedY);
+void interpolateStarryBG();
 void drawNineSliceWindow(int x, int y, int width, int height, int layer);
 void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int layer);
 void setTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical, int palette, int layer);
@@ -204,6 +210,7 @@ int menuExecPlayBGM();
 int menuExecPlaySFX();
 
 void loadGFX(u32 VRAMCharBlock, u32 VRAMTileIndex, void *graphicsBasePointer, u32 graphicsTileOffset, u32 numTilesToSend, u32 queueChannel);
+
 
 int easeInOut(int t, int power);
 int easeOutQuint(int t);
