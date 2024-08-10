@@ -106,9 +106,9 @@ MenuPage menuPages[6] = {
 		},
 		.itemCount = 3,
 		.pageName = "SOUND TEST",
-		.tileX = 10,
+		.tileX = 5,
 		.tileY = 6,
-		.tileWidth = 11,
+		.tileWidth = 22,
 		.tileHeight = 10,
 		.pxOffX = 4,
 		.backPage = (int)MPI_EXTRAS
@@ -903,6 +903,10 @@ void mainMenuEnd(){
 }
 
 void drawMenuPageText(int xPos, int yPos, int imgIndex) {
+	// Each character data block holds 512 tiles, and is selected per background.
+	// Sprites get character data blocks 4 and 5.
+	// The shooting star takes up the entirety of 4, so I put the rest of the sprites in 5. (that way I can just load them at initialization)
+	// The library I used (tonc) addresses VRAM as a 2-d array, with [charblock][tile ID]
 	objectBuffer[1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(yPos);
 	objectBuffer[1].attr1 = ATTR1_SIZE_64 | ATTR1_X(xPos);
 	objectBuffer[1].attr2 = ATTR2_ID(MENU_GFX_START + MIDDLE_UPPER) | ATTR2_PRIO(1) | ATTR2_PALBANK(2);
