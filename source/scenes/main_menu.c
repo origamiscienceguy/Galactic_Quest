@@ -73,9 +73,9 @@ MenuPage menuPages[6] = {
 		},
 		.itemCount = 5,
 		.pageName = "OPTIONS",
-		.tileX = 10,
+		.tileX = 5,//10,
 		.tileY = 6,
-		.tileWidth = 11,
+		.tileWidth = 22,//11,
 		.tileHeight = 14,
 		.pxOffX = 4,
 		.backPage = (int)MPI_MAIN_MENU
