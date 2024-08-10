@@ -146,7 +146,7 @@ void mainMenuInitialize(){
 	
 	memcpy32(&paletteBufferObj[FLYING_COMET_PAL_START << 4], shootingStarPal, sizeof(shootingStarPal) >> 2);
 	memcpy32(&paletteBufferObj[STAR_BLOCKER_PAL_START << 4], starBlockerPal, sizeof(starBlockerPal) >> 2);
-	memcpy32(&paletteBufferObj[BUTTON_PROMPT_PAL << 4], menu_button_promptsPal, sizeof(menu_button_promptsPal) >> 2);
+	memcpy32(&paletteBufferObj[MENU_BUTTON_PROMPT_PAL << 4], menu_button_promptsPal, sizeof(menu_button_promptsPal) >> 2);
 	
 	paletteData[1].size = 32;
 	paletteData[1].position = pal_obj_mem;
@@ -654,32 +654,7 @@ void updateMainMenu(){
 				mDat.winSliceHeight = 1;//mDat.windowTargetHeight;
 				//mDat.winSliceHeight += 2;
 				mDat.windowCurrTileYPos -= 2;
-				mDat.windowState = MMWS_ZIPPING;
-				mDat.zipSpeed = 3;
 
-/*
-		.items = {
-			{"Master Volume", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY, .textGFXIndex = 14},
-			{"BGM", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY, .textGFXIndex = 16},
-			{"SFX", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY, .textGFXIndex = 18},
-			{"Apply Changes", SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = FUNC_PTR, .textGFXIndex = 120},
-			{"Abort", PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = INT, .textGFXIndex = 22}
-		},
-		.itemCount = 5,
-		.pageName = "OPTIONS",
-		.tileX = 10,
-		.tileY = 6,
-		.tileWidth = 10,
-		.tileHeight = 10
-
-
-				.items = {
-			{"Sound Test", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_SOUND_TEST, .dataType = MPIDT_INT, .textGFXIndex = 36},
-			{"Credits", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_CREDITS, .dataType = MPIDT_INT, .textGFXIndex = 38},
-			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = MPIDT_INT, .textGFXIndex = 12}
-		},
-		*/
-				
 				MenuElementData* dat;
 				FunctionPtr datFunctPtr;
 				int datIntVal;
@@ -689,6 +664,9 @@ void updateMainMenu(){
 					default:
 					case MWCD_NEUTRAL:
 					case MWCD_FORWARD:
+						mDat.windowState = MMWS_ZIPPING;
+						mDat.zipSpeed = 3;
+						
 						dat = &menuPage->items[mDat.menuCursorPos].data;
 						switch(menuPage->items[mDat.menuCursorPos].dataType) {
 							case MPIDT_FUNC_PTR:
@@ -719,13 +697,18 @@ void updateMainMenu(){
 						}
 						break;
 					case MWCD_BACKWARD:
+						// nvm, maybe if there's extra time i'll implement this
+						//mDat.windowState = MMWS_OPENING;
+						//mDat.zipSpeed = 0;
+						mDat.windowState = MMWS_ZIPPING;
+						mDat.zipSpeed = 3;
+
 						// Always perform a Page Transfer for backing out of a menu
 						datIntVal = menuPage->backPage;
 						performPageTransfer(datIntVal);
 						break;
 				}
 
-				mDat.windowConfirmDirection = MWCD_NEUTRAL;
 				mDat.windowTargetTileX = menuPage->tileX;
 				mDat.windowTargetTileY = menuPage->tileY;
 				mDat.windowTargetWidth = menuPage->tileWidth;
@@ -1274,6 +1257,16 @@ void drawStarBlocker(int yPos){
 	objectBuffer[STAR_BLOCKER_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(yPos);
 	objectBuffer[STAR_BLOCKER_SPRITE].attr1 = ATTR1_SIZE_32 | ATTR1_X(185);
 	objectBuffer[STAR_BLOCKER_SPRITE].attr2 = ATTR2_ID(STAR_BLOCKER_GFX_START) | ATTR2_PRIO(3) | ATTR2_PALBANK(1);
+}
+
+void drawMenuButtons(int xPos, int yPos){
+	objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(yPos);
+	objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr1 = ATTR1_SIZE_32 | ATTR1_X(185);
+	objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr2 = ATTR2_ID(STAR_BLOCKER_GFX_START) | ATTR2_PRIO(3) | ATTR2_PALBANK(1);
+	
+	objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(yPos);
+	objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr1 = ATTR1_SIZE_32 | ATTR1_X(185);
+	objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr2 = ATTR2_ID(STAR_BLOCKER_GFX_START) | ATTR2_PRIO(3) | ATTR2_PALBANK(1);
 }
 
 void hidePressStart(){

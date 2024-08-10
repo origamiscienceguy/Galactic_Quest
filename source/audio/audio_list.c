@@ -435,8 +435,8 @@ AudioSample _woodblock_smp = {
 
 extern cu8 _sfxMenuCancel_smp_data[];
 AudioSample _sfxMenuCancel_smp = {
-	.sampleStart = _sfxMenuCancel_smp_data, .sampleLength = 11456, .loopEnd = 11456, .loopStart = 9216, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 32768,
-	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+	.sampleStart = _sfxMenuCancel_smp_data, .sampleLength = 16583, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 32768,
+	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
 extern cu8 _sfxShipDmgL_smp_data[];
