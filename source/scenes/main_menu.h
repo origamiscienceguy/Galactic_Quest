@@ -162,6 +162,7 @@ typedef struct BGData{
 typedef struct MainMenuData{
 	enum TitleSceneState state;
 	enum MainMenuWindowState windowState;
+	bool updateDraw;
 	BGData starryBG;
 	BGData titleCardBG;
 	BGData menuBG;
@@ -185,6 +186,7 @@ typedef struct MainMenuData{
 	bool showPageWindowBG;
 	u8 windowActionTimer;
 	u8 zipSpeed;
+	int menuElementsWidth[MPI_MAX];
 }MainMenuData;
 
 typedef int (*FunctionPtr)(void);
@@ -275,7 +277,7 @@ int wrapX(int x);
 bool isInBounds(int y);
 void drawLaserRow(int x, int y, int width, int layer, bool wrapAround);
 void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int layer);
-void drawMenuTextSegment(int nineSliceWidth, int tileXPos, int tileYPos, int menuElementPosition, int palette, bool highlighted);
+void drawMenuTextSegment(int nineSliceWidth, int tileXPos, int tileYPos, int menuElementPosition, int palette, bool highlighted, int numTextTileColumns);
 void menuInputConfirmEnabled();
 void menuInputBackEnabled();
 void performPageTransfer(int datIntVal);
