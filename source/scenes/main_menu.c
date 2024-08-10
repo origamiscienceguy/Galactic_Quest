@@ -50,9 +50,9 @@ MenuPage menuPages[6] = {
 		.backPage = (int)MPI_MAIN_MENU
 	},{
 		.items = {
-			{"Sound Test", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_SOUND_TEST, .dataType = MPIDT_INT, .textGFXIndex = 36},
-			{"Credits", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_CREDITS, .dataType = MPIDT_INT, .textGFXIndex = 38},
-			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = MPIDT_INT, .textGFXIndex = 12}
+			{"Sound Test", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_SOUND_TEST, .dataType = MPIDT_INT, .textGFXIndex = 38},
+			{"Credits", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_CREDITS, .dataType = MPIDT_INT, .textGFXIndex = 40},
+			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = MPIDT_INT, .textGFXIndex = 42}
 		},
 		.itemCount = 3,
 		.pageName = "EXTRAS",
@@ -82,12 +82,12 @@ MenuPage menuPages[6] = {
 	},
 	{
 		.items = {
-			{"- Programming -", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 24},
-			{"origamiscienceguy", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 30},
-			{"- Graphics -", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 28},
-			{"n67094", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 34},
-			{"- Audio -", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 26},
-			{"potatoTeto", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 32}
+			{"- Programming -", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 26},
+			{"origamiscienceguy", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 32},
+			{"- Graphics -", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 30},
+			{"n67094", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 36},
+			{"- Audio -", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 28},
+			{"potatoTeto", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 34}
 		},
 		.itemCount = 6,
 		.pageName = "CREDITS",
@@ -102,7 +102,7 @@ MenuPage menuPages[6] = {
 		.items = {
 			{"BGM", ME_SOUND_TESTER, .data.functionPtr = menuExecPlayBGM, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 16},
 			{"SFX", ME_SOUND_TESTER, .data.functionPtr = menuExecPlaySFX, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 18},
-			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = MPIDT_INT, .textGFXIndex = 12}
+			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = MPIDT_INT, .textGFXIndex = 24}
 		},
 		.itemCount = 3,
 		.pageName = "SOUND TEST",
@@ -843,6 +843,8 @@ void drawMainMenu(){
 		else
 			drawLaserRow(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos, mDat.winSliceWidth, 1, false);
 		
+		drawMenuPageText(10, mDat.menuPageTextYPos + secondaryNineSliceYOff, 0);
+
 		switch(mDat.windowState) {
 			default:
 			case MMWS_OPENING:
@@ -889,11 +891,20 @@ void drawMainMenu(){
 		tilemapData[2].position = se_mem[MENU_PAGE_TILEMAP];
 		tilemapData[2].buffer = (void *)tilemapBuffer2;
 		tilemapData[2].size = 512;
+
+		updateObjBuffer();
 }
 
 void mainMenuEnd(){
 	currentScene.scenePointer = sceneList[GAMEPLAY];
 	currentScene.state = INITIALIZE;
+}
+
+void drawMenuPageText(int xPos, int yPos, int imgIndex) {
+	objectBuffer[1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(yPos);
+	objectBuffer[1].attr1 = ATTR1_SIZE_64 | ATTR1_X(xPos);
+	objectBuffer[1].attr2 = ATTR2_ID(MENU_GFX_START + MIDDLE_UPPER) | ATTR2_PRIO(1) | ATTR2_PALBANK(2);
+	//(imgIndex << 5) + MENU_PAGE_TEXT_SPRITE
 }
 
 void scrollStarryBG(int addedX, int addedY){

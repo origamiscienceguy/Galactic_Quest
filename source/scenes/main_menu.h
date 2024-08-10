@@ -57,8 +57,11 @@
 #define MENU_TEXT_FOCUSED_GFX_SIZE 156
 #define MENU_TEXT_FOCUSED_PAL_START 2
 
-#define MENU_BUTTON_PROMPT_SPRITE1 0
-#define MENU_BUTTON_PROMPT_SPRITE2 1
+#define MENU_PAGE_TEXT_SPRITE 0
+#define MENU_BUTTON_PROMPT_SPRITE1 1
+#define MENU_BUTTON_PROMPT_SPRITE2 2
+#define MENU_BUTTON_PROMPT_SPRITE3 3
+#define MENU_BUTTON_PROMPT_SPRITE4 4
 
 #define MENU_BUTTON_PROMPT_PAL 3
 #define MENU_BUTTON_PROMPT_GFX_START (MENU_TEXT_FOCUSED_GFX_START + MENU_TEXT_FOCUSED_GFX_SIZE)
@@ -166,6 +169,7 @@ typedef struct MainMenuData{
 	int winSliceWidth;
 	int winSliceHeight;
 	int currMenuPage;
+	u8 menuPageTextYPos;
 	u8 menuCursorPos;
 	u8 windowConfirmDirection;
 	int windowCurrTileXPos;
@@ -260,6 +264,7 @@ void initMainMenu();
 void updateMainMenu();
 void loadMenuGraphics(MenuPage *menuPage);
 void drawMainMenu();
+void drawMenuPageText(int xPos, int yPos, int imgIndex);
 void setTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical, int palette, int layer);
 void drawNineSliceWindow(int x, int y, int width, int height, int layer);
 int wrapX(int x);
