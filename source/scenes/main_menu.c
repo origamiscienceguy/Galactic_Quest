@@ -166,6 +166,8 @@ void mainMenuInitialize(){
 	
 	memcpy32(&characterBuffer4[FLYING_COMET_GFX_START << 5], shootingStarTiles, sizeof(shootingStarTiles) >> 2);
 	memcpy32(&characterBuffer5[0], starBlockerTiles, sizeof(starBlockerTiles) >> 2);
+	memcpy32(&characterBuffer5[MENU_SLIDER_PROMPT_GFX_START << 5], menu_slider_promptTiles, sizeof(menu_slider_promptTiles) >> 2);
+	memcpy32(&characterBuffer5[MENU_BUTTON_PROMPT_GFX_START << 5], menu_button_promptsTiles, sizeof(menu_button_promptsTiles) >> 2);
 	characterData[4].position = tile_mem[FLYING_COMET_CHARDATA];
 	characterData[4].buffer = (void *)characterBuffer4;
 	characterData[4].size = sizeof(characterBuffer4) >> 2;
