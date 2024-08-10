@@ -242,6 +242,7 @@ void updateObjBuffer();
 
 void initMainMenu();
 void updateMainMenu();
+void loadMenuGraphics(MenuPage *menuPage);
 void drawMainMenu();
 void setTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical, int palette, int layer);
 void drawNineSliceWindow(int x, int y, int width, int height, int layer);

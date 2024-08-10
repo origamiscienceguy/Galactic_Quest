@@ -62,7 +62,7 @@ MenuPage menuPages[6] = {
 			{"Master Volume", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 14},
 			{"BGM", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 16},
 			{"SFX", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 18},
-			{"Apply Changes", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 120},
+			{"Apply Changes", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 20},
 			{"Abort", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = MPIDT_INT, .textGFXIndex = 22}
 		},
 		.itemCount = 5,
@@ -87,7 +87,7 @@ MenuPage menuPages[6] = {
 		.items = {
 			{"BGM", ME_SOUND_TESTER, .data.functionPtr = menuExecPlayBGM, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 16},
 			{"SFX", ME_SOUND_TESTER, .data.functionPtr = menuExecPlaySFX, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 18},
-			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = MPIDT_INT}
+			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = MPIDT_INT, .textGFXIndex = 12}
 		},
 		.itemCount = 3,
 		.pageName = "SOUND TEST",
@@ -622,12 +622,12 @@ void updateMainMenu(){
 			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = MPIDT_INT, .textGFXIndex = 12}
 		},
 		*/
-				MenuElementData* dat = &menuPage->items[mDat.menuCursorPos].data;  // Corrected: Accessing array element directly
+				MenuElementData* dat = &menuPage->items[mDat.menuCursorPos].data;
 				FunctionPtr datFunctPtr;
 				int datIntVal;
 				int* datIntArr;
 
-				switch(menuPage->items[mDat.menuCursorPos].dataType) {  // Corrected: Accessing array element directly
+				switch(menuPage->items[mDat.menuCursorPos].dataType) {
 					case MPIDT_FUNC_PTR:
 						datFunctPtr = dat->functionPtr;
 						break;
@@ -639,43 +639,34 @@ void updateMainMenu(){
 						break;
 				}
 
-				switch(menuPage->items[mDat.menuCursorPos].menuElement) {  // Corrected: Accessing array element directly
+				switch(menuPage->items[mDat.menuCursorPos].menuElement) {
 					case ME_SCRIPT_RUNNER:
-						// Handle SCRIPT_RUNNER case
 						break;
 					case ME_PAGE_TRANSFER:
-						mDat.currMenuPage = datIntVal;
-						menuPage = &menuPages[mDat.currMenuPage];
 						mDat.windowTargetWidth = menuPage->tileWidth;
 						mDat.windowTargetHeight = menuPage->tileHeight;
 
-						int gfxPosY = menuPage->items[mDat.menuCursorPos].textGFXIndex;  // Corrected: Accessing array element directly
-						int numItems = menuPage->itemCount;
-						
 						mDat.menuCursorPos = 0;
 
-						///TODO: fix this bs
-						for (int i = 0; i < numItems; i++) {
-							loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, (void *)menu_actionTiles, MENU_TEXT_TILE_WIDTH * gfxPosY, MENU_TEXT_TILE_WIDTH * 2, 0);
-							loadGFX(MENU_CHARDATA, MENU_TEXT_FOCUSED_GFX_START, (void *)menu_action_focusedTiles, MENU_TEXT_TILE_WIDTH * gfxPosY, MENU_TEXT_TILE_WIDTH * 2, 1);
-						}
+						// Get the new Menu Page based on the data we're reading
+						mDat.currMenuPage = datIntVal;
+						menuPage = &menuPages[mDat.currMenuPage];
+						
+						// Start loading the new menu page's graphics into VRAM (this will take more than one frame, so this function will keep being called even during MMWS_ZIPPING state)
+						loadMenuGraphics(menuPage);
 						break;
 					case ME_SLIDER:
-						// Handle SLIDER case
 						break;
 					case ME_SHIFT:
-						// Handle SHIFT case
 						break;
 					case ME_TOGGLE:
-						// Handle TOGGLE case
 						break;
 					case ME_SOUND_TESTER:
-						// Handle SOUND_TESTER case
 						break;
 				}
 
-				mDat.windowTargetWidth = menuPage->tileWidth;    // Corrected: Direct assignment
-				mDat.windowTargetHeight = menuPage->tileHeight;  // Corrected: Direct assignment
+				mDat.windowTargetWidth = menuPage->tileWidth;
+				mDat.windowTargetHeight = menuPage->tileHeight;
 				mDat.wrappedAround = false;
 			}
 			break;
@@ -718,6 +709,9 @@ void updateMainMenu(){
 			break;
 		case MMWS_INITIAL_ZIPPING:
 		case MMWS_ZIPPING:
+			// Continue loading the VRAM graphics, if applicable
+			loadMenuGraphics(menuPage);
+
 			//mDat.winSliceWidth = 1;
 			mDat.windowTileXPos-= mDat.zipSpeed;
 			
@@ -740,6 +734,39 @@ void updateMainMenu(){
 			mDat.windowActionTimer++;
 			break;
 	}
+}
+
+void loadMenuGraphics(MenuPage *menuPage) {
+    static int itemIndex = 0;       // Track the current item index
+    static u32 vramTileOffset = 0;  // Track the current VRAM tile offset
+    static u32 queueChannel = 0;    // Track the current queue channel
+    int numItems = menuPage->itemCount;
+
+    // Process up to 4 graphics load operations per call
+    for (int i = 0; i < 4; i+=2) {
+        if (itemIndex >= numItems) {
+            // All items have been processed, reset for next call
+            itemIndex = 0;
+            vramTileOffset = 0;
+            queueChannel = 0;
+            return;
+        }
+
+        int gfxPosY = menuPage->items[itemIndex].textGFXIndex;
+
+        // Load unhighlighted tiles
+        loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START + vramTileOffset, (void *)menu_actionTiles,
+                MENU_TEXT_TILE_WIDTH * gfxPosY, MENU_TEXT_TILE_WIDTH * 2, queueChannel);
+        queueChannel = (queueChannel + 1) % 4;
+
+        // Load highlighted tiles
+        loadGFX(MENU_CHARDATA, MENU_TEXT_FOCUSED_GFX_START + vramTileOffset, (void *)menu_action_focusedTiles,
+                MENU_TEXT_TILE_WIDTH * gfxPosY, MENU_TEXT_TILE_WIDTH * 2, queueChannel);
+        vramTileOffset += MENU_TEXT_TILE_WIDTH * 2;
+        queueChannel = (queueChannel + 1) % 4;
+
+        itemIndex++;
+    }
 }
 
 void drawMainMenu(){
