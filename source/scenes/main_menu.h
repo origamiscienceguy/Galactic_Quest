@@ -121,6 +121,12 @@ enum MenuPageIndex{
 	MPI_MAIN_MENU, MPI_PLAY_GAME, MPI_EXTRAS, MPI_OPTIONS, MPI_CREDITS, MPI_SOUND_TEST, MPI_MAX
 };
 
+enum MenuWindowConfirmDirection {
+	MWCD_NEUTRAL,
+	MWCD_FORWARD,
+	MWCD_BACKWARD,
+};
+
 typedef enum{
     ME_SCRIPT_RUNNER,
     ME_PAGE_TRANSFER,
@@ -128,6 +134,7 @@ typedef enum{
 	ME_SHIFT,
 	ME_TOGGLE,
 	ME_SOUND_TESTER,
+	ME_CREDITS_DISPLAY,
 }MenuElement;
 
 //structs
@@ -156,8 +163,11 @@ typedef struct MainMenuData{
 	int winSliceHeight;
 	int currMenuPage;
 	u8 menuCursorPos;
-	int windowTileXPos;
-	u8 windowTileYPos;
+	u8 windowConfirmDirection;
+	int windowCurrTileXPos;
+	int windowCurrTileYPos;
+	u8 windowTargetTileX;
+	u8 windowTargetTileY;
 	u8 windowTargetWidth;
 	u8 windowTargetHeight;
 	bool wrappedAround;
@@ -187,12 +197,14 @@ typedef struct{
 // Define the MenuPage struct with an array of MenuPageItem
 typedef struct{
     MenuPageItem items[MAX_MENU_ITEMS];  // Fixed-size array of MenuPageItem
+	int backPage;
     s32 itemCount;                    // Number of items currently in the array
 	char* pageName;
 	u8 tileX;
 	u8 tileY;
 	u8 tileWidth;
 	u8 tileHeight;
+	u8 pxOffX;
 } MenuPage;
 
 //globals
@@ -251,6 +263,9 @@ bool isInBounds(int y);
 void drawLaserRow(int x, int y, int width, int layer, bool wrapAround);
 void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int layer);
 void drawMenuTextSegment(int nineSliceWidth, int tileXPos, int tileYPos, int menuElementPosition, int palette, bool highlighted);
+void menuInputConfirmEnabled();
+void menuInputBackEnabled();
+void performPageTransfer(int datIntVal);
 
 int menuExecNewGame();
 int menuExecContinue();

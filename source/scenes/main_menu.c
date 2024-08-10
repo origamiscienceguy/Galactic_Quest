@@ -29,7 +29,9 @@ MenuPage menuPages[6] = {
 		.tileX = 10,
 		.tileY = 6,
 		.tileWidth = 10,
-		.tileHeight = 10
+		.tileHeight = 10,
+		.pxOffX = 0,
+		.backPage = (int)MPI_MAIN_MENU
 	},
 	{
 		.items = {
@@ -43,7 +45,9 @@ MenuPage menuPages[6] = {
 		.tileX = 10,
 		.tileY = 6,
 		.tileWidth = 10,
-		.tileHeight = 12
+		.tileHeight = 12,
+		.pxOffX = 0,
+		.backPage = (int)MPI_MAIN_MENU
 	},{
 		.items = {
 			{"Sound Test", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_SOUND_TEST, .dataType = MPIDT_INT, .textGFXIndex = 36},
@@ -52,10 +56,12 @@ MenuPage menuPages[6] = {
 		},
 		.itemCount = 3,
 		.pageName = "EXTRAS",
-		.tileX = 10,
+		.tileX = 11,
 		.tileY = 6,
-		.tileWidth = 10,
-		.tileHeight = 10
+		.tileWidth = 9,
+		.tileHeight = 10,
+		.pxOffX = 4,
+		.backPage = (int)MPI_MAIN_MENU
 	},
 	{
 		.items = {
@@ -69,19 +75,28 @@ MenuPage menuPages[6] = {
 		.pageName = "OPTIONS",
 		.tileX = 10,
 		.tileY = 6,
-		.tileWidth = 10,
-		.tileHeight = 14
+		.tileWidth = 11,
+		.tileHeight = 14,
+		.pxOffX = 4,
+		.backPage = (int)MPI_MAIN_MENU
 	},
 	{
 		.items = {
-			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = MPIDT_INT, .textGFXIndex = 12}
+			{"- Programming -", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 24},
+			{"origamiscienceguy", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 30},
+			{"- Graphics -", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 28},
+			{"n67094", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 34},
+			{"- Audio -", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 26},
+			{"potatoTeto", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 32}
 		},
-		.itemCount = 1,
+		.itemCount = 6,
 		.pageName = "CREDITS",
-		.tileX = 10,
-		.tileY = 6,
-		.tileWidth = 12,
-		.tileHeight = 10
+		.tileX = 9,
+		.tileY = 4,
+		.tileWidth = 13,
+		.tileHeight = 16,
+		.pxOffX = 4,
+		.backPage = (int)MPI_EXTRAS
 	},
 	{
 		.items = {
@@ -93,8 +108,10 @@ MenuPage menuPages[6] = {
 		.pageName = "SOUND TEST",
 		.tileX = 10,
 		.tileY = 6,
-		.tileWidth = 10,
-		.tileHeight = 10
+		.tileWidth = 11,
+		.tileHeight = 10,
+		.pxOffX = 0,
+		.backPage = (int)MPI_EXTRAS
 	}
 };
 
@@ -550,11 +567,14 @@ void mainMenuNormal(){
 void initMainMenu(){
 	mDat.currMenuPage = 0;
 	mDat.menuCursorPos = 0;
+	mDat.windowConfirmDirection = MWCD_NEUTRAL;
 
-	mDat.windowTileXPos = 22;
-	mDat.windowTileYPos = 10;
+	mDat.windowCurrTileXPos = 22;
+	mDat.windowCurrTileYPos = 10;
 	mDat.winSliceWidth = 10;
 	mDat.winSliceHeight = 1;
+	mDat.windowTargetTileX = 10;
+	mDat.windowTargetTileY = 6;
 	mDat.windowTargetWidth = 10;
 	mDat.windowTargetHeight = 10;
 	mDat.windowState = MMWS_INITIAL_ZIPPING;
@@ -576,10 +596,11 @@ void updateMainMenu(){
 			if (mDat.winSliceHeight + 2 < mDat.windowTargetHeight) {
 				mDat.winSliceHeight+=2;
 				//Ensure that this window never goes beyond the screen boundary
-				if (mDat.windowTileYPos - 1 >= 0)
-					mDat.windowTileYPos--;
+				if (mDat.windowCurrTileYPos - 1 >= 0)
+					mDat.windowCurrTileYPos--;
 			} else {
 				mDat.winSliceHeight = mDat.windowTargetHeight;
+				//mDat.windowCurrTileYPos = mDat.windowTargetTileY;
 				//mDat.winSliceHeight += 2;
 				//mDat.windowTileYPos -= 2;
 				mDat.windowState = MMWS_READY;
@@ -591,12 +612,12 @@ void updateMainMenu(){
 			if (mDat.winSliceHeight + 2 > 1) {
 				mDat.winSliceHeight-=2;
 				//Ensure that this window never goes beyond the screen boundary
-				if (mDat.windowTileYPos + 1 < 19)
-					mDat.windowTileYPos++;
+				if (mDat.windowCurrTileYPos + 1 < 19)
+					mDat.windowCurrTileYPos++;
 			} else {
 				mDat.winSliceHeight = 1;//mDat.windowTargetHeight;
 				//mDat.winSliceHeight += 2;
-				mDat.windowTileYPos -= 2;
+				mDat.windowCurrTileYPos -= 2;
 				mDat.windowState = MMWS_ZIPPING;
 				mDat.zipSpeed = 3;
 
@@ -622,49 +643,55 @@ void updateMainMenu(){
 			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = MPIDT_INT, .textGFXIndex = 12}
 		},
 		*/
-				MenuElementData* dat = &menuPage->items[mDat.menuCursorPos].data;
+				
+				MenuElementData* dat;
 				FunctionPtr datFunctPtr;
 				int datIntVal;
 				int* datIntArr;
 
-				switch(menuPage->items[mDat.menuCursorPos].dataType) {
-					case MPIDT_FUNC_PTR:
-						datFunctPtr = dat->functionPtr;
+				switch(mDat.windowConfirmDirection) {
+					default:
+					case MWCD_NEUTRAL:
+					case MWCD_FORWARD:
+						dat = &menuPage->items[mDat.menuCursorPos].data;
+						switch(menuPage->items[mDat.menuCursorPos].dataType) {
+							case MPIDT_FUNC_PTR:
+								datFunctPtr = dat->functionPtr;
+								break;
+							case MPIDT_INT:
+								datIntVal = dat->intVal;
+								break;
+							case MPIDT_INT_ARRAY:
+								datIntArr = dat->intArray;
+								break;
+						}
+
+						switch(menuPage->items[mDat.menuCursorPos].menuElement) {
+							case ME_SCRIPT_RUNNER:
+								break;
+							case ME_PAGE_TRANSFER:
+								performPageTransfer(datIntVal);
+								break;
+							case ME_SLIDER:
+								break;
+							case ME_SHIFT:
+								break;
+							case ME_TOGGLE:
+								break;
+							case ME_SOUND_TESTER:
+								break;
+						}
 						break;
-					case MPIDT_INT:
-						datIntVal = dat->intVal;
-						break;
-					case MPIDT_INT_ARRAY:
-						datIntArr = dat->intArray;
+					case MWCD_BACKWARD:
+						// Always perform a Page Transfer for backing out of a menu
+						datIntVal = menuPage->backPage;
+						performPageTransfer(datIntVal);
 						break;
 				}
 
-				switch(menuPage->items[mDat.menuCursorPos].menuElement) {
-					case ME_SCRIPT_RUNNER:
-						break;
-					case ME_PAGE_TRANSFER:
-						mDat.windowTargetWidth = menuPage->tileWidth;
-						mDat.windowTargetHeight = menuPage->tileHeight;
-
-						mDat.menuCursorPos = 0;
-
-						// Get the new Menu Page based on the data we're reading
-						mDat.currMenuPage = datIntVal;
-						menuPage = &menuPages[mDat.currMenuPage];
-						
-						// Start loading the new menu page's graphics into VRAM (this will take more than one frame, so this function will keep being called even during MMWS_ZIPPING state)
-						loadMenuGraphics(menuPage);
-						break;
-					case ME_SLIDER:
-						break;
-					case ME_SHIFT:
-						break;
-					case ME_TOGGLE:
-						break;
-					case ME_SOUND_TESTER:
-						break;
-				}
-
+				mDat.windowConfirmDirection = MWCD_NEUTRAL;
+				mDat.windowTargetTileX = menuPage->tileX;
+				mDat.windowTargetTileY = menuPage->tileY;
 				mDat.windowTargetWidth = menuPage->tileWidth;
 				mDat.windowTargetHeight = menuPage->tileHeight;
 				mDat.wrappedAround = false;
@@ -689,22 +716,25 @@ void updateMainMenu(){
 			}
 
 			// Navigate the menu; wrap around if we hit an edge
-			if (moveY != 0) {
-				playNewSound(_sfxMenuMove);
-				if((mDat.menuCursorPos + moveY) < 0){
-					mDat.menuCursorPos = menuPage->itemCount - 1;
+			if (menuPage != &menuPages[MPI_CREDITS]) {
+				if (moveY != 0) {
+					playNewSound(_sfxMenuMove);
+					if((mDat.menuCursorPos + moveY) < 0){
+						mDat.menuCursorPos = menuPage->itemCount - 1;
+					}
+					else if ((mDat.menuCursorPos + moveY) > (menuPage->itemCount - 1)){
+						mDat.menuCursorPos = 0;
+					}
+					else{
+						mDat.menuCursorPos += moveY;
+					}
 				}
-				else if ((mDat.menuCursorPos + moveY) > (menuPage->itemCount - 1)){
-					mDat.menuCursorPos = 0;
-				}
-				else{
-					mDat.menuCursorPos += moveY;
-				}
+			
+				menuInputConfirmEnabled();
 			}
 			
-			if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
-				playNewSound(_sfxMenuConfirmA);
-				mDat.windowState = MMWS_CLOSING;
+			if (menuPage != &menuPages[MPI_MAIN_MENU]) {
+				menuInputBackEnabled();
 			}
 			break;
 		case MMWS_INITIAL_ZIPPING:
@@ -713,22 +743,30 @@ void updateMainMenu(){
 			loadMenuGraphics(menuPage);
 
 			//mDat.winSliceWidth = 1;
-			mDat.windowTileXPos-= mDat.zipSpeed;
+			mDat.windowCurrTileXPos-= mDat.zipSpeed;
 			
-			if (mDat.windowTileXPos < 0) {
+			if (mDat.windowCurrTileXPos < 0) {
 				if (!mDat.wrappedAround) {
-					mDat.windowTileXPos = 29;
+					mDat.windowCurrTileXPos = 29;
 					mDat.wrappedAround = true;
 				} 
 			} else {
 				if (mDat.wrappedAround) {
-					if (mDat.windowTileXPos < mDat.windowTargetWidth) {
-						mDat.windowTileXPos = mDat.windowTargetWidth;
+					if (mDat.windowCurrTileXPos < mDat.windowTargetTileX) {
+						mDat.windowCurrTileXPos = mDat.windowTargetTileX;
+						// Set the xPos Offset
+						mDat.menuBG.xPos = menuPage->pxOffX;
+
+						mDat.winSliceWidth = mDat.windowTargetWidth;
 						mDat.wrappedAround = true;
 						mDat.windowActionTimer = 0;
 						mDat.windowState = MMWS_OPENING;
 					}
 				}
+			}
+
+			if (mDat.wrappedAround) {
+
 			}
 
 			mDat.windowActionTimer++;
@@ -774,13 +812,16 @@ void drawMainMenu(){
 		memset32(tilemapBuffer1, 0, 512);
 		
 		// Draw the Menu Page Window
+		int secondaryNineSliceYOff = 2;
+		if (mDat.currMenuPage == (int)MPI_CREDITS)
+			secondaryNineSliceYOff--;
 		if (mDat.showPageWindowBG)
-			drawSecondaryNineSliceWindowStyle(10, 2, 10, 2, 1);
+			drawSecondaryNineSliceWindowStyle(10, secondaryNineSliceYOff, 10, 2, 1);
 
 		if (mDat.windowState != MMWS_INITIAL_ZIPPING)
-			drawNineSliceWindow(mDat.windowTileXPos, mDat.windowTileYPos, mDat.winSliceWidth, mDat.winSliceHeight, 1);
+			drawNineSliceWindow(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos, mDat.winSliceWidth, mDat.winSliceHeight, 1);
 		else
-			drawLaserRow(mDat.windowTileXPos, mDat.windowTileYPos, mDat.winSliceWidth, 1, false);
+			drawLaserRow(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos, mDat.winSliceWidth, 1, false);
 		
 		switch(mDat.windowState) {
 			default:
@@ -796,8 +837,8 @@ void drawMainMenu(){
 
 				for(int i = 0; i < menuPage->itemCount; ++i){
 					MenuPageItem* thisMenuElement = &menuPage->items[i];
-					bool cursorOnElement = (mDat.menuCursorPos == i);
-					drawMenuTextSegment(mDat.winSliceWidth, mDat.windowTileXPos, mDat.windowTileYPos + 2 + (2 * i), i, 2, cursorOnElement);
+					bool cursorOnElement = (mDat.menuCursorPos == i && (menuPage != &menuPages[MPI_CREDITS]));
+					drawMenuTextSegment(mDat.winSliceWidth, mDat.windowCurrTileXPos, mDat.windowCurrTileYPos + 2 + (2 * i), i, 2, cursorOnElement);
 				}
 				break;
 			case MMWS_ZIPPING:
@@ -1055,6 +1096,22 @@ void drawMenuTextSegment(int nineSliceWidth, int tileXPos, int tileYPos, int men
 	}
 }
 
+void menuInputConfirmEnabled() {
+	if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
+		playNewSound(_sfxMenuConfirmA);
+		mDat.windowConfirmDirection = MWCD_FORWARD;
+		mDat.windowState = MMWS_CLOSING;
+	}
+}
+
+void menuInputBackEnabled() {
+	if((inputs.pressed & KEY_B)){
+		playNewSound(_sfxMenuCancel);
+		mDat.windowConfirmDirection = MWCD_BACKWARD;
+		mDat.windowState = MMWS_CLOSING;
+	}
+}
+
 int menuExecNewGame(){
 	mDat.state = MAIN_MENU_FLY_OUT;
 	mDat.actionTimer = 0;
@@ -1082,28 +1139,21 @@ int menuExecPlaySFX(){
 	return 0;
 }
 
+void performPageTransfer(int datIntVal) {
+	mDat.windowTargetWidth = menuPage->tileWidth;
+	mDat.windowTargetHeight = menuPage->tileHeight;
 
-void printMenuPageItem(const MenuPageItem* item){
-    //printf("String: %s\n", item->itemName);
-    //printf("Enum: %d\n", item->dataType);
-    
-    switch (item->dataType){
-        case MPIDT_FUNC_PTR:
-            //printf("Function return value: %d\n", item->data.functionPtr());
-            break;
-        case MPIDT_INT:
-            //printf("Integer value: %d\n", item->data.intVal);
-            break;
-        case MPIDT_INT_ARRAY:
-            //printf("Integer array: ");
-            // Assuming the size of the array is known or can be tracked
-            // This placeholder assumes 4 elements for demonstration
-            for (size_t i = 0; i < 4; ++i){
-                //printf("%d ", item->data.intArray[i]);
-            }
-            //printf("\n");
-            break;
-    }
+	mDat.menuCursorPos = 0;
+
+	// Get the new Menu Page based on the data we're reading
+	mDat.currMenuPage = datIntVal;
+	menuPage = &menuPages[mDat.currMenuPage];
+
+	// Start loading the new menu page's graphics into VRAM (this will take more than one frame, so this function will keep being called even during MMWS_ZIPPING state)
+	loadMenuGraphics(menuPage);
+
+	// Reset the xPos Offset before we start zipping
+	mDat.menuBG.xPos = 0;
 }
 
 //example usage to load the portion of the image starting 6 tile rows down, and 8 tile rows deep.
