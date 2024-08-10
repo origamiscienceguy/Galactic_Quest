@@ -34,7 +34,9 @@ MenuPage menuPages[6] = {
 		.tileWidth = 10,
 		.tileHeight = 10,
 		.pxOffX = 0,
-		.backPage = (int)MPI_MAIN_MENU
+		.backPage = (int)MPI_MAIN_MENU,
+		.showConfirmPrompt = true,
+		.showBackPrompt = false
 	},
 	{
 		.items = {
@@ -50,7 +52,9 @@ MenuPage menuPages[6] = {
 		.tileWidth = 10,
 		.tileHeight = 12,
 		.pxOffX = 0,
-		.backPage = (int)MPI_MAIN_MENU
+		.backPage = (int)MPI_MAIN_MENU,
+		.showConfirmPrompt = true,
+		.showBackPrompt = true
 	},
 	{
 		.items = {
@@ -65,7 +69,9 @@ MenuPage menuPages[6] = {
 		.tileWidth = 22,
 		.tileHeight = 10,
 		.pxOffX = 4,
-		.backPage = (int)MPI_EXTRAS
+		.backPage = (int)MPI_EXTRAS,
+		.showConfirmPrompt = false,
+		.showBackPrompt = true
 	},
 	{
 		.items = {
@@ -80,7 +86,9 @@ MenuPage menuPages[6] = {
 		.tileWidth = 9,
 		.tileHeight = 10,
 		.pxOffX = 4,
-		.backPage = (int)MPI_MAIN_MENU
+		.backPage = (int)MPI_MAIN_MENU,
+		.showConfirmPrompt = true,
+		.showBackPrompt = true
 	},
 	{
 		.items = {
@@ -98,7 +106,9 @@ MenuPage menuPages[6] = {
 		.tileWidth = 13,
 		.tileHeight = 16,
 		.pxOffX = 4,
-		.backPage = (int)MPI_EXTRAS
+		.backPage = (int)MPI_EXTRAS,
+		.showConfirmPrompt = false,
+		.showBackPrompt = true
 	},
 	{
 		.items = {
@@ -115,7 +125,9 @@ MenuPage menuPages[6] = {
 		.tileWidth = 22,//11
 		.tileHeight = 14,
 		.pxOffX = 4,
-		.backPage = (int)MPI_MAIN_MENU
+		.backPage = (int)MPI_MAIN_MENU,
+		.showConfirmPrompt = true,
+		.showBackPrompt = true
 	}
 };
 
@@ -885,6 +897,7 @@ void drawMainMenu(){
 				tilemapData[2].buffer = (void *)tilemapBuffer2;
 				tilemapData[2].size = 512;
 				
+				drawMenuButtons(true);
 				updateObjBuffer();
 				break;
 			case MMWS_READY:
@@ -908,7 +921,6 @@ void drawMainMenu(){
 					
 					menuPage = &menuPages[mDat.currMenuPage];
 
-					//drawMenuButtons(2,3);
 					for(int i = 0; i < menuPage->itemCount; ++i){
 						MenuPageItem* thisMenuElement = &menuPage->items[i];
 						bool cursorOnElement = (mDat.menuCursorPos == i && (menuPage != &menuPages[MPI_CREDITS]));
@@ -940,7 +952,7 @@ void drawMainMenu(){
 					mDat.updateDraw = false;
 					updateObjBuffer();
 				}
-				drawMenuButtons(2,3);
+				drawMenuButtons(false);
 				break;
 		}
 }
@@ -1405,14 +1417,20 @@ void drawStarBlocker(int yPos){
 	objectBuffer[STAR_BLOCKER_SPRITE].attr2 = ATTR2_ID(STAR_BLOCKER_GFX_START) | ATTR2_PRIO(3) | ATTR2_PALBANK(1);
 }
 
-void drawMenuButtons(){
-	objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(18*8);
-	objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr1 = ATTR1_SIZE_32 | ATTR1_X(26*8);
-	objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr2 = ATTR2_ID(512 + MENU_BUTTON_PROMPT_GFX_START) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_BUTTON_PROMPT_PAL);
-	
-	objectBuffer[MENU_BUTTON_PROMPT_SPRITE2].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(18*8);
-	objectBuffer[MENU_BUTTON_PROMPT_SPRITE2].attr1 = ATTR1_SIZE_32 | ATTR1_X(0);
-	objectBuffer[MENU_BUTTON_PROMPT_SPRITE2].attr2 = ATTR2_ID(512 + MENU_BUTTON_PROMPT_GFX_START + 8) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_BUTTON_PROMPT_PAL);
+void drawMenuButtons(bool hideAll){
+	if (menuPage->showConfirmPrompt && !hideAll) {
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(18*8);
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr1 = ATTR1_SIZE_32 | ATTR1_X(26*8);
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr2 = ATTR2_ID(512 + MENU_BUTTON_PROMPT_GFX_START) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_BUTTON_PROMPT_PAL);
+	} else
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr0 = ATTR0_HIDE;
+
+	if (menuPage->showBackPrompt && !hideAll) {
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE2].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(18*8);
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE2].attr1 = ATTR1_SIZE_32 | ATTR1_X(0);
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE2].attr2 = ATTR2_ID(512 + MENU_BUTTON_PROMPT_GFX_START + 8) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_BUTTON_PROMPT_PAL);
+	} else
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE2].attr0 = ATTR0_HIDE;
 }
 
 void drawSliderPrompt(int xPos, int yPos, int sprIndex, bool flipSpriteHorizontally){

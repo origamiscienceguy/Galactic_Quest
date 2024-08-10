@@ -223,6 +223,8 @@ typedef struct{
 	u8 tileWidth;
 	u8 tileHeight;
 	u8 pxOffX;
+	bool showConfirmPrompt;
+	bool showBackPrompt;
 } MenuPage;
 
 //globals
@@ -287,7 +289,7 @@ void directionalInputEnabled();
 void menuInputConfirmEnabled();
 void menuInputBackEnabled();
 void performPageTransfer(int datIntVal);
-void drawMenuButtons();
+void drawMenuButtons(bool hideAll);
 void drawSliderPrompt(int xPos, int yPos, int sprIndex, bool flipSpriteHorizontally);
 void hideSliderPrompt();
 
