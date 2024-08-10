@@ -51,7 +51,23 @@ MenuPage menuPages[6] = {
 		.tileHeight = 12,
 		.pxOffX = 0,
 		.backPage = (int)MPI_MAIN_MENU
-	},{
+	},
+	{
+		.items = {
+			{"BGM", ME_SOUND_TESTER, .data.functionPtr = menuExecPlayBGM, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 16},
+			{"SFX", ME_SOUND_TESTER, .data.functionPtr = menuExecPlaySFX, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 18},
+			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = MPIDT_INT, .textGFXIndex = 24}
+		},
+		.itemCount = 3,
+		.pageName = "SOUND TEST",
+		.tileX = 5,
+		.tileY = 6,
+		.tileWidth = 22,
+		.tileHeight = 10,
+		.pxOffX = 4,
+		.backPage = (int)MPI_EXTRAS
+	},
+	{
 		.items = {
 			{"Sound Test", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_SOUND_TEST, .dataType = MPIDT_INT, .textGFXIndex = 38},
 			{"Credits", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_CREDITS, .dataType = MPIDT_INT, .textGFXIndex = 40},
@@ -63,23 +79,6 @@ MenuPage menuPages[6] = {
 		.tileY = 6,
 		.tileWidth = 9,
 		.tileHeight = 10,
-		.pxOffX = 4,
-		.backPage = (int)MPI_MAIN_MENU
-	},
-	{
-		.items = {
-			{"Master Volume", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 14},
-			{"BGM", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 16},
-			{"SFX", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 18},
-			{"Apply Changes", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 20},
-			{"Abort", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = MPIDT_INT, .textGFXIndex = 22}
-		},
-		.itemCount = 5,
-		.pageName = "OPTIONS",
-		.tileX = 5,//10,
-		.tileY = 6,
-		.tileWidth = 22,//11
-		.tileHeight = 14,
 		.pxOffX = 4,
 		.backPage = (int)MPI_MAIN_MENU
 	},
@@ -103,18 +102,20 @@ MenuPage menuPages[6] = {
 	},
 	{
 		.items = {
-			{"BGM", ME_SOUND_TESTER, .data.functionPtr = menuExecPlayBGM, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 16},
-			{"SFX", ME_SOUND_TESTER, .data.functionPtr = menuExecPlaySFX, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 18},
-			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = MPIDT_INT, .textGFXIndex = 24}
+			{"Master Volume", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 14},
+			{"BGM", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 16},
+			{"SFX", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 18},
+			{"Apply Changes", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 20},
+			{"Abort", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = MPIDT_INT, .textGFXIndex = 22}
 		},
-		.itemCount = 3,
-		.pageName = "SOUND TEST",
-		.tileX = 5,
+		.itemCount = 5,
+		.pageName = "OPTIONS",
+		.tileX = 5,//10,
 		.tileY = 6,
-		.tileWidth = 22,
-		.tileHeight = 10,
+		.tileWidth = 22,//11
+		.tileHeight = 14,
 		.pxOffX = 4,
-		.backPage = (int)MPI_EXTRAS
+		.backPage = (int)MPI_MAIN_MENU
 	}
 };
 
@@ -606,6 +607,14 @@ void initMainMenu(){
 	tilemapData[2].buffer = (void *)tilemapBuffer2;
 	tilemapData[2].size = 512;
 	
+	memcpy32(&characterBuffer4[MENU_PAGE_TEXT_GFX_START << 5], page_name_ui_64x16Tiles, sizeof(page_name_ui_64x16Tiles) >> 2);
+	characterData[4].position = tile_mem[MENU_PAGE_TEXT_CHARDATA];
+	characterData[4].buffer = (void *)characterBuffer4;
+	characterData[4].size = sizeof(characterBuffer4) >> 2;
+
+	//example usage to load the portion of the image starting 6 tile rows down, and 8 tile rows deep.
+	//loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8);
+
 	mDat.currMenuPage = 0;
 	menuPage = &menuPages[mDat.currMenuPage];
 
@@ -726,23 +735,11 @@ void updateMainMenu(){
 			break;
 		case MMWS_READY:
 			menuPage = &menuPages[mDat.currMenuPage];
-			// Allow Up/Down to navigate the menu; wrap around if we hit the upper/lower limits
-			// Combine both up and down input checks into a single operation
-			moveY = 0;
+			directionalInputEnabled();
 
-			if((inputs.pressed & KEY_UP) && !(inputs.pressed & KEY_DOWN)){
-				moveY = -1;
-			}
-			else if((inputs.pressed & KEY_DOWN) && !(inputs.pressed & KEY_UP)){
-				moveY = 1;
-			}
-			if((inputs.pressed & KEY_RIGHT) && !(inputs.pressed & KEY_LEFT)){
-				moveX = -1;
-			}
-			else if((inputs.pressed & KEY_LEFT) && !(inputs.pressed & KEY_RIGHT)){
-				moveX = 1;
-			}
-
+			if (moveY != 0)
+				mDat.updateDraw = true;
+			
 			// Navigate the menu; wrap around if we hit an edge
 			if (menuPage != &menuPages[MPI_CREDITS]) {
 				if (moveY != 0) {
@@ -799,6 +796,16 @@ void updateMainMenu(){
 
 			mDat.windowActionTimer++;
 			break;
+		case MMWS_TWEAKING_DATA:
+			directionalInputEnabled();
+			menuInputConfirmEnabled();
+			
+			menuInputBackEnabled();
+			if (moveX != 0) {
+				playNewSound(_sfxMenuMove);
+				mDat.updateDraw = true;
+			}
+			break;
 	}
 }
 
@@ -840,9 +847,6 @@ void drawMainMenu(){
 		memset32(tilemapBuffer1, 0, 512);
 		memset32(tilemapBuffer2, 0, 512);
 		
-		if (moveY != 0)
-			mDat.updateDraw = true;
-		
 		switch(mDat.windowState) {
 			default:
 			case MMWS_OPENING:
@@ -864,6 +868,13 @@ void drawMainMenu(){
 				
 				drawMenuPageText(10, mDat.menuPageTextYPos + secondaryNineSliceYOff, 0);
 
+				if (mDat.showPageWindowBG) {
+					// Draw the Menu Page UI Text now				
+					objectBuffer[MENU_PAGE_TEXT_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SHAPE(1) | ATTR0_Y(secondaryNineSliceYOff * 8);
+					objectBuffer[MENU_PAGE_TEXT_SPRITE].attr1 = ATTR1_SIZE(3) | ATTR1_X(89);
+					objectBuffer[MENU_PAGE_TEXT_SPRITE].attr2 = ATTR2_ID(MENU_PAGE_TEXT_GFX_START + (32 * mDat.currMenuPage)) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_PAGE_TEXT_PAL_START);
+				}
+
 				// Queue the tilemap with our drawing functions, using tilemapBuffer1
 				tilemapData[1].position = se_mem[MENU_WINDOW_TILEMAP];
 				tilemapData[1].buffer = (void *)tilemapBuffer1;
@@ -873,10 +884,11 @@ void drawMainMenu(){
 				tilemapData[2].position = se_mem[MENU_PAGE_TILEMAP];
 				tilemapData[2].buffer = (void *)tilemapBuffer2;
 				tilemapData[2].size = 512;
-
+				
 				updateObjBuffer();
 				break;
 			case MMWS_READY:
+			case MMWS_TWEAKING_DATA:
 				if (!mDat.showPageWindowBG)
 					mDat.showPageWindowBG = true;
 				
@@ -896,12 +908,26 @@ void drawMainMenu(){
 					
 					menuPage = &menuPages[mDat.currMenuPage];
 
+					//drawMenuButtons(2,3);
 					for(int i = 0; i < menuPage->itemCount; ++i){
 						MenuPageItem* thisMenuElement = &menuPage->items[i];
 						bool cursorOnElement = (mDat.menuCursorPos == i && (menuPage != &menuPages[MPI_CREDITS]));
-						drawMenuTextSegment(mDat.winSliceWidth, mDat.windowCurrTileXPos, mDat.windowCurrTileYPos + 2 + (2 * i), i, 2, cursorOnElement, mDat.menuElementsWidth[mDat.currMenuPage]);
+						bool isTweakingData = (mDat.windowState == MMWS_TWEAKING_DATA);
+						drawMenuTextSegment(mDat.winSliceWidth, mDat.windowCurrTileXPos, mDat.windowCurrTileYPos + 2 + (2 * i), i, 2, cursorOnElement && !isTweakingData, mDat.menuElementsWidth[mDat.currMenuPage]);
 					}
 					
+					if (mDat.showPageWindowBG) {
+						// Draw the Menu Page UI Text now				
+						objectBuffer[MENU_PAGE_TEXT_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SHAPE(1) | ATTR0_Y(secondaryNineSliceYOff * 8);
+						objectBuffer[MENU_PAGE_TEXT_SPRITE].attr1 = ATTR1_SIZE(3) | ATTR1_X(89);
+						objectBuffer[MENU_PAGE_TEXT_SPRITE].attr2 = ATTR2_ID(MENU_PAGE_TEXT_GFX_START + (32 * mDat.currMenuPage)) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_PAGE_TEXT_PAL_START);
+					}
+					
+					if (mDat.windowState == MMWS_TWEAKING_DATA) {
+						drawSliderPrompt(123, 48 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE1, false);
+						drawSliderPrompt(170, 48 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE2, true);
+					}
+
 					// Queue the tilemap with our drawing functions, using tilemapBuffer1
 					tilemapData[1].position = se_mem[MENU_WINDOW_TILEMAP];
 					tilemapData[1].buffer = (void *)tilemapBuffer1;
@@ -911,26 +937,12 @@ void drawMainMenu(){
 					tilemapData[2].position = se_mem[MENU_PAGE_TILEMAP];
 					tilemapData[2].buffer = (void *)tilemapBuffer2;
 					tilemapData[2].size = 512;
-
-					updateObjBuffer();
 					mDat.updateDraw = false;
+					updateObjBuffer();
 				}
+				drawMenuButtons(2,3);
 				break;
 		}
-		
-		// Example array of MenuPageItem
-
-		/*
-		MenuPage menuPage = {
-			.items = {
-				{"Function Item", SCRIPT_RUNNER, .data.functionPtr = exampleFunction, .dataType = FUNC_PTR},
-				{"Integer Item", PAGE_TRANSFER, .data.intValue = 123, .dataType = INT},
-				{"Integer Array Item", SLIDER, .data.intArray = dataRange, .dataType = INT_ARRAY}
-			},
-			.itemCount = 3
-		};*/
-
-
 }
 
 void mainMenuEnd(){
@@ -943,9 +955,11 @@ void drawMenuPageText(int xPos, int yPos, int imgIndex) {
 	// Sprites get character data blocks 4 and 5.
 	// The shooting star takes up the entirety of 4, so I put the rest of the sprites in 5. (that way I can just load them at initialization)
 	// The library I used (tonc) addresses VRAM as a 2-d array, with [charblock][tile ID]
-	objectBuffer[1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(yPos);
-	objectBuffer[1].attr1 = ATTR1_SIZE_64 | ATTR1_X(xPos);
-	objectBuffer[1].attr2 = ATTR2_ID(MENU_GFX_START + MIDDLE_UPPER) | ATTR2_PRIO(1) | ATTR2_PALBANK(2);
+	
+	//objectBuffer[1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(yPos);
+	//objectBuffer[1].attr1 = ATTR1_SIZE_64 | ATTR1_X(xPos);
+	//objectBuffer[1].attr2 = ATTR2_ID(MENU_GFX_START + MIDDLE_UPPER) | ATTR2_PRIO(1) | ATTR2_PALBANK(2);
+	
 	//(imgIndex << 5) + MENU_PAGE_TEXT_SPRITE
 }
 
@@ -1182,19 +1196,94 @@ void drawMenuTextSegment(int nineSliceWidth, int tileXPos, int tileYPos, int men
 	}
 }
 
+void directionalInputEnabled() {
+	// Allow Up/Down to navigate the menu; wrap around if we hit the upper/lower limits
+	// Combine both up and down input checks into a single operation
+	moveX = 0;
+	moveY = 0;
+
+	if((inputs.pressed & KEY_UP) && !(inputs.pressed & KEY_DOWN)){
+		moveY = -1;
+	}
+	else if((inputs.pressed & KEY_DOWN) && !(inputs.pressed & KEY_UP)){
+		moveY = 1;
+	}
+	if((inputs.pressed & KEY_RIGHT) && !(inputs.pressed & KEY_LEFT)){
+		moveX = -1;
+	}
+	else if((inputs.pressed & KEY_LEFT) && !(inputs.pressed & KEY_RIGHT)){
+		moveX = 1;
+	}
+}
+
 void menuInputConfirmEnabled() {
 	if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
-		playNewSound(_sfxMenuConfirmA);
-		mDat.windowConfirmDirection = MWCD_FORWARD;
-		mDat.windowState = MMWS_CLOSING;
+		switch(mDat.windowState) {
+			case MMWS_READY:
+				switch(menuPage->items[mDat.menuCursorPos].menuElement) {
+					case ME_SCRIPT_RUNNER:
+						break;
+					case ME_PAGE_TRANSFER:
+						playNewSound(_sfxMenuConfirmA);
+						mDat.windowConfirmDirection = MWCD_FORWARD;
+						mDat.windowState = MMWS_CLOSING;
+						mDat.updateDraw = true;
+						break;
+					case ME_SLIDER:
+						playNewSound(_sfxMenuConfirmA);
+						mDat.windowState = MMWS_TWEAKING_DATA;
+						mDat.updateDraw = true;
+						break;
+					case ME_SHIFT:
+						break;
+					case ME_TOGGLE:
+						break;
+					case ME_SOUND_TESTER:
+						break;
+				}
+				break;
+			case MMWS_TWEAKING_DATA:
+				switch(menuPage->items[mDat.menuCursorPos].menuElement) {
+					case ME_SCRIPT_RUNNER:
+						break;
+					case ME_PAGE_TRANSFER:
+						break;
+					case ME_SLIDER:
+						playNewSound(_sfxMenuConfirmA);
+						hideSliderPrompt();
+						mDat.windowState = MMWS_READY;
+						mDat.updateDraw = true;
+						break;
+					case ME_SHIFT:
+						break;
+					case ME_TOGGLE:
+						break;
+					case ME_SOUND_TESTER:
+						break;
+				}
+				break;
+		}
 	}
 }
 
 void menuInputBackEnabled() {
 	if((inputs.pressed & KEY_B)){
-		playNewSound(_sfxMenuCancel);
-		mDat.windowConfirmDirection = MWCD_BACKWARD;
-		mDat.windowState = MMWS_CLOSING;
+		switch(mDat.windowState) {
+			default:
+				break;
+			case MMWS_READY:
+				playNewSound(_sfxMenuCancel);
+				mDat.windowConfirmDirection = MWCD_BACKWARD;
+				mDat.windowState = MMWS_CLOSING;		
+				mDat.updateDraw = true;
+				break;
+			case MMWS_TWEAKING_DATA:
+				playNewSound(_sfxMenuMove);
+				hideSliderPrompt();
+				mDat.windowState = MMWS_READY;
+				mDat.updateDraw = true;
+				break;
+		}
 	}
 }
 
@@ -1246,6 +1335,10 @@ void performPageTransfer(int datIntVal) {
 //loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8);
 
 // Limit of 4 queue channels per frame
+// Each character data block holds 512 tiles, and is selected per background.
+// Sprites get character data blocks 4 and 5.
+// The shooting star takes up the entirety of 4, so I put the rest of the sprites in 5. (that way I can just load them at initialization)
+// The library I used (tonc) addresses VRAM as a 2-d array, with [charblock][tile ID]
 void loadGFX(u32 VRAMCharBlock, u32 VRAMTileIndex, void *graphicsBasePointer, u32 graphicsTileOffset, u32 numTilesToSend, u32 queueChannel){
 	characterData[queueChannel].position = &tile_mem[VRAMCharBlock][VRAMTileIndex];
 	characterData[queueChannel].buffer = &((u8 *)graphicsBasePointer)[graphicsTileOffset << 5];
@@ -1312,14 +1405,26 @@ void drawStarBlocker(int yPos){
 	objectBuffer[STAR_BLOCKER_SPRITE].attr2 = ATTR2_ID(STAR_BLOCKER_GFX_START) | ATTR2_PRIO(3) | ATTR2_PALBANK(1);
 }
 
-void drawMenuButtons(int xPos, int yPos){
-	objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(yPos);
-	objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr1 = ATTR1_SIZE_32 | ATTR1_X(185);
-	objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr2 = ATTR2_ID(STAR_BLOCKER_GFX_START) | ATTR2_PRIO(3) | ATTR2_PALBANK(1);
+void drawMenuButtons(){
+	objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(18*8);
+	objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr1 = ATTR1_SIZE_32 | ATTR1_X(26*8);
+	objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr2 = ATTR2_ID(512 + MENU_BUTTON_PROMPT_GFX_START) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_BUTTON_PROMPT_PAL);
 	
-	objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(yPos);
-	objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr1 = ATTR1_SIZE_32 | ATTR1_X(185);
-	objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr2 = ATTR2_ID(STAR_BLOCKER_GFX_START) | ATTR2_PRIO(3) | ATTR2_PALBANK(1);
+	objectBuffer[MENU_BUTTON_PROMPT_SPRITE2].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(18*8);
+	objectBuffer[MENU_BUTTON_PROMPT_SPRITE2].attr1 = ATTR1_SIZE_32 | ATTR1_X(0);
+	objectBuffer[MENU_BUTTON_PROMPT_SPRITE2].attr2 = ATTR2_ID(512 + MENU_BUTTON_PROMPT_GFX_START + 8) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_BUTTON_PROMPT_PAL);
+}
+
+void drawSliderPrompt(int xPos, int yPos, int sprIndex, bool flipSpriteHorizontally){
+	objectBuffer[sprIndex].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SHAPE(2) | ATTR0_Y(yPos);
+	objectBuffer[sprIndex].attr1 = ATTR1_SIZE(0) | ATTR1_X(xPos) | (flipSpriteHorizontally ? ATTR1_HFLIP : 0x0000);
+
+	objectBuffer[sprIndex].attr2 = ATTR2_ID(512 + MENU_SLIDER_PROMPT_GFX_START) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_BUTTON_PROMPT_PAL);
+}
+
+void hideSliderPrompt() {
+	objectBuffer[MENU_SLIDER_PROMPT_SPRITE1].attr0 = ATTR0_HIDE;
+	objectBuffer[MENU_SLIDER_PROMPT_SPRITE2].attr0 = ATTR0_HIDE;
 }
 
 void hidePressStart(){

@@ -57,11 +57,15 @@
 #define MENU_TEXT_FOCUSED_GFX_SIZE 156
 #define MENU_TEXT_FOCUSED_PAL_START 2
 
+#define MENU_PAGE_TEXT_GFX_START 0
+#define MENU_PAGE_TEXT_PAL_START 3
+#define MENU_PAGE_TEXT_CHARDATA 4
 #define MENU_PAGE_TEXT_SPRITE 0
+
 #define MENU_BUTTON_PROMPT_SPRITE1 1
 #define MENU_BUTTON_PROMPT_SPRITE2 2
-#define MENU_BUTTON_PROMPT_SPRITE3 3
-#define MENU_BUTTON_PROMPT_SPRITE4 4
+#define MENU_SLIDER_PROMPT_SPRITE1 3
+#define MENU_SLIDER_PROMPT_SPRITE2 4
 
 #define MENU_BUTTON_PROMPT_PAL 3
 #define MENU_BUTTON_PROMPT_GFX_START (MENU_SLIDER_PROMPT_GFX_START + MENU_SLIDER_PROMPT_GFX_SIZE)
@@ -124,11 +128,12 @@ enum MainMenuWindowState {
 	MMWS_CLOSING,
 	MMWS_READY,
 	MMWS_ZIPPING,
-	MMWS_INITIAL_ZIPPING
+	MMWS_INITIAL_ZIPPING,
+	MMWS_TWEAKING_DATA
 };
 
 enum MenuPageIndex{
-	MPI_MAIN_MENU, MPI_PLAY_GAME, MPI_EXTRAS, MPI_OPTIONS, MPI_CREDITS, MPI_SOUND_TEST, MPI_MAX
+	MPI_MAIN_MENU, MPI_PLAY_GAME, MPI_SOUND_TEST, MPI_EXTRAS, MPI_CREDITS, MPI_OPTIONS, MPI_MAX
 };
 
 enum MenuWindowConfirmDirection {
@@ -278,9 +283,13 @@ bool isInBounds(int y);
 void drawLaserRow(int x, int y, int width, int layer, bool wrapAround);
 void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int layer);
 void drawMenuTextSegment(int nineSliceWidth, int tileXPos, int tileYPos, int menuElementPosition, int palette, bool highlighted, int numTextTileColumns);
+void directionalInputEnabled();
 void menuInputConfirmEnabled();
 void menuInputBackEnabled();
 void performPageTransfer(int datIntVal);
+void drawMenuButtons();
+void drawSliderPrompt(int xPos, int yPos, int sprIndex, bool flipSpriteHorizontally);
+void hideSliderPrompt();
 
 int menuExecNewGame();
 int menuExecContinue();
