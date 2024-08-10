@@ -161,7 +161,7 @@ typedef struct MainMenuData{
 	u8 windowTargetWidth;
 	u8 windowTargetHeight;
 	bool wrappedAround;
-	bool showPageWindow;
+	bool showPageWindowBG;
 	u8 windowActionTimer;
 	u8 zipSpeed;
 }MainMenuData;

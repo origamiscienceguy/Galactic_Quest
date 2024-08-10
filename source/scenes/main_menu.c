@@ -565,7 +565,7 @@ void initMainMenu(){
 	mDat.zipSpeed = 3;
 	mDat.wrappedAround = true;
 
-	mDat.showPageWindow = false;
+	mDat.showPageWindowBG = false;
 }
 
 void updateMainMenu(){
@@ -774,7 +774,7 @@ void drawMainMenu(){
 		memset32(tilemapBuffer1, 0, 512);
 		
 		// Draw the Menu Page Window
-		if (mDat.showPageWindow)
+		if (mDat.showPageWindowBG)
 			drawSecondaryNineSliceWindowStyle(10, 2, 10, 2, 1);
 
 		if (mDat.windowState != MMWS_INITIAL_ZIPPING)
@@ -789,14 +789,15 @@ void drawMainMenu(){
 			case MMWS_CLOSING:
 				break;
 			case MMWS_READY:
-				if (!mDat.showPageWindow)
-					mDat.showPageWindow = true;
+				if (!mDat.showPageWindowBG)
+					mDat.showPageWindowBG = true;
+				
 				menuPage = &menuPages[mDat.currMenuPage];
 
 				for(int i = 0; i < menuPage->itemCount; ++i){
 					MenuPageItem* thisMenuElement = &menuPage->items[i];
 					bool cursorOnElement = (mDat.menuCursorPos == i);
-					drawMenuTextSegment(mDat.winSliceWidth, mDat.windowTileXPos, mDat.windowTileYPos + 2 + (2 * i), thisMenuElement->textGFXIndex, 2, cursorOnElement);
+					drawMenuTextSegment(mDat.winSliceWidth, mDat.windowTileXPos, mDat.windowTileYPos + 2 + (2 * i), i, 2, cursorOnElement);
 				}
 				break;
 			case MMWS_ZIPPING:
@@ -1048,7 +1049,7 @@ void drawMenuTextSegment(int nineSliceWidth, int tileXPos, int tileYPos, int men
 	
 	for (int row = 0; row < 2; row++){
 		for (int tileXOff = 0; tileXOff < MENU_TEXT_TILE_WIDTH; tileXOff++){
-			int vramIndex = tilesetIndex + tileXOff + (menuElementPosition * MENU_TEXT_TILE_WIDTH) + (row * MENU_TEXT_TILE_WIDTH);
+			int vramIndex = tilesetIndex + tileXOff + (menuElementPosition * MENU_TEXT_TILE_WIDTH * 2) + (row * MENU_TEXT_TILE_WIDTH);
 			setTile(tileXPos + tileXOff, tileYPos + row, vramIndex, false, false, palette, MENU_TEXT_LAYER_ID);
 		}
 	}
