@@ -32,7 +32,7 @@
 #define STAR_BLOCKER_PAL_SIZE 1
 #define STAR_BLOCKER_SPRITE 1
 #define STAR_BLOCKER_GFX_START (FLYING_COMET_GFX_START + FLYING_COMET_GFX_SIZE)
-#define STAR_BLOCKER_GFX_SIZE 1
+#define STAR_BLOCKER_GFX_SIZE 16
 
 #define PRESS_START_CHARDATA 4
 #define PRESS_START_PAL_START 0
@@ -61,13 +61,16 @@
 #define MENU_BUTTON_PROMPT_SPRITE2 1
 
 #define MENU_BUTTON_PROMPT_PAL 3
-#define MENU_BUTTON_PROMPT_GFX_START (MENU_TEXT_FOCUSED_GFX_START + MENU_TEXT_FOCUSED_GFX_SIZE)
+#define MENU_BUTTON_PROMPT_GFX_START (MENU_SLIDER_PROMPT_GFX_START + MENU_SLIDER_PROMPT_GFX_SIZE)
 #define MENU_BUTTON_PROMPT_GFX_SIZE 16
 
 #define MENU_TITLE_TEXT_PAL 3
-#define MENU_TITLE_TEXT_GFX_START (BUTTON_PROMPT_GFX_START + BUTTON_PROMPT_GFX_SIZE)
+#define MENU_TITLE_TEXT_GFX_START (MENU_BUTTON_PROMPT_GFX_START + MENU_BUTTON_PROMPT_GFX_SIZE)
 #define MENU_TITLE_TEXT_GFX_SIZE 32
 
+#define MENU_SLIDER_PROMPT_PAL 3
+#define MENU_SLIDER_PROMPT_GFX_START 16
+#define MENU_SLIDER_PROMPT_GFX_SIZE 2
 
 #define STARRY_BG_MAX_VEL 
 
@@ -238,6 +241,7 @@ extern const unsigned short menu_actionTiles[8320];
 extern const unsigned short page_name_ui_64x16Tiles[2560];
 extern const unsigned short menu_button_promptsTiles[256];
 extern const unsigned short menu_button_promptsPal[16];
+extern const unsigned short menu_slider_promptTiles[32];
 int yStart, yTarget, titleCardYStart, titleCardYTarget, titleRevealFadeDirection;
 
 //local functions
