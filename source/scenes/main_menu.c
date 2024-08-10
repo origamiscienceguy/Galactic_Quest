@@ -1,7 +1,7 @@
 #include "main_menu.h"
 
 MainMenuData mDat = {
-	.menuElementsWidth = {10,10,9,11,13,11}
+	.menuElementsWidth = {10,10,11,9,13,11}
 };
 
 Scene mainMenuScene = {
