@@ -110,7 +110,7 @@ MenuPage menuPages[6] = {
 		.tileY = 6,
 		.tileWidth = 11,
 		.tileHeight = 10,
-		.pxOffX = 0,
+		.pxOffX = 4,
 		.backPage = (int)MPI_EXTRAS
 	}
 };
@@ -119,6 +119,7 @@ void mainMenuInitialize(){
 	REG_DISPCNT = DCNT_MODE0; //black screen
 	REG_BG0CNT = BG_4BPP | BG_SBB(STARRY_IMAGE_TILEMAP) | BG_CBB(STARRY_IMAGE_CHARDATA) | BG_PRIO(3) | BG_REG_64x64; //starry background layer
 	REG_BG1CNT = BG_4BPP | BG_SBB(TITLE_CARD_TILEMAP) | BG_CBB(TITLE_CARD_CHARDATA) | BG_PRIO(2) | BG_REG_32x32; //title screen layer
+	REG_BG2CNT = BG_4BPP | BG_SBB(MENU_WINDOW_TILEMAP) | BG_CBB(MENU_CHARDATA) | BG_PRIO(1) | BG_REG_32x32; //menu page ui layer
 	REG_BLDCNT = BLD_TOP(BLD_BG2 | BLD_BACKDROP | BLD_OBJ) | BLD_WHITE;
 	REG_BLDY = BLDY(0);
 	mDat.starryBG.xPos = 512 - 16;
@@ -131,6 +132,8 @@ void mainMenuInitialize(){
 	REG_BG0VOFS = mDat.starryBG.yPos;
 	REG_BG1HOFS = mDat.titleCardBG.xPos;
 	REG_BG1VOFS = mDat.titleCardBG.yPos;
+	REG_BG2HOFS = mDat.titleCardBG.xPos;
+	REG_BG2VOFS = mDat.titleCardBG.yPos;
 	
 	//send the palettes
 	memcpy32(&paletteBufferBg[STARRY_IMAGE_PAL_START << 4], main_menu_starfieldPal, sizeof(main_menu_starfieldPal) >> 2);
@@ -419,6 +422,22 @@ void mainMenuNormal(){
 			currentBGMIndex = playNewSound(_musMainMenu);
 			mDat.menuBG.xPos = 512 - 2;
 			mDat.menuBG.yPos = 0;
+
+			
+			//Clear the menu tilemaps
+			memset32(tilemapBuffer1, 0, 512);
+			memset32(tilemapBuffer2, 0, 512);
+			
+			// Queue the tilemap with our drawing functions, using tilemapBuffer1
+			tilemapData[1].position = se_mem[MENU_WINDOW_TILEMAP];
+			tilemapData[1].buffer = (void *)tilemapBuffer1;
+			tilemapData[1].size = 512;
+
+			// Queue the tilemap with our drawing functions, using tilemapBuffer1
+			tilemapData[2].position = se_mem[MENU_PAGE_TILEMAP];
+			tilemapData[2].buffer = (void *)tilemapBuffer2;
+			tilemapData[2].size = 512;
+
 			loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, (void *)menu_actionTiles, MENU_TEXT_TILE_WIDTH * 0, MENU_TEXT_TILE_WIDTH * 6, 0);
 			loadGFX(MENU_CHARDATA, MENU_TEXT_FOCUSED_GFX_START, (void *)menu_action_focusedTiles, MENU_TEXT_TILE_WIDTH * 0, MENU_TEXT_TILE_WIDTH * 6, 1);
 		}else{
@@ -509,7 +528,6 @@ void mainMenuNormal(){
 
 	if (mDat.state < TITLE_AFTER_PRESS_START){
 		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
-			
 			REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_OBJ | DCNT_OBJ_1D;
 			//clear the titlecard tilemap
 			memset32(tilemapBuffer0, 0, sizeof(tilemapBuffer0) >> 2);
@@ -565,7 +583,25 @@ void mainMenuNormal(){
 }
 
 void initMainMenu(){
+	//set the active screen layers
+	REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ | DCNT_OBJ_1D;
+//	REG_BG0CNT = BG_4BPP | BG_SBB(STARRY_IMAGE_TILEMAP) | BG_CBB(STARRY_IMAGE_CHARDATA) | BG_PRIO(3) | BG_REG_64x64; //starry background layer
+	REG_BG1CNT = BG_4BPP | BG_SBB(MENU_WINDOW_TILEMAP) | BG_CBB(MENU_CHARDATA) | BG_PRIO(2) | BG_REG_32x32; //title screen layer
+	REG_BG2CNT = BG_4BPP | BG_SBB(MENU_PAGE_TILEMAP) | BG_CBB(MENU_CHARDATA) | BG_PRIO(1) | BG_REG_32x32; //menu page ui layer
+
+	// Queue the tilemap with our drawing functions, using tilemapBuffer1
+	tilemapData[1].position = se_mem[MENU_WINDOW_TILEMAP];
+	tilemapData[1].buffer = (void *)tilemapBuffer1;
+	tilemapData[1].size = 512;
+
+	// Queue the tilemap with our drawing functions, using tilemapBuffer1
+	tilemapData[2].position = se_mem[MENU_PAGE_TILEMAP];
+	tilemapData[2].buffer = (void *)tilemapBuffer2;
+	tilemapData[2].size = 512;
+	
 	mDat.currMenuPage = 0;
+	menuPage = &menuPages[mDat.currMenuPage];
+
 	mDat.menuCursorPos = 0;
 	mDat.windowConfirmDirection = MWCD_NEUTRAL;
 
@@ -810,13 +846,14 @@ void loadMenuGraphics(MenuPage *menuPage) {
 void drawMainMenu(){
 		//Clear the menu tilemap every frame
 		memset32(tilemapBuffer1, 0, 512);
+		memset32(tilemapBuffer2, 0, 512);
 		
 		// Draw the Menu Page Window
 		int secondaryNineSliceYOff = 2;
 		if (mDat.currMenuPage == (int)MPI_CREDITS)
 			secondaryNineSliceYOff--;
 		if (mDat.showPageWindowBG)
-			drawSecondaryNineSliceWindowStyle(10, secondaryNineSliceYOff, 10, 2, 1);
+			drawSecondaryNineSliceWindowStyle(10, secondaryNineSliceYOff, 10, 2, 2);
 
 		if (mDat.windowState != MMWS_INITIAL_ZIPPING)
 			drawNineSliceWindow(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos, mDat.winSliceWidth, mDat.winSliceHeight, 1);
@@ -861,9 +898,14 @@ void drawMainMenu(){
 
 
 		// Queue the tilemap with our drawing functions, using tilemapBuffer1
-		tilemapData[1].position = se_mem[MENU_TILEMAP];
+		tilemapData[1].position = se_mem[MENU_WINDOW_TILEMAP];
 		tilemapData[1].buffer = (void *)tilemapBuffer1;
 		tilemapData[1].size = 512;
+
+		// Queue the tilemap with our drawing functions, using tilemapBuffer1
+		tilemapData[2].position = se_mem[MENU_PAGE_TILEMAP];
+		tilemapData[2].buffer = (void *)tilemapBuffer2;
+		tilemapData[2].size = 512;
 }
 
 void mainMenuEnd(){
@@ -919,6 +961,14 @@ void setTile(int x, int y, int drawingTileIndex, bool flipHorizontal, bool flipV
     // Calculate the index and set the tile value
     int tilemapIndex = x + (y << 5);
     tilemapBuffer[tilemapIndex] = SE_BUILD(drawingTileIndex, palette, flipHorizontal, flipVertical);
+	
+	/*
+			// Hide the title card after 40 frames in this state
+			memset32(tilemapBuffer1, 0, sizeof(sprTitleLogoMap) >> 2);
+			tilemapData[1].size = sizeof(sprTitleLogoMap) >> 2;
+			tilemapData[1].buffer = tilemapBuffer1;
+			tilemapData[1].position = &se_mem[TITLE_CARD_TILEMAP];
+	*/
 }
 
 /// @brief Draws a nine slice window for the centric main menu; Width and Height params are in terms of 8x8 tiles
