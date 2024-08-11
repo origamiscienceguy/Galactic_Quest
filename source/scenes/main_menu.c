@@ -164,7 +164,7 @@ void mainMenuInitialize(){
 	
 	memcpy32(&paletteBufferObj[FLYING_COMET_PAL_START << 4], shootingStarPal, sizeof(shootingStarPal) >> 2);
 	memcpy32(&paletteBufferObj[STAR_BLOCKER_PAL_START << 4], starBlockerPal, sizeof(starBlockerPal) >> 2);
-	memcpy32(&paletteBufferObj[MENU_BUTTON_PROMPT_PAL << 4], menu_button_promptsPal, sizeof(menu_button_promptsPal) >> 2);
+	memcpy32(&paletteBufferObj[MENU_BUTTON_PROMPT_PAL << 4], menu_button_prompt_32x16Pal, sizeof(menu_button_prompt_32x16Pal) >> 2);
 	memcpy32(&paletteBufferObj[MENU_SLIDER_BARS_PAL << 4], menu_slider_barsPal, sizeof(menu_slider_barsPal) >> 2);
 	
 	paletteData[1].size = 40;
@@ -185,12 +185,12 @@ void mainMenuInitialize(){
 	
 	memcpy32(&characterBuffer4[FLYING_COMET_GFX_START << 5], shootingStarTiles, sizeof(shootingStarTiles) >> 2);
 	memcpy32(&characterBuffer5[0], starBlockerTiles, sizeof(starBlockerTiles) >> 2);
-	memcpy32(&characterBuffer5[MENU_SLIDER_PROMPT_GFX_START << 5], menu_slider_promptTiles, sizeof(menu_slider_promptTiles) >> 2);
-	memcpy32(&characterBuffer5[MENU_TOGGLE_PROMPT_GFX_START << 5], menu_toggle_promptTiles, sizeof(menu_toggle_promptTiles) >> 2);
-	memcpy32(&characterBuffer5[MENU_BUTTON_PROMPT_GFX_START << 5], menu_button_promptsTiles, sizeof(menu_button_promptsTiles) >> 2);
+	memcpy32(&characterBuffer5[MENU_SLIDER_PROMPT_GFX_START << 5], menu_slider_prompt_8x16Tiles, sizeof(menu_slider_prompt_8x16Tiles) >> 2);
+	memcpy32(&characterBuffer5[MENU_TOGGLE_PROMPT_GFX_START << 5], menu_toggle_prompt_64x32Tiles, sizeof(menu_toggle_prompt_64x32Tiles) >> 2);
+	memcpy32(&characterBuffer5[MENU_BUTTON_PROMPT_GFX_START << 5], menu_button_prompt_32x16Tiles, sizeof(menu_button_prompt_32x16Tiles) >> 2);
 	memcpy32(&characterBuffer5[FONT_NUMBERS_GFX_START << 5], font_numbers_8x16Tiles, sizeof(font_numbers_8x16Tiles) >> 2);
 	memcpy32(&characterBuffer5[FONT_PERCENT_GFX_START << 5], font_percent_16x16Tiles, sizeof(font_percent_16x16Tiles) >> 2);
-	memcpy32(&characterBuffer5[MENU_SLIDER_BARS_GFX_START << 5], menu_slider_barsTiles, sizeof(menu_slider_barsTiles) >> 2);
+	memcpy32(&characterBuffer5[MENU_SLIDER_BARS_GFX_START << 5], menu_slider_bars_8x16Tiles, sizeof(menu_slider_bars_8x16Tiles) >> 2);
 	
 	characterData[4].position = tile_mem[FLYING_COMET_CHARDATA];
 	characterData[4].buffer = (void *)characterBuffer4;

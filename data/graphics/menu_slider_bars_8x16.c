@@ -14,7 +14,7 @@
 //
 //======================================================================
 
-const unsigned short menu_slider_barsTiles[96] __attribute__((aligned(4)))=
+const unsigned short menu_slider_bars_8x16Tiles[96] __attribute__((aligned(4)))=
 {
 	0x0333,0x0333,0x0333,0x0333,0x0333,0x0333,0x0333,0x0333,
 	0x0333,0x0333,0x0333,0x0333,0x0333,0x0333,0x0333,0x0333,

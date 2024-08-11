@@ -73,7 +73,7 @@
 
 #define MENU_TOGGLE_PROMPT_PAL 3
 #define MENU_TOGGLE_PROMPT_GFX_START (MENU_SLIDER_PROMPT_GFX_START + MENU_SLIDER_PROMPT_GFX_SIZE)
-#define MENU_TOGGLE_PROMPT_GFX_SIZE 20
+#define MENU_TOGGLE_PROMPT_GFX_SIZE 32
 
 #define MENU_BUTTON_PROMPT_PAL 3
 #define MENU_BUTTON_PROMPT_GFX_START (MENU_TOGGLE_PROMPT_GFX_START + MENU_TOGGLE_PROMPT_GFX_SIZE)
@@ -89,7 +89,7 @@
 
 #define MENU_SLIDER_BARS_PAL 4
 #define MENU_SLIDER_BARS_GFX_START (FONT_PERCENT_GFX_START + FONT_PERCENT_GFX_SIZE)
-#define MENU_SLIDER_BARS_GFX_SIZE 4
+#define MENU_SLIDER_BARS_GFX_SIZE 6
 
 #define MENU_TITLE_TEXT_PAL 3
 #define MENU_TITLE_TEXT_GFX_START (MENU_SLIDER_BARS_GFX_START + MENU_SLIDER_BARS_GFX_SIZE)
@@ -269,13 +269,13 @@ extern const unsigned short tsMenuUIPal[16];
 extern const unsigned short menu_action_focusedTiles[8320];
 extern const unsigned short menu_actionTiles[8320];
 extern const unsigned short page_name_ui_64x16Tiles[3072];
-extern const unsigned short menu_button_promptsTiles[256];
-extern const unsigned short menu_button_promptsPal[16];
-extern const unsigned short menu_slider_promptTiles[32];
-extern const unsigned short menu_toggle_promptTiles[320];
+extern const unsigned short menu_button_prompt_32x16Tiles[256];
+extern const unsigned short menu_button_prompt_32x16Pal[16];
+extern const unsigned short menu_slider_prompt_8x16Tiles[32];
+extern const unsigned short menu_toggle_prompt_64x32Tiles[512];
 extern const unsigned short font_numbers_8x16Tiles[320];
 extern const unsigned short font_percent_16x16Tiles[64];
-extern const unsigned short menu_slider_barsTiles[96];
+extern const unsigned short menu_slider_bars_8x16Tiles[96];
 extern const unsigned short menu_slider_barsPal[16];
 
 int yStart, yTarget, titleCardYStart, titleCardYTarget, titleRevealFadeDirection;

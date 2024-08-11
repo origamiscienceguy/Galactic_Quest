@@ -14,7 +14,7 @@
 //
 //======================================================================
 
-const unsigned short menu_button_promptsTiles[256] __attribute__((aligned(4)))=
+const unsigned short menu_button_prompt_32x16Tiles[256] __attribute__((aligned(4)))=
 {
 	0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x6500,
 	0x0000,0x6660,0x0000,0x6665,0x0000,0x5666,0x0000,0x5666,
@@ -53,7 +53,7 @@ const unsigned short menu_button_promptsTiles[256] __attribute__((aligned(4)))=
 	0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,
 };
 
-const unsigned short menu_button_promptsPal[16] __attribute__((aligned(4)))=
+const unsigned short menu_button_prompt_32x16Pal[16] __attribute__((aligned(4)))=
 {
 	0x7C1F,0x0096,0x00BD,0x12E4,0x03E3,0x4210,0x7FFF,0x0000,
 	0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,0x0000,
