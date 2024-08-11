@@ -67,6 +67,7 @@
 #define MENU_SLIDER_PROMPT_SPRITE1 3
 #define MENU_SLIDER_PROMPT_SPRITE2 4
 #define MENU_SLIDER_BAR_SPRITE_FIRST 5
+#define MENU_SLIDER_BAR_SPRITE_LAST (MENU_SLIDER_BAR_SPRITE_FIRST + (5 * 3) - 1)
 
 #define MENU_SLIDER_PROMPT_PAL 3
 #define MENU_SLIDER_PROMPT_GFX_START 16
@@ -74,10 +75,16 @@
 
 #define MENU_TOGGLE_PROMPT_PAL 3
 #define MENU_TOGGLE_PROMPT_GFX_START (MENU_SLIDER_PROMPT_GFX_START + MENU_SLIDER_PROMPT_GFX_SIZE)
-#define MENU_TOGGLE_PROMPT_GFX_SIZE 32
+#define MENU_TOGGLE_PROMPT_GFX_SIZE 64
+#define MENU_TOGGLE_SPRITE_FIRST (MENU_SLIDER_BAR_SPRITE_LAST + 1)
+#define MENU_TOGGLE_SPRITE_LAST (MENU_TOGGLE_SPRITE_FIRST + 5)
+
+#define MENU_SLIDER_BARS_PAL 4
+#define MENU_SLIDER_BARS_GFX_START (MENU_TOGGLE_PROMPT_GFX_START + MENU_TOGGLE_PROMPT_GFX_SIZE)
+#define MENU_SLIDER_BARS_GFX_SIZE 6
 
 #define MENU_BUTTON_PROMPT_PAL 3
-#define MENU_BUTTON_PROMPT_GFX_START (MENU_TOGGLE_PROMPT_GFX_START + MENU_TOGGLE_PROMPT_GFX_SIZE)
+#define MENU_BUTTON_PROMPT_GFX_START (MENU_SLIDER_BARS_GFX_START + MENU_SLIDER_BARS_GFX_SIZE)
 #define MENU_BUTTON_PROMPT_GFX_SIZE 16
 
 #define FONT_NUMBERS_PROMPT_PAL 3
@@ -88,9 +95,6 @@
 #define FONT_PERCENT_GFX_START (FONT_NUMBERS_GFX_START + FONT_NUMBERS_GFX_SIZE)
 #define FONT_PERCENT_GFX_SIZE 4
 
-#define MENU_SLIDER_BARS_PAL 4
-#define MENU_SLIDER_BARS_GFX_START (FONT_PERCENT_GFX_START + FONT_PERCENT_GFX_SIZE)
-#define MENU_SLIDER_BARS_GFX_SIZE 6
 
 #define STARRY_BG_MAX_VEL 
 
@@ -275,7 +279,7 @@ extern const unsigned short page_name_ui_64x16Tiles[3072];
 extern const unsigned short menu_button_prompt_32x16Tiles[256];
 extern const unsigned short menu_button_prompt_32x16Pal[16];
 extern const unsigned short menu_slider_prompt_8x16Tiles[32];
-extern const unsigned short menu_toggle_prompt_64x32Tiles[512];
+extern const unsigned short menu_toggle_prompt_64x32Tiles[1024];
 extern const unsigned short font_numbers_8x16Tiles[320];
 extern const unsigned short font_percent_16x16Tiles[64];
 extern const unsigned short menu_slider_bars_8x16Tiles[96];
@@ -289,6 +293,7 @@ void mainMenuNormal();
 void mainMenuEnd();
 
 void hidePressStart();
+void hideAllUIWindowSprites();
 void drawPressStart();
 void drawStarBlocker(int yPos);
 
@@ -307,8 +312,8 @@ void drawMenuPageUIText();
 void hidePageUITextSprite();
 void setTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical, int palette, int layer);
 void drawNineSliceWindow(int x, int y, int width, int height, int layer);
-int wrapX(int x);
-bool isInBounds(int y);
+int wrapTileX(int x);
+bool tileYInBounds(int y);
 void drawLaserRow(int x, int y, int width, int layer, bool wrapAround);
 void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int layer);
 void drawMenuTextSegment(int tileXPos, int tileYPos, int menuElementPosition, int palette, bool highlighted, int numTextTileColumns);
@@ -320,6 +325,7 @@ void drawMenuButtons(bool hideAll);
 void drawSliderPrompt(int xPos, int yPos, int sprIndex, bool flipSpriteHorizontally);
 void hideSliderPrompt();
 void drawSliderBar(int sprIndex, int xPos, int yPos, int imgIndex, int barValue);
+void drawToggle(int sprIndex, int xPos, int yPos, bool isEnabled);
 void mainMenuInitBlend();
 void mainMenuUpdateBlend(u32 eva, u32 evb);
 
@@ -336,6 +342,7 @@ int easeInOut(int t, int power);
 int easeOutQuint(int t);
 int lerp(int a, int b, int t);
 int interpolateValues(int timer, int targetTime, int lerpStartVal, int lerpTargetVal);
+int calculatePercentage(int numerator, int denominator);
 
 void printMenuPageItem(const MenuPageItem* item);
 

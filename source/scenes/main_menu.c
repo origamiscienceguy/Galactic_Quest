@@ -119,7 +119,7 @@ MenuPage menuPages[6] = {
 			{"Master Volume", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 14, .data.userIntValue = 8},
 			{"BGM", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 16, .data.userIntValue = 8},
 			{"SFX", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 18, .data.userIntValue = 8},
-			{"Grid Enabled", ME_TOGGLE, .data.boolVal = false, .dataType = MPIDT_BOOL, .textGFXIndex = 20},
+			{"Grid Enabled", ME_TOGGLE, .data.boolVal = true, .dataType = MPIDT_BOOL, .textGFXIndex = 20, .data.userBoolValue = true},
 			{"Apply Changes", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 22},
 		},
 		.itemCount = 5,
@@ -723,9 +723,11 @@ void updateMainMenu(){
 			menuPage = &menuPages[mDat.currMenuPage];
 			directionalInputEnabled();
 
-			if (moveY != 0)
+			if (moveY != 0) {
+				hideSliderPrompt();
 				mDat.updateDraw = true;
-			
+			}
+
 			// Navigate the menu; wrap around if we hit an edge
 			if (menuPage != &menuPages[MPI_CREDITS]){
 				if (moveY != 0){
@@ -741,6 +743,19 @@ void updateMainMenu(){
 					}
 				}
 			
+				if (moveX != 0){
+					MenuPageItem* thisMenuItem = &menuPage->items[mDat.menuCursorPos];
+					switch(thisMenuItem->menuElement) {
+						default:
+							break;
+						case ME_TOGGLE:
+							currentSFXIndex = playNewSound(_sfxMenuConfirmA);
+							thisMenuItem->data.userBoolValue = !thisMenuItem->data.userBoolValue;
+							mDat.updateDraw = true;
+							break;
+					}
+				}
+
 				menuInputConfirmEnabled();
 			}
 			
@@ -968,8 +983,11 @@ void drawMainMenu(){
 				menuPage = &menuPages[mDat.currMenuPage];
 
 				u8 numDrawnSliders = 0;
+				u8 numDrawnToggles = 0;
 				for(int i = 0; i < menuPage->itemCount; ++i){
 					MenuPageItem* thisMenuItem = &menuPage->items[i];
+					bool cursorOnElement = (mDat.menuCursorPos == i && (menuPage != &menuPages[MPI_CREDITS]));
+					bool isTweakingData = (mDat.windowState == MMWS_TWEAKING_DATA);
 					switch(thisMenuItem->menuElement) {
 						default:
 							break;
@@ -979,14 +997,22 @@ void drawMainMenu(){
 							drawSliderBar(numDrawnSliders, slBarX, slBarY, 0, thisMenuItem->data.userIntValue);
 							numDrawnSliders++;
 							break;
+						case ME_TOGGLE:
+							int togglePosX = ((mDat.windowCurrTileXPos + mDat.menuElementsWidth[mDat.currMenuPage]) * TILE_SIZE) + 4;
+							int togglePosY = ((mDat.windowCurrTileYPos + 2) * TILE_SIZE) + (i * TILE_SIZE * 2) + 1;
+							drawToggle(numDrawnToggles, togglePosX, togglePosY, thisMenuItem->data.userBoolValue);
+							numDrawnToggles++;
+
+							if (cursorOnElement){
+								drawSliderPrompt(123, 48 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE1, false);
+								drawSliderPrompt(170, 48 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE2, true);
+							}
+							break;
 					}
-					bool cursorOnElement = (mDat.menuCursorPos == i && (menuPage != &menuPages[MPI_CREDITS]));
-					bool isTweakingData = (mDat.windowState == MMWS_TWEAKING_DATA);
 					drawMenuTextSegment(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos + 2 + (2 * i), i, 2, cursorOnElement && !isTweakingData, mDat.menuElementsWidth[mDat.currMenuPage]);
 
 
 				}
-				
 				
 				if (mDat.windowState == MMWS_TWEAKING_DATA){
 					drawSliderPrompt(123, 48 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE1, false);
@@ -1087,11 +1113,11 @@ void drawNineSliceWindow(int x, int y, int width, int height, int layer){
     if (height > 1){
         // Draw the top-middle row
         if (height >= 2){
-            setTile(wrapX(x), y + 1, tilesetIndex + LM_UPPER, false, false, palette, layer); // Left-middle-upper tile
+            setTile(wrapTileX(x), y + 1, tilesetIndex + LM_UPPER, false, false, palette, layer); // Left-middle-upper tile
             for (int i = 1; i < width - 1; ++i){
-                setTile(wrapX(x + i), y + 1, tilesetIndex + MIDDLE_UPPER, false, false, palette, layer); // Middle upper
+                setTile(wrapTileX(x + i), y + 1, tilesetIndex + MIDDLE_UPPER, false, false, palette, layer); // Middle upper
             }
-            setTile(wrapX(x + (width - 1)), y + 1, tilesetIndex + RM_UPPER, false, false, palette, layer); // Right-middle-upper tile
+            setTile(wrapTileX(x + (width - 1)), y + 1, tilesetIndex + RM_UPPER, false, false, palette, layer); // Right-middle-upper tile
         }
 
         // Calculate the bottomY position
@@ -1099,77 +1125,77 @@ void drawNineSliceWindow(int x, int y, int width, int height, int layer){
 
         // Draw center rows
         for (int j = 2; j < height - 1; ++j){
-            setTile(wrapX(x), y + j, tilesetIndex + LM, false, false, palette, layer); // Left-middle tile
+            setTile(wrapTileX(x), y + j, tilesetIndex + LM, false, false, palette, layer); // Left-middle tile
             for (int i = 1; i < width - 1; ++i){
-                setTile(wrapX(x + i), y + j, tilesetIndex + CENTER, false, false, palette, layer); // Center
+                setTile(wrapTileX(x + i), y + j, tilesetIndex + CENTER, false, false, palette, layer); // Center
             }
-            setTile(wrapX(x + (width - 1)), y + j, tilesetIndex + RM, false, false, palette, layer); // Right-middle tile
+            setTile(wrapTileX(x + (width - 1)), y + j, tilesetIndex + RM, false, false, palette, layer); // Right-middle tile
         }
 
         // Draw the bottom-middle row (mirrored)
         if (height > 4){
-            setTile(wrapX(x), bottomY - 1, tilesetIndex + LM_UPPER, false, true, palette, layer); // Left-middle-lower tile (flipped vertically)
+            setTile(wrapTileX(x), bottomY - 1, tilesetIndex + LM_UPPER, false, true, palette, layer); // Left-middle-lower tile (flipped vertically)
             for (int i = 1; i < width - 1; ++i){
-                setTile(wrapX(x + i), bottomY - 1, tilesetIndex + MIDDLE_UPPER, false, true, palette, layer); // Middle lower (flipped vertically)
+                setTile(wrapTileX(x + i), bottomY - 1, tilesetIndex + MIDDLE_UPPER, false, true, palette, layer); // Middle lower (flipped vertically)
             }
-            setTile(wrapX(x + (width - 1)), bottomY - 1, tilesetIndex + RM_UPPER, false, true, palette, layer); // Right-middle-lower tile (flipped vertically)
+            setTile(wrapTileX(x + (width - 1)), bottomY - 1, tilesetIndex + RM_UPPER, false, true, palette, layer); // Right-middle-lower tile (flipped vertically)
         }
 
         // Draw the bottom row
         if (width > 2){
-            setTile(wrapX(x + 1), bottomY, tilesetIndex + TL_2, false, true, palette, layer); // Bottom-left corner Part 2 (flipped vertically)
+            setTile(wrapTileX(x + 1), bottomY, tilesetIndex + TL_2, false, true, palette, layer); // Bottom-left corner Part 2 (flipped vertically)
         }
         if (width > 3){
-            setTile(wrapX(x + 2), bottomY, tilesetIndex + TL_3, false, true, palette, layer); // Bottom-left corner Part 3 (flipped vertically)
+            setTile(wrapTileX(x + 2), bottomY, tilesetIndex + TL_3, false, true, palette, layer); // Bottom-left corner Part 3 (flipped vertically)
         }
         for (int i = 3; i < width - 3; ++i){
-            setTile(wrapX(x + i), bottomY, tilesetIndex + TOP_MIDDLE, false, true, palette, layer); // Bottom middle (flipped vertically)
+            setTile(wrapTileX(x + i), bottomY, tilesetIndex + TOP_MIDDLE, false, true, palette, layer); // Bottom middle (flipped vertically)
         }
         if (width >= 3){
-            setTile(wrapX(x + (width - 3)), bottomY, tilesetIndex + TR_1, false, true, palette, layer); // Bottom-right corner Part 1 (flipped vertically)
+            setTile(wrapTileX(x + (width - 3)), bottomY, tilesetIndex + TR_1, false, true, palette, layer); // Bottom-right corner Part 1 (flipped vertically)
         }
         if (width >= 2){
-            setTile(wrapX(x + (width - 2)), bottomY, tilesetIndex + TR_2, false, true, palette, layer); // Bottom-right corner Part 2 (flipped vertically)
+            setTile(wrapTileX(x + (width - 2)), bottomY, tilesetIndex + TR_2, false, true, palette, layer); // Bottom-right corner Part 2 (flipped vertically)
         }
 
         // Draw the top row
         for (int i = 3; i < width - 3; ++i){
-            setTile(wrapX(x + i), y, tilesetIndex + TOP_MIDDLE, false, false, palette, layer); // Top middle
+            setTile(wrapTileX(x + i), y, tilesetIndex + TOP_MIDDLE, false, false, palette, layer); // Top middle
         }
 
         if (width >= 3){
-            setTile(wrapX(x + (width - 3)), y, tilesetIndex + TR_1, false, false, palette, layer); // Top-right corner Part 1
+            setTile(wrapTileX(x + (width - 3)), y, tilesetIndex + TR_1, false, false, palette, layer); // Top-right corner Part 1
         }
         if (width >= 2){
-            setTile(wrapX(x + 1), y, tilesetIndex + TL_2, false, false, palette, layer); // Top-left corner Part 2
+            setTile(wrapTileX(x + 1), y, tilesetIndex + TL_2, false, false, palette, layer); // Top-left corner Part 2
         }
         if (width >= 3){
-            setTile(wrapX(x + 2), y, tilesetIndex + TL_3, false, false, palette, layer); // Top-left corner Part 3
+            setTile(wrapTileX(x + 2), y, tilesetIndex + TL_3, false, false, palette, layer); // Top-left corner Part 3
         }
 
         if (width >= 2){
-            setTile(wrapX(x + (width - 2)), y, tilesetIndex + TR_2, false, false, palette, layer); // Top-right corner Part 2
+            setTile(wrapTileX(x + (width - 2)), y, tilesetIndex + TR_2, false, false, palette, layer); // Top-right corner Part 2
         }
 
         // Correct top-right and bottom-right corners with wrapping
-        setTile(wrapX(x + (width - 1)), bottomY, tilesetIndex + TR_3, false, true, palette, layer); // Bottom-right corner Part 3 (flipped vertically)
-        setTile(wrapX(x + (width - 1)), y, tilesetIndex + TR_3, false, false, palette, layer); // Top-right corner Part 3
+        setTile(wrapTileX(x + (width - 1)), bottomY, tilesetIndex + TR_3, false, true, palette, layer); // Bottom-right corner Part 3 (flipped vertically)
+        setTile(wrapTileX(x + (width - 1)), y, tilesetIndex + TR_3, false, false, palette, layer); // Top-right corner Part 3
 
-        setTile(wrapX(x), bottomY, tilesetIndex + TL_1, false, true, palette, layer); // Bottom-left corner Part 1 (flipped vertically)
-        setTile(wrapX(x), y, tilesetIndex + TL_1, false, false, palette, layer); // Top-left corner Part 1
+        setTile(wrapTileX(x), bottomY, tilesetIndex + TL_1, false, true, palette, layer); // Bottom-left corner Part 1 (flipped vertically)
+        setTile(wrapTileX(x), y, tilesetIndex + TL_1, false, false, palette, layer); // Top-left corner Part 1
     }else{
 		drawLaserRow(x, y, width, layer, true);
     }
 }
 
-// Helper function to get wrapped x-coordinate
-int wrapX(int x){
-    return (x + 30) % 30; // Ensure x is within [0, 29]
+// Helper function to ensure tilemapX remains within tilemap bounds (and wraps around the screen)
+int wrapTileX(int tileXPos){
+    return (tileXPos + 30) % 30; // Ensure x is within [0, 29]
 }
 
-// Helper function to ensure y is within bounds
-bool isInBounds(int y){
-    return y >= 0 && y < 30;
+// Helper function to ensure tilemapY remains within tilemap bounds
+bool tileYInBounds(int tileYPos){
+    return tileYPos >= 0 && tileYPos < 30;
 }
 
 // Draw the LASER_TOP and LASER_BOTTOM tiles with wrapping
@@ -1181,13 +1207,13 @@ void drawLaserRow(int x, int y, int width, int layer, bool wrapAround){
 
         // Handle wrapping or boundary checking based on the boolean flag
         if (wrapAround){
-            drawX = wrapX(drawX);
-        }else if (!isInBounds(drawX)){
+            drawX = wrapTileX(drawX);
+        }else if (!tileYInBounds(drawX)){
             continue; // Skip drawing if out of bounds and not wrapping
         }
 
         // Check bounds for y position (should be within the range 0-29)
-        if (isInBounds(y) && isInBounds(y + 1)){
+        if (tileYInBounds(y) && tileYInBounds(y + 1)){
             setTile(drawX, y, tilesetIndex + LASER_TOP, false, false, palette, layer);
             setTile(drawX, y + 1, tilesetIndex + LASER_BOTTOM, false, false, palette, layer);
         }
@@ -1273,6 +1299,7 @@ void directionalInputEnabled(){
 
 void menuInputConfirmEnabled(){
 	if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
+		MenuPageItem* thisMenuItem = &menuPages[mDat.currMenuPage].items[mDat.menuCursorPos];
 		switch(mDat.windowState){
 			default:
 				break;
@@ -1306,6 +1333,9 @@ void menuInputConfirmEnabled(){
 					case ME_SHIFT:
 						break;
 					case ME_TOGGLE:
+						currentSFXIndex = playNewSound(_sfxMenuConfirmA);
+						thisMenuItem->data.userBoolValue = !thisMenuItem->data.userBoolValue;
+						mDat.updateDraw = true;
 						break;
 					case ME_SOUND_TESTER:
 						break;
@@ -1349,6 +1379,9 @@ void menuInputCancelEnabled(){
 				mDat.windowConfirmDirection = MWCD_BACKWARD;
 				mDat.windowState = MMWS_CLOSING;
 				
+				// If there are any menu toggles/sliders/cursors visible, hide them right now
+				hideAllUIWindowSprites();
+
 				// Lerp toward making the text completely invisible, over 32 frames
 				mDat.evaLerpStart = 16;
 				mDat.evaLerpEnd = 0;
@@ -1359,8 +1392,6 @@ void menuInputCancelEnabled(){
 
 				mDat.updateDraw = true;
 			
-				// Draw the Menu Page UI Text now
-				//drawMenuPageUIText();
 				break;
 			case MMWS_TWEAKING_DATA:
 				currentSFXIndex = playNewSound(_sfxMenuMove);
@@ -1543,6 +1574,17 @@ void drawSliderBar(int sprIndex, int xPos, int yPos, int imgIndex, int barValue)
     }
 }
 
+void drawToggle(int sprIndex, int xPos, int yPos, bool isEnabled) {
+	u8 imgIndex = 0;
+	if (!isEnabled)
+		imgIndex = 1;
+
+	// Set the attributes for the sprite
+	objectBuffer[MENU_TOGGLE_SPRITE_FIRST + sprIndex].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SHAPE(1) | ATTR0_Y(yPos);
+	objectBuffer[MENU_TOGGLE_SPRITE_FIRST + sprIndex].attr1 = ATTR1_SIZE(3) | ATTR1_X(xPos);
+	objectBuffer[MENU_TOGGLE_SPRITE_FIRST + sprIndex].attr2 = ATTR2_ID(512 + MENU_TOGGLE_PROMPT_GFX_START + (32 * imgIndex)) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_BUTTON_PROMPT_PAL);
+}
+
 void drawMenuPageUIText(){
 	if (mDat.showPageWindowBG){
 		if (mDat.eva >= 2 && mDat.evb <= 14){
@@ -1571,6 +1613,12 @@ void hidePressStart(){
 	objectBuffer[PRESS_START_SPRITE1].attr0 = ATTR0_HIDE;
 	objectBuffer[PRESS_START_SPRITE2].attr0 = ATTR0_HIDE;
 	objectBuffer[PRESS_START_SPRITE3].attr0 = ATTR0_HIDE;
+}
+
+void hideAllUIWindowSprites(){
+	for (int i = MENU_SLIDER_PROMPT_SPRITE1; i < MENU_TOGGLE_SPRITE_LAST; i++) {
+		objectBuffer[i].attr0 = ATTR0_HIDE;
+	}
 }
 
 void skipToMenu(){
@@ -1654,4 +1702,8 @@ int interpolateValues(int timer, int targetTime, int lerpStartVal, int lerpTarge
 
 	// Calculate the interpolated position and update yPos
 	return lerp(lerpStartVal * FIXED_POINT_SCALE, lerpTargetVal * FIXED_POINT_SCALE, easedT) / FIXED_POINT_SCALE;
+}
+
+int calculatePercentage(int numerator, int denominator) {
+	return (numerator * 100 + (denominator / 2)) / denominator;
 }
