@@ -1281,6 +1281,9 @@ void menuInputConfirmEnabled(){
 						
 						// Hide the Pade UI Text Sprite
 						hideSprite(MENU_PAGE_TEXT_SPRITE);
+						
+						// If there are any menu toggles/sliders/cursors visible, hide them right now
+						hideSpriteRange(MENU_SLIDER_PROMPT_SPRITE1, FONT_PERCENT_SPRITE_LAST);
 						break;
 					case ME_SLIDER:
 						currentSFXIndex = playNewSound(_sfxMenuConfirmA);
