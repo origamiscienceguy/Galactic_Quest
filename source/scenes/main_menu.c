@@ -957,12 +957,7 @@ void drawMainMenu(){
 							}
 							break;
 						case ME_SOUND_TESTER:
-							//togglePosX = ((mDat.windowCurrTileXPos + mDat.menuElementsWidth[mDat.currMenuPage]) * TILE_SIZE) + 4;
-							//togglePosY = ((mDat.windowCurrTileYPos + 2) * TILE_SIZE) + (i * TILE_SIZE * 2) + 1;
-							//drawToggle(numDrawnToggles, togglePosX, togglePosY, thisMenuItem->data.boolVal);
-							//numDrawnToggles++;int 
-							
-							int posX = ((mDat.windowCurrTileXPos + mDat.menuElementsWidth[mDat.currMenuPage] - 5) * TILE_SIZE) + 3;
+							int posX = ((mDat.windowCurrTileXPos + mDat.menuElementsWidth[mDat.currMenuPage] - 5) * TILE_SIZE) + 1;
 							int posY = ((mDat.windowCurrTileYPos + 2) * TILE_SIZE) + (i * TILE_SIZE * 2) + 2;
 							numDrawnDigits += drawNumber(FONT_NUMBERS_SPRITE_FIRST + (i * 3), thisMenuItem->data.intVal, posX + (8 * TILE_SIZE) + 2, posY + 1, true);
 
@@ -1055,14 +1050,6 @@ void setTile(int x, int y, int drawingTileIndex, bool flipHorizontal, bool flipV
     // Calculate the index and set the tile value
     int tilemapIndex = x + (y << 5);
     tilemapBuffer[tilemapIndex] = SE_BUILD(drawingTileIndex, palette, flipHorizontal, flipVertical);
-	
-	/*
-			// Hide the title card after 40 frames in this state
-			memset32(tilemapBuffer1, 0, sizeof(sprTitleLogoMap) >> 2);
-			tilemapData[1].size = sizeof(sprTitleLogoMap) >> 2;
-			tilemapData[1].buffer = tilemapBuffer1;
-			tilemapData[1].position = &se_mem[TITLE_CARD_TILEMAP];
-	*/
 }
 
 /// @brief Draws a nine slice window for the centric main menu; Width and Height params are in terms of 8x8 tiles
