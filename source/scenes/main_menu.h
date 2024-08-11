@@ -67,17 +67,33 @@
 #define MENU_SLIDER_PROMPT_SPRITE1 3
 #define MENU_SLIDER_PROMPT_SPRITE2 4
 
-#define MENU_BUTTON_PROMPT_PAL 3
-#define MENU_BUTTON_PROMPT_GFX_START (MENU_SLIDER_PROMPT_GFX_START + MENU_SLIDER_PROMPT_GFX_SIZE)
-#define MENU_BUTTON_PROMPT_GFX_SIZE 16
-
-#define MENU_TITLE_TEXT_PAL 3
-#define MENU_TITLE_TEXT_GFX_START (MENU_BUTTON_PROMPT_GFX_START + MENU_BUTTON_PROMPT_GFX_SIZE)
-#define MENU_TITLE_TEXT_GFX_SIZE 32
-
 #define MENU_SLIDER_PROMPT_PAL 3
 #define MENU_SLIDER_PROMPT_GFX_START 16
 #define MENU_SLIDER_PROMPT_GFX_SIZE 2
+
+#define MENU_TOGGLE_PROMPT_PAL 3
+#define MENU_TOGGLE_PROMPT_GFX_START (MENU_SLIDER_PROMPT_GFX_START + MENU_SLIDER_PROMPT_GFX_SIZE)
+#define MENU_TOGGLE_PROMPT_GFX_SIZE 20
+
+#define MENU_BUTTON_PROMPT_PAL 3
+#define MENU_BUTTON_PROMPT_GFX_START (MENU_TOGGLE_PROMPT_GFX_START + MENU_TOGGLE_PROMPT_GFX_SIZE)
+#define MENU_BUTTON_PROMPT_GFX_SIZE 16
+
+#define FONT_NUMBERS_PROMPT_PAL 3
+#define FONT_NUMBERS_GFX_START (MENU_BUTTON_PROMPT_GFX_START + MENU_BUTTON_PROMPT_GFX_SIZE)
+#define FONT_NUMBERS_GFX_SIZE 20
+
+#define FONT_PERCENT_PAL 3
+#define FONT_PERCENT_GFX_START (FONT_NUMBERS_GFX_START + FONT_NUMBERS_GFX_SIZE)
+#define FONT_PERCENT_GFX_SIZE 4
+
+#define MENU_SLIDER_BARS_PAL 4
+#define MENU_SLIDER_BARS_GFX_START (FONT_PERCENT_GFX_START + FONT_PERCENT_GFX_SIZE)
+#define MENU_SLIDER_BARS_GFX_SIZE 4
+
+#define MENU_TITLE_TEXT_PAL 3
+#define MENU_TITLE_TEXT_GFX_START (MENU_SLIDER_BARS_GFX_START + MENU_SLIDER_BARS_GFX_SIZE)
+#define MENU_TITLE_TEXT_GFX_SIZE 32
 
 #define STARRY_BG_MAX_VEL 
 
@@ -200,6 +216,7 @@ typedef int (*FunctionPtr)(void);
 typedef union{
     FunctionPtr functionPtr;
     int intVal;
+	bool boolVal;
     int* intArray;  // Pointer to an array of integers
 } MenuElementData;
 
@@ -208,7 +225,7 @@ typedef struct{
     char* itemName;
     MenuElement menuElement;
     MenuElementData data;
-    enum{ MPIDT_FUNC_PTR, MPIDT_INT, MPIDT_INT_ARRAY } dataType; // To keep track of the type stored
+    enum{ MPIDT_FUNC_PTR, MPIDT_INT, MPIDT_BOOL, MPIDT_INT_ARRAY } dataType; // To keep track of the type stored
 	int textGFXIndex;				// The graphic row that this text appears on in the tileset
 } MenuPageItem;
 
@@ -255,6 +272,12 @@ extern const unsigned short page_name_ui_64x16Tiles[3072];
 extern const unsigned short menu_button_promptsTiles[256];
 extern const unsigned short menu_button_promptsPal[16];
 extern const unsigned short menu_slider_promptTiles[32];
+extern const unsigned short menu_toggle_promptTiles[320];
+extern const unsigned short font_numbers_8x16Tiles[320];
+extern const unsigned short font_percent_16x16Tiles[64];
+extern const unsigned short menu_slider_barsTiles[96];
+extern const unsigned short menu_slider_barsPal[16];
+
 int yStart, yTarget, titleCardYStart, titleCardYTarget, titleRevealFadeDirection;
 
 //local functions
@@ -297,8 +320,8 @@ int menuExecNewGame();
 int menuExecContinue();
 int menuExecLoadGame();
 int menuExecOptionsApplyChanges();
-int menuExecPlayBGM();
-int menuExecPlaySFX();
+int menuExecPlayBGM(u8 soundIndex);
+int menuExecPlaySFX(u8 soundIndex);
 
 void loadGFX(u32 VRAMCharBlock, u32 VRAMTileIndex, void *graphicsBasePointer, u32 graphicsTileOffset, u32 numTilesToSend, u32 queueChannel);
 

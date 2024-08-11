@@ -58,8 +58,8 @@ MenuPage menuPages[6] = {
 	},
 	{
 		.items = {
-			{"BGM", ME_SOUND_TESTER, .data.functionPtr = menuExecPlayBGM, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 16},
-			{"SFX", ME_SOUND_TESTER, .data.functionPtr = menuExecPlaySFX, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 18},
+			{"BGM", ME_SOUND_TESTER, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 16},
+			{"SFX", ME_SOUND_TESTER, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 18},
 			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = MPIDT_INT, .textGFXIndex = 24}
 		},
 		.itemCount = 3,
@@ -92,12 +92,12 @@ MenuPage menuPages[6] = {
 	},
 	{
 		.items = {
-			{"- Programming -", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 26},
-			{"origamiscienceguy", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 32},
-			{"- Graphics -", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 30},
-			{"n67094", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 36},
-			{"- Audio -", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 28},
-			{"potatoTeto", ME_CREDITS_DISPLAY, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 34}
+			{"- Programming -", ME_CREDITS_DISPLAY, .textGFXIndex = 26},
+			{"origamiscienceguy", ME_CREDITS_DISPLAY, .textGFXIndex = 32},
+			{"- Graphics -", ME_CREDITS_DISPLAY, .textGFXIndex = 30},
+			{"n67094", ME_CREDITS_DISPLAY, .textGFXIndex = 36},
+			{"- Audio -", ME_CREDITS_DISPLAY, .textGFXIndex = 28},
+			{"potatoTeto", ME_CREDITS_DISPLAY, .textGFXIndex = 34}
 		},
 		.itemCount = 6,
 		.pageName = "CREDITS",
@@ -115,8 +115,8 @@ MenuPage menuPages[6] = {
 			{"Master Volume", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 14},
 			{"BGM", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 16},
 			{"SFX", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 18},
-			{"Apply Changes", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 20},
-			{"Abort", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = MPIDT_INT, .textGFXIndex = 22}
+			{"Grid Enabled", ME_TOGGLE, .data.boolVal = false, .dataType = MPIDT_BOOL, .textGFXIndex = 20},
+			{"Apply Changes", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 22},
 		},
 		.itemCount = 5,
 		.pageName = "OPTIONS",
@@ -165,8 +165,9 @@ void mainMenuInitialize(){
 	memcpy32(&paletteBufferObj[FLYING_COMET_PAL_START << 4], shootingStarPal, sizeof(shootingStarPal) >> 2);
 	memcpy32(&paletteBufferObj[STAR_BLOCKER_PAL_START << 4], starBlockerPal, sizeof(starBlockerPal) >> 2);
 	memcpy32(&paletteBufferObj[MENU_BUTTON_PROMPT_PAL << 4], menu_button_promptsPal, sizeof(menu_button_promptsPal) >> 2);
+	memcpy32(&paletteBufferObj[MENU_SLIDER_BARS_PAL << 4], menu_slider_barsPal, sizeof(menu_slider_barsPal) >> 2);
 	
-	paletteData[1].size = 32;
+	paletteData[1].size = 40;
 	paletteData[1].position = pal_obj_mem;
 	paletteData[1].buffer = (void *)paletteBufferObj;
 	
@@ -185,7 +186,12 @@ void mainMenuInitialize(){
 	memcpy32(&characterBuffer4[FLYING_COMET_GFX_START << 5], shootingStarTiles, sizeof(shootingStarTiles) >> 2);
 	memcpy32(&characterBuffer5[0], starBlockerTiles, sizeof(starBlockerTiles) >> 2);
 	memcpy32(&characterBuffer5[MENU_SLIDER_PROMPT_GFX_START << 5], menu_slider_promptTiles, sizeof(menu_slider_promptTiles) >> 2);
+	memcpy32(&characterBuffer5[MENU_TOGGLE_PROMPT_GFX_START << 5], menu_toggle_promptTiles, sizeof(menu_toggle_promptTiles) >> 2);
 	memcpy32(&characterBuffer5[MENU_BUTTON_PROMPT_GFX_START << 5], menu_button_promptsTiles, sizeof(menu_button_promptsTiles) >> 2);
+	memcpy32(&characterBuffer5[FONT_NUMBERS_GFX_START << 5], font_numbers_8x16Tiles, sizeof(font_numbers_8x16Tiles) >> 2);
+	memcpy32(&characterBuffer5[FONT_PERCENT_GFX_START << 5], font_percent_16x16Tiles, sizeof(font_percent_16x16Tiles) >> 2);
+	memcpy32(&characterBuffer5[MENU_SLIDER_BARS_GFX_START << 5], menu_slider_barsTiles, sizeof(menu_slider_barsTiles) >> 2);
+	
 	characterData[4].position = tile_mem[FLYING_COMET_CHARDATA];
 	characterData[4].buffer = (void *)characterBuffer4;
 	characterData[4].size = sizeof(characterBuffer4) >> 2;
@@ -211,15 +217,13 @@ void mainMenuInitialize(){
 }
 
 void mainMenuNormal(){
-
 	//temporary debug input
 	if(inputs.pressed & KEY_START){
 		currentScene.scenePointer = sceneList[GAMEPLAY];
 		currentScene.state = INITIALIZE;
 		endSound(currentBGMIndex);
 	}
-	static u8 currentAsset = 0;
-	extern u16 numSounds;
+
 	switch(mDat.state){
 	case FLASH_WHITE:
 		if(mDat.actionTimer == mDat.actionTarget){
@@ -698,6 +702,7 @@ void updateMainMenu(){
 						
 						dat = &menuPage->items[mDat.menuCursorPos].data;
 						switch(menuPage->items[mDat.menuCursorPos].dataType) {
+							default:
 							case MPIDT_FUNC_PTR:
 								datFunctPtr = dat->functionPtr;
 								break;
@@ -705,6 +710,9 @@ void updateMainMenu(){
 								datIntVal = dat->intVal;
 								break;
 							case MPIDT_INT_ARRAY:
+								datIntArr = dat->intArray;
+								break;
+							case MPIDT_BOOL:
 								datIntArr = dat->intArray;
 								break;
 						}
@@ -1233,6 +1241,8 @@ void menuInputConfirmEnabled() {
 		switch(mDat.windowState) {
 			case MMWS_READY:
 				switch(menuPage->items[mDat.menuCursorPos].menuElement) {
+					default:
+						break;
 					case ME_SCRIPT_RUNNER:
 						break;
 					case ME_PAGE_TRANSFER:
@@ -1251,6 +1261,8 @@ void menuInputConfirmEnabled() {
 					case ME_TOGGLE:
 						break;
 					case ME_SOUND_TESTER:
+						break;
+					case ME_CREDITS_DISPLAY:
 						break;
 				}
 				break;
@@ -1318,11 +1330,11 @@ int menuExecOptionsApplyChanges(){
 	return 0;
 }
 
-int menuExecPlayBGM(){
+int menuExecPlayBGM(u8 soundIndex){
 	return 0;
 }
 
-int menuExecPlaySFX(){
+int menuExecPlaySFX(u8 soundIndex){
 	return 0;
 }
 
