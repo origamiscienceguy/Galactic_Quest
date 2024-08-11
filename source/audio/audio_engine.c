@@ -185,6 +185,22 @@ u8 endSound(u8 soundIndex){
 	return numActiveSounds;
 }
 
+u8 endAllSound(){
+	for (int i = 0; i < MAX_SOUNDS_IN_QUEUE; i++){
+		endSound(i);
+	}
+	return 0;
+}
+
+u8 endAllSoundExcept(u8 soundIndex){
+	u32 numActiveSounds = 0;
+	for (int i = 0; i < MAX_SOUNDS_IN_QUEUE; i++){
+		if (i != soundIndex)
+			numActiveSounds = endSound(i);
+	}
+	return numActiveSounds;
+}
+
 void pauseAsset(u8 soundIndex){
 	//pause the asset
 	if(activeSounds[soundIndex].enabled == 1){

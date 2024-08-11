@@ -13,8 +13,16 @@ extern void audioInitialize();
 extern u8 playNewSound(u16 assetName);
 
 //will remove an asset from the queue. Can be called at any time by the programmer, or called automatically after an asset reaches the end.
-//returns the number of assets still palying after this one is removed
+//returns the number of assets still playing after this one is removed
 extern u8 endSound(u8 assetIndex);
+
+//will remove all assets from the queue. Can be called at any time by the programmer, or called automatically after an asset reaches the end.
+//returns the number of assets still playing after this one is removed (always 0)
+extern u8 endAllSound();
+
+//will remove all assets from the queue except for the provided sound index. Can be called at any time by the programmer, or called automatically after an asset reaches the end.
+//returns the number of assets still playing after the rest are removed
+extern u8 endAllSoundExcept(u8 soundIndex);
 
 //will temporarilly stop playing a song in the queue. It will still maintain it's position in the queue.
 extern void pauseAsset(u8 assetIndex);

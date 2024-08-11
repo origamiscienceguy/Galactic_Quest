@@ -755,7 +755,7 @@ void updateMainMenu(){
 			// Navigate the menu; wrap around if we hit an edge
 			if (menuPage != &menuPages[MPI_CREDITS]) {
 				if (moveY != 0) {
-					playNewSound(_sfxMenuMove);
+					currentSFXIndex = playNewSound(_sfxMenuMove);
 					if((mDat.menuCursorPos + moveY) < 0){
 						mDat.menuCursorPos = menuPage->itemCount - 1;
 					}
@@ -771,7 +771,7 @@ void updateMainMenu(){
 			}
 			
 			if (menuPage != &menuPages[MPI_MAIN_MENU]) {
-				menuInputBackEnabled();
+				menuInputCancelEnabled();
 			}
 			break;
 		case MMWS_INITIAL_ZIPPING:
@@ -812,9 +812,9 @@ void updateMainMenu(){
 			directionalInputEnabled();
 			menuInputConfirmEnabled();
 			
-			menuInputBackEnabled();
+			menuInputCancelEnabled();
 			if (moveX != 0) {
-				playNewSound(_sfxMenuMove);
+				currentSFXIndex = playNewSound(_sfxMenuMove);
 				mDat.updateDraw = true;
 			}
 			break;
@@ -1236,13 +1236,13 @@ void menuInputConfirmEnabled() {
 					case ME_SCRIPT_RUNNER:
 						break;
 					case ME_PAGE_TRANSFER:
-						playNewSound(_sfxMenuConfirmA);
+						currentSFXIndex = playNewSound(_sfxMenuConfirmA);
 						mDat.windowConfirmDirection = MWCD_FORWARD;
 						mDat.windowState = MMWS_CLOSING;
 						mDat.updateDraw = true;
 						break;
 					case ME_SLIDER:
-						playNewSound(_sfxMenuConfirmA);
+						currentSFXIndex = playNewSound(_sfxMenuConfirmA);
 						mDat.windowState = MMWS_TWEAKING_DATA;
 						mDat.updateDraw = true;
 						break;
@@ -1261,7 +1261,7 @@ void menuInputConfirmEnabled() {
 					case ME_PAGE_TRANSFER:
 						break;
 					case ME_SLIDER:
-						playNewSound(_sfxMenuConfirmA);
+						currentSFXIndex = playNewSound(_sfxMenuConfirmA);
 						hideSliderPrompt();
 						mDat.windowState = MMWS_READY;
 						mDat.updateDraw = true;
@@ -1278,19 +1278,19 @@ void menuInputConfirmEnabled() {
 	}
 }
 
-void menuInputBackEnabled() {
+void menuInputCancelEnabled() {
 	if((inputs.pressed & KEY_B)){
 		switch(mDat.windowState) {
 			default:
 				break;
 			case MMWS_READY:
-				playNewSound(_sfxMenuCancel);
+				currentSFXIndex = playNewSound(_sfxMenuCancel);
 				mDat.windowConfirmDirection = MWCD_BACKWARD;
 				mDat.windowState = MMWS_CLOSING;		
 				mDat.updateDraw = true;
 				break;
 			case MMWS_TWEAKING_DATA:
-				playNewSound(_sfxMenuMove);
+				currentSFXIndex = playNewSound(_sfxMenuMove);
 				hideSliderPrompt();
 				mDat.windowState = MMWS_READY;
 				mDat.updateDraw = true;
@@ -1336,10 +1336,13 @@ void performPageTransfer(int datIntVal) {
 	mDat.currMenuPage = datIntVal;
 	menuPage = &menuPages[mDat.currMenuPage];
 
-	// Stop the Main Menu BGM if we're entering sound test; Play it again if it isn't currently playing when we leave
-	if (datIntVal == MPI_SOUND_TEST) {
-		endSound(currentBGMIndex);
+	if (mDat.currMenuPage == MPI_SOUND_TEST) {
+		// Kill all sound except for currentSFXIndex (should be _sfxMenuConfirm)
+		endAllSoundExcept(currentSFXIndex);
 	} else if (!isSoundPlaying(_musMainMenu, currentBGMIndex)) {
+		// Kill all sound except for currentSFXIndex (should be _sfxMenuCancel)
+		endAllSoundExcept(currentSFXIndex);
+		// Play the Main Menu BGM again if it isn't currently playing when we leave
 		currentBGMIndex = playNewSound(_musMainMenu);
 	}
 

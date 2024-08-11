@@ -287,7 +287,7 @@ void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int 
 void drawMenuTextSegment(int nineSliceWidth, int tileXPos, int tileYPos, int menuElementPosition, int palette, bool highlighted, int numTextTileColumns);
 void directionalInputEnabled();
 void menuInputConfirmEnabled();
-void menuInputBackEnabled();
+void menuInputCancelEnabled();
 void performPageTransfer(int datIntVal);
 void drawMenuButtons(bool hideAll);
 void drawSliderPrompt(int xPos, int yPos, int sprIndex, bool flipSpriteHorizontally);
