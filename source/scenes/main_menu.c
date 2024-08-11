@@ -216,7 +216,7 @@ void mainMenuNormal(){
 	if(inputs.pressed & KEY_START){
 		currentScene.scenePointer = sceneList[GAMEPLAY];
 		currentScene.state = INITIALIZE;
-		endAsset(currentBGMIndex);
+		endSound(currentBGMIndex);
 	}
 	static u8 currentAsset = 0;
 	extern u16 numSounds;
@@ -589,7 +589,7 @@ void mainMenuNormal(){
 			objectBuffer[FLYING_COMET_SPRITE].attr0 = ATTR0_HIDE;
 			objectBuffer[STAR_BLOCKER_SPRITE].attr0 = ATTR0_HIDE;
 
-			endAsset(currentBGMIndex);
+			endSound(currentBGMIndex);
 			currentSFXIndex = playNewSound(_sfxMenuConfirmC);
 
 			yStart = mDat.starryBG.yPos * FIXED_POINT_SCALE; // Start position (scaled)
@@ -1335,6 +1335,13 @@ void performPageTransfer(int datIntVal) {
 	// Get the new Menu Page based on the data we're reading
 	mDat.currMenuPage = datIntVal;
 	menuPage = &menuPages[mDat.currMenuPage];
+
+	// Stop the Main Menu BGM if we're entering sound test; Play it again if it isn't currently playing when we leave
+	if (datIntVal == MPI_SOUND_TEST) {
+		endSound(currentBGMIndex);
+	} else if (!isSoundPlaying(_musMainMenu, currentBGMIndex)) {
+		currentBGMIndex = playNewSound(_musMainMenu);
+	}
 
 	// Start loading the new menu page's graphics into VRAM (this will take more than one frame, so this function will keep being called even during MMWS_ZIPPING state)
 	loadMenuGraphics(menuPage);

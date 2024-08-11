@@ -251,7 +251,7 @@ extern const unsigned short tsMenuUITiles[320];
 extern const unsigned short tsMenuUIPal[16];
 extern const unsigned short menu_action_focusedTiles[8320];
 extern const unsigned short menu_actionTiles[8320];
-extern const unsigned short page_name_ui_64x16Tiles[2560];
+extern const unsigned short page_name_ui_64x16Tiles[3072];
 extern const unsigned short menu_button_promptsTiles[256];
 extern const unsigned short menu_button_promptsPal[16];
 extern const unsigned short menu_slider_promptTiles[32];

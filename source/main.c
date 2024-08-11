@@ -100,7 +100,7 @@ void criticalUpdates(){
 		static u8 currentAssetIndex = 0;
 		static u8 currentAsset = 0;
 		extern u16 numSounds;
-		endAsset(currentAssetIndex);
+		endSound(currentAssetIndex);
 		if((currentAsset + 1) >= numSounds){
 			currentAsset = 0;
 			currentAssetIndex = playNewSound(currentAsset);
@@ -117,7 +117,7 @@ void criticalUpdates(){
 		static u8 playingState = 0;
 		if(playingState == 1){
 			playingState = 2;
-			if(!isAssetPlaying(_ThemeC_Peace, battleAssetIndex)){
+			if(!isSoundPlaying(_ThemeC_Peace, battleAssetIndex)){
 				battleAssetIndex = playNewSound(_ThemeC_Peace);
 				setAssetVolume(battleAssetIndex, 0);
 				syncAsset(battleAssetIndex, peaceAssetIndex);

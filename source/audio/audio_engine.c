@@ -108,7 +108,7 @@ u8 playNewSound(u16 assetID){
 	soundIndex = lowestIndex;
 	
 	if(activeSounds[soundIndex].enabled != 0){
-		endAsset(soundIndex);
+		endSound(soundIndex);
 	}
 	
 	CurrentSoundSettings *soundPointer = &activeSounds[soundIndex];
@@ -153,7 +153,7 @@ u8 playNewSound(u16 assetID){
 	return soundIndex;
 }
 
-u8 endAsset(u8 soundIndex){
+u8 endSound(u8 soundIndex){
 	activeSounds[soundIndex].enabled = 0;
 	for(u32 i = 0; i < MAX_DMA_CHANNELS; i++){
 		if(activeSounds[soundIndex].channelSettings[i].channelIndex != 0xff){
@@ -267,7 +267,7 @@ void syncAsset(u8 soundIndex1, u8 soundIndex2){
 	activeSounds[soundIndex1].leftoverSamples = activeSounds[soundIndex2].leftoverSamples;
 }
 
-u8 isAssetPlaying(u16 assetName, u8 assetIndex){
+u8 isSoundPlaying(u16 assetName, u8 assetIndex){
 	if((activeSounds[assetIndex].assetID == assetName) && (activeSounds[assetIndex].enabled != 0)){
 		return 1;
 	}
@@ -514,7 +514,7 @@ void processAssetTick(CurrentSoundSettings *assetPointer, u8 soundIndex){
 			//check if the asset is over
 			if((assetPointer->orderIndex >= (assetPointer->asset->ordersNum)) || (assetPointer->asset->orders[assetPointer->orderIndex] == 0xff)){
 				//end this asset and free it's slot for others
-				endAsset(soundIndex);
+				endSound(soundIndex);
 				return;
 			}
 			assetPointer->rowNum = 1;
@@ -553,7 +553,7 @@ void processAssetTick(CurrentSoundSettings *assetPointer, u8 soundIndex){
 				assetPointer->volumeSlideAmount = 0;
 				assetPointer->mixVolume = finalVolume;
 				if(finalVolume == 0){
-					endAsset(soundIndex);
+					endSound(soundIndex);
 					return;
 				}
 			}

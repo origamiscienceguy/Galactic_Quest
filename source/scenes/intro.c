@@ -184,5 +184,5 @@ void introNormal(){
 void introEnd(){
 	currentScene.scenePointer = sceneList[MAIN_MENU];
 	currentScene.state = INITIALIZE;
-	endAsset(currentBGM);
+	endSound(currentBGM);
 }
