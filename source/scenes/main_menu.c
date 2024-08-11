@@ -31,9 +31,7 @@ void mainMenuInitialize(){
 	REG_BG0CNT = BG_4BPP | BG_SBB(STARRY_IMAGE_TILEMAP) | BG_CBB(STARRY_IMAGE_CHARDATA) | BG_PRIO(3) | BG_REG_64x64; //starry background layer
 	REG_BG1CNT = BG_4BPP | BG_SBB(TITLE_CARD_TILEMAP) | BG_CBB(TITLE_CARD_CHARDATA) | BG_PRIO(2) | BG_REG_32x32; //title screen layer
 	REG_BG2CNT = BG_4BPP | BG_SBB(MENU_WINDOW_TILEMAP) | BG_CBB(MENU_CHARDATA) | BG_PRIO(1) | BG_REG_32x32; //menu page ui layer
-
-	mainMenuInitBlend();
-
+	REG_BLDCNT = BLD_TOP(BLD_BG2 | BLD_BACKDROP | BLD_OBJ) | BLD_WHITE;
 	REG_BLDY = BLDY(0);
 	mDat.starryBG.xPos = 512 - 16;
 	REG_BG0HOFS = mDat.starryBG.xPos;
@@ -506,6 +504,7 @@ void initMainMenu(){
 	// Initialize the menu pages
 	initMenuPages(menuPages);
 
+	mainMenuInitBlend();
 	//set the active screen layers
 	REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ | DCNT_OBJ_1D;
 //	REG_BG0CNT = BG_4BPP | BG_SBB(STARRY_IMAGE_TILEMAP) | BG_CBB(STARRY_IMAGE_CHARDATA) | BG_PRIO(3) | BG_REG_64x64; //starry background layer
@@ -927,7 +926,7 @@ void drawMainMenu(){
 							//togglePosX = ((mDat.windowCurrTileXPos + mDat.menuElementsWidth[mDat.currMenuPage]) * TILE_SIZE) + 4;
 							//togglePosY = ((mDat.windowCurrTileYPos + 2) * TILE_SIZE) + (i * TILE_SIZE * 2) + 1;
 							//drawToggle(numDrawnToggles, togglePosX, togglePosY, thisMenuItem->data.boolVal);
-							//numDrawnToggles++;
+							//numDrawnToggles++;int 
 							if (cursorOnElement){
 								drawSliderPrompt(123, 48 + 16 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE1, false);
 								drawSliderPrompt(170, 48 + 16 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE2, true);
@@ -1607,7 +1606,7 @@ void mainMenuInitBlend(){
 
 /*
 	//u8 blendLayer = 2;
-	//REG_BLDCNT = BLD_STD | BLD_TOP(BLD_OBJ) | (blendLayer << BLD_BOT_SHIFT);//BLD_TOP(BLD_BG2 | BLD_BACKDROP | BLD_OBJ) | BLD_WHITE;
+	//
 	
     mDat.blendMode = 0;
 
