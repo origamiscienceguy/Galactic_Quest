@@ -116,9 +116,9 @@ MenuPage menuPages[6] = {
 	},
 	{
 		.items = {
-			{"Master Volume", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 14},
-			{"BGM", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 16},
-			{"SFX", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 18},
+			{"Master Volume", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 14, .data.userIntValue = 8},
+			{"BGM", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 16, .data.userIntValue = 8},
+			{"SFX", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 18, .data.userIntValue = 8},
 			{"Grid Enabled", ME_TOGGLE, .data.boolVal = false, .dataType = MPIDT_BOOL, .textGFXIndex = 20},
 			{"Apply Changes", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 22},
 		},
@@ -171,7 +171,7 @@ void mainMenuInitialize(){
 	memcpy32(&paletteBufferObj[FLYING_COMET_PAL_START << 4], shootingStarPal, sizeof(shootingStarPal) >> 2);
 	memcpy32(&paletteBufferObj[STAR_BLOCKER_PAL_START << 4], starBlockerPal, sizeof(starBlockerPal) >> 2);
 	memcpy32(&paletteBufferObj[MENU_BUTTON_PROMPT_PAL << 4], menu_button_prompt_32x16Pal, sizeof(menu_button_prompt_32x16Pal) >> 2);
-	memcpy32(&paletteBufferObj[MENU_SLIDER_BARS_PAL << 4], menu_slider_barsPal, sizeof(menu_slider_barsPal) >> 2);
+	memcpy32(&paletteBufferObj[MENU_SLIDER_BARS_PAL << 4], menu_slider_bars_8x16Pal, sizeof(menu_slider_bars_8x16Pal) >> 2);
 	
 	paletteData[1].size = 40;
 	paletteData[1].position = pal_obj_mem;
@@ -852,9 +852,18 @@ void updateMainMenu(){
 			menuInputConfirmEnabled();
 			
 			menuInputCancelEnabled();
+			
 			if (moveX != 0){
-				currentSFXIndex = playNewSound(_sfxMenuMove);
-				mDat.updateDraw = true;
+				MenuPageItem* thisMenuItem = &menuPage->items[mDat.menuCursorPos];
+				switch(thisMenuItem->menuElement) {
+					default:
+						break;
+					case ME_SLIDER:
+						thisMenuItem->data.userIntValue = clamp(thisMenuItem->data.userIntValue + moveX, 0, 11);
+						currentSFXIndex = playNewSound(_sfxMenuMove);
+						mDat.updateDraw = true;
+						break;
+				}
 			}
 			break;
 	}
@@ -958,11 +967,24 @@ void drawMainMenu(){
 				
 				menuPage = &menuPages[mDat.currMenuPage];
 
+				u8 numDrawnSliders = 0;
 				for(int i = 0; i < menuPage->itemCount; ++i){
-					//MenuPageItem* thisMenuElement = &menuPage->items[i];
+					MenuPageItem* thisMenuItem = &menuPage->items[i];
+					switch(thisMenuItem->menuElement) {
+						default:
+							break;
+						case ME_SLIDER:
+							int slBarX = ((mDat.windowCurrTileXPos + mDat.menuElementsWidth[mDat.currMenuPage]) * TILE_SIZE) + 3;
+							int slBarY = ((mDat.windowCurrTileYPos + 2) * TILE_SIZE) + (i * TILE_SIZE * 2) + 2;
+							drawSliderBar(numDrawnSliders, slBarX, slBarY, 0, thisMenuItem->data.userIntValue);
+							numDrawnSliders++;
+							break;
+					}
 					bool cursorOnElement = (mDat.menuCursorPos == i && (menuPage != &menuPages[MPI_CREDITS]));
 					bool isTweakingData = (mDat.windowState == MMWS_TWEAKING_DATA);
 					drawMenuTextSegment(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos + 2 + (2 * i), i, 2, cursorOnElement && !isTweakingData, mDat.menuElementsWidth[mDat.currMenuPage]);
+
+
 				}
 				
 				
@@ -1242,10 +1264,10 @@ void directionalInputEnabled(){
 		moveY = 1;
 	}
 	if((inputs.pressed & KEY_RIGHT) && !(inputs.pressed & KEY_LEFT)){
-		moveX = -1;
+		moveX = 1;
 	}
 	else if((inputs.pressed & KEY_LEFT) && !(inputs.pressed & KEY_RIGHT)){
-		moveX = 1;
+		moveX = -1;
 	}
 }
 
@@ -1505,8 +1527,20 @@ void drawMenuButtons(bool hideAll){
 void drawSliderPrompt(int xPos, int yPos, int sprIndex, bool flipSpriteHorizontally){
 	objectBuffer[sprIndex].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SHAPE(2) | ATTR0_Y(yPos);
 	objectBuffer[sprIndex].attr1 = ATTR1_SIZE(0) | ATTR1_X(xPos) | (flipSpriteHorizontally ? ATTR1_HFLIP : 0x0000);
-
 	objectBuffer[sprIndex].attr2 = ATTR2_ID(512 + MENU_SLIDER_PROMPT_GFX_START) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_BUTTON_PROMPT_PAL);
+}
+
+void drawSliderBar(int sprIndex, int xPos, int yPos, int imgIndex, int barValue){
+    u8 barCount = 5;
+    for (u8 i = 0; i < barCount; i++) {
+        // Determine imgIndex for the current sprite
+        imgIndex = (barValue > (i * 2)) ? ((barValue > (i * 2 + 1)) ? 2 : 1) : 0;
+
+        // Set the attributes for the sprite
+        objectBuffer[MENU_SLIDER_BAR_SPRITE_FIRST + (sprIndex * barCount) + i].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SHAPE(2) | ATTR0_Y(yPos);
+        objectBuffer[MENU_SLIDER_BAR_SPRITE_FIRST + (sprIndex * barCount) + i].attr1 = ATTR1_SIZE(0) | ATTR1_X(xPos + (i * 8));
+        objectBuffer[MENU_SLIDER_BAR_SPRITE_FIRST + (sprIndex * barCount) + i].attr2 = ATTR2_ID(512 + MENU_SLIDER_BARS_GFX_START + (imgIndex * 2)) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_SLIDER_BARS_PAL);
+    }
 }
 
 void drawMenuPageUIText(){

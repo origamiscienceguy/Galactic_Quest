@@ -66,6 +66,7 @@
 #define MENU_BUTTON_PROMPT_SPRITE2 2
 #define MENU_SLIDER_PROMPT_SPRITE1 3
 #define MENU_SLIDER_PROMPT_SPRITE2 4
+#define MENU_SLIDER_BAR_SPRITE_FIRST 5
 
 #define MENU_SLIDER_PROMPT_PAL 3
 #define MENU_SLIDER_PROMPT_GFX_START 16
@@ -218,6 +219,8 @@ typedef union{
     int intVal;
 	bool boolVal;
     int* intArray;  // Pointer to an array of integers
+	int userIntValue; // The option as it currently is in the Main Menu
+	bool userBoolValue; // The option as it currently is in the Main Menu
 } MenuElementData;
 
 // Define the struct with the union
@@ -276,7 +279,7 @@ extern const unsigned short menu_toggle_prompt_64x32Tiles[512];
 extern const unsigned short font_numbers_8x16Tiles[320];
 extern const unsigned short font_percent_16x16Tiles[64];
 extern const unsigned short menu_slider_bars_8x16Tiles[96];
-extern const unsigned short menu_slider_barsPal[16];
+extern const unsigned short menu_slider_bars_8x16Pal[16];
 
 int yStart, yTarget, titleCardYStart, titleCardYTarget, titleRevealFadeDirection;
 
@@ -316,6 +319,7 @@ void performPageTransfer(int datIntVal);
 void drawMenuButtons(bool hideAll);
 void drawSliderPrompt(int xPos, int yPos, int sprIndex, bool flipSpriteHorizontally);
 void hideSliderPrompt();
+void drawSliderBar(int sprIndex, int xPos, int yPos, int imgIndex, int barValue);
 void mainMenuInitBlend();
 void mainMenuUpdateBlend(u32 eva, u32 evb);
 
