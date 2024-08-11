@@ -923,6 +923,9 @@ void drawMainMenu(){
 				
 				menuPage = &menuPages[mDat.currMenuPage];
 
+				// First, hide all of these number/percent sprites from the previous frame
+				hideSpriteRange(FONT_NUMBERS_SPRITE_FIRST, FONT_PERCENT_SPRITE_LAST);
+				
 				u8 numDrawnSliders = 0;
 				u8 numDrawnToggles = 0;
 				u8 numDrawnDigits = 0;
@@ -1622,9 +1625,7 @@ int drawNumber(int startIndex, int numberToDraw, int xPos, int yPos, bool rightA
             leadingZeroSkipped = true;
             drawDigit(startIndex++, digits[i], xPos, yPos);
             xPos += 6;  // Move to the next digit's position
-        } else {
-			hideSprite(startIndex);
-		}
+        }
     }
 
     return startIndex; // Return the next available sprite index
