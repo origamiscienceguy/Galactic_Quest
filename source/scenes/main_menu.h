@@ -135,6 +135,24 @@
 
 #define MENU_TEXT_LAYER_ID 1
 
+#define BGM_SINGLE -1 // Marker for single track
+
+// Define the grouped BGM assets
+const int bgmGroups[][2] = {
+    {_musThemeA_Battle, _musThemeA_Peace},
+    {_musThemeB, BGM_SINGLE}, // Group with itself
+    {_musThemeB_Battle, BGM_SINGLE}, // Group with itself
+    {_musThemeC_Battle, _musThemeC_Peace},
+    {_musThemeD_Battle, _musThemeD_Peace},
+    {_musMainMenu, BGM_SINGLE}, // Singular Group
+    {_musOpening, BGM_SINGLE}, // Singular Group
+    {_musTitle, BGM_SINGLE} // Singular Group
+};
+
+#define SOUND_TEST_BGM_COUNT (sizeof(bgmGroups) / sizeof(bgmGroups[0]))
+#define SOUND_TEST_SFX_COUNT 14
+#define SFX_START 11
+
 //enums
 enum TitleSceneState{
 	FLASH_WHITE, FADE_TO_TITLE, TITLE_PAN_UP, TITLE_FLASH, TITLE_REVEAL, TITLE_FLYING_COMET_ANIMATION, TITLE_BEFORE_HOLD, TITLE_HOLD, TITLE_AFTER_PRESS_START, TITLE_FLY_OUT, MAIN_MENU_FLY_IN, MAIN_MENU_HOLD, MAIN_MENU_FLY_OUT, 
@@ -168,6 +186,11 @@ typedef enum{
 	ME_SOUND_TESTER,
 	ME_CREDITS_DISPLAY,
 }MenuElement;
+
+typedef enum{
+	MID_SOUND_TEST_BGM,
+	MID_SOUND_TEST_SFX,
+}MenuItemID;
 
 //structs
 typedef struct BGData{
@@ -223,8 +246,6 @@ typedef union{
     int intVal;
 	bool boolVal;
     int* intArray;  // Pointer to an array of integers
-	int userIntValue; // The option as it currently is in the Main Menu
-	bool userBoolValue; // The option as it currently is in the Main Menu
 } MenuElementData;
 
 // Define the struct with the union
@@ -234,6 +255,7 @@ typedef struct{
     MenuElementData data;
     enum{ MPIDT_FUNC_PTR, MPIDT_INT, MPIDT_BOOL, MPIDT_INT_ARRAY } dataType; // To keep track of the type stored
 	int textGFXIndex;				// The graphic row that this text appears on in the tileset
+	MenuItemID id;
 } MenuPageItem;
 
 // Define the MenuPage struct with an array of MenuPageItem
@@ -305,6 +327,8 @@ void skipToMenu();
 void updateObjBuffer();
 
 void initMainMenu();
+void initMenuPages(MenuPage menuPages[]);
+
 void updateMainMenu();
 void loadMenuGraphics(MenuPage *menuPage);
 void drawMainMenu();

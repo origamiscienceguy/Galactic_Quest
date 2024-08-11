@@ -23,118 +23,8 @@ static u8 currentSFXIndex = 0;
 int moveY = 0, moveX = 0; // Player directional input
 
 // Initialize the Menu Pages
-MenuPage* menuPage;
-MenuPage menuPages[6] = {
-	{
-		.items = {
-			{"Play Game", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_PLAY_GAME, .dataType = MPIDT_INT, .textGFXIndex = 0},
-			{"Options", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_OPTIONS, .dataType = MPIDT_INT, .textGFXIndex = 2},
-			{"Extras", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = MPIDT_INT, .textGFXIndex = 4}
-		},
-		.itemCount = 3,
-		.pageName = "MAIN MENU",
-		.tileX = 10,
-		.tileY = 6,
-		.tileWidth = 10,
-		.tileHeight = 10,
-		.pxOffX = 0,
-		.backPage = (int)MPI_MAIN_MENU,
-		.showConfirmPrompt = true,
-		.showBackPrompt = false
-	},
-	{
-		.items = {
-			{"New Game", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecNewGame, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 6},
-			{"Continue", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecContinue, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 8},
-			{"Load Game", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecLoadGame, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 10},
-			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = MPIDT_INT, .textGFXIndex = 12}
-		},
-		.itemCount = 4,
-		.pageName = "PLAY GAME",
-		.tileX = 10,
-		.tileY = 6,
-		.tileWidth = 10,
-		.tileHeight = 12,
-		.pxOffX = 0,
-		.backPage = (int)MPI_MAIN_MENU,
-		.showConfirmPrompt = true,
-		.showBackPrompt = true
-	},
-	{
-		.items = {
-			{"BGM", ME_SOUND_TESTER, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 16},
-			{"SFX", ME_SOUND_TESTER, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 18},
-			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_EXTRAS, .dataType = MPIDT_INT, .textGFXIndex = 24}
-		},
-		.itemCount = 3,
-		.pageName = "SOUND TEST",
-		.tileX = 5,
-		.tileY = 6,
-		.tileWidth = 22,
-		.tileHeight = 10,
-		.pxOffX = 4,
-		.backPage = (int)MPI_EXTRAS,
-		.showConfirmPrompt = false,
-		.showBackPrompt = true
-	},
-	{
-		.items = {
-			{"Sound Test", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_SOUND_TEST, .dataType = MPIDT_INT, .textGFXIndex = 38},
-			{"Credits", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_CREDITS, .dataType = MPIDT_INT, .textGFXIndex = 40},
-			{"Back", ME_PAGE_TRANSFER, .data.intVal = (int)MPI_MAIN_MENU, .dataType = MPIDT_INT, .textGFXIndex = 42}
-		},
-		.itemCount = 3,
-		.pageName = "EXTRAS",
-		.tileX = 11,
-		.tileY = 6,
-		.tileWidth = 9,
-		.tileHeight = 10,
-		.pxOffX = 4,
-		.backPage = (int)MPI_MAIN_MENU,
-		.showConfirmPrompt = true,
-		.showBackPrompt = true
-	},
-	{
-		.items = {
-			{"- Programming -", ME_CREDITS_DISPLAY, .textGFXIndex = 26},
-			{"origamiscienceguy", ME_CREDITS_DISPLAY, .textGFXIndex = 32},
-			{"- Graphics -", ME_CREDITS_DISPLAY, .textGFXIndex = 30},
-			{"n67094", ME_CREDITS_DISPLAY, .textGFXIndex = 36},
-			{"- Audio -", ME_CREDITS_DISPLAY, .textGFXIndex = 28},
-			{"potatoTeto", ME_CREDITS_DISPLAY, .textGFXIndex = 34}
-		},
-		.itemCount = 6,
-		.pageName = "CREDITS",
-		.tileX = 9,
-		.tileY = 4,
-		.tileWidth = 13,
-		.tileHeight = 16,
-		.pxOffX = 4,
-		.backPage = (int)MPI_EXTRAS,
-		.showConfirmPrompt = false,
-		.showBackPrompt = true
-	},
-	{
-		.items = {
-			{"Master Volume", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 14, .data.userIntValue = 8},
-			{"BGM", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 16, .data.userIntValue = 8},
-			{"SFX", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 18, .data.userIntValue = 8},
-			{"Grid Enabled", ME_TOGGLE, .data.boolVal = true, .dataType = MPIDT_BOOL, .textGFXIndex = 20, .data.userBoolValue = true},
-			{"Apply Changes", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 22},
-		},
-		.itemCount = 5,
-		.pageName = "OPTIONS",
-		.tileX = 5,//10,
-		.tileY = 6,
-		.tileWidth = 22,//11
-		.tileHeight = 14,
-		.pxOffX = 4,
-		.backPage = (int)MPI_MAIN_MENU,
-		.showConfirmPrompt = true,
-		.showBackPrompt = true
-	}
-};
-
+static MenuPage* menuPage;
+static MenuPage menuPages[6];
 
 void mainMenuInitialize(){
 	REG_DISPCNT = DCNT_MODE0; //black screen
@@ -613,6 +503,9 @@ void mainMenuNormal(){
 }
 
 void initMainMenu(){
+	// Initialize the menu pages
+	initMenuPages(menuPages);
+
 	//set the active screen layers
 	REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_BG2 | DCNT_OBJ | DCNT_OBJ_1D;
 //	REG_BG0CNT = BG_4BPP | BG_SBB(STARRY_IMAGE_TILEMAP) | BG_CBB(STARRY_IMAGE_CHARDATA) | BG_PRIO(3) | BG_REG_64x64; //starry background layer
@@ -750,8 +643,30 @@ void updateMainMenu(){
 							break;
 						case ME_TOGGLE:
 							currentSFXIndex = playNewSound(_sfxMenuConfirmA);
-							thisMenuItem->data.userBoolValue = !thisMenuItem->data.userBoolValue;
+							thisMenuItem->data.boolVal = !thisMenuItem->data.boolVal;
 							mDat.updateDraw = true;
+							break;
+						case ME_SOUND_TESTER:
+							thisMenuItem->data.intVal += moveX;
+							switch(thisMenuItem->id){
+								default:
+									break;
+								case MID_SOUND_TEST_BGM:
+									if (thisMenuItem->data.intVal < 0)
+										thisMenuItem->data.intVal = SOUND_TEST_BGM_COUNT;
+									else if (thisMenuItem->data.intVal > SOUND_TEST_BGM_COUNT)
+										thisMenuItem->data.intVal = 0;
+									mDat.updateDraw = true;
+									break;
+								case MID_SOUND_TEST_SFX:
+									if (thisMenuItem->data.intVal < 0)
+										thisMenuItem->data.intVal = SOUND_TEST_SFX_COUNT - 1;
+									else if (thisMenuItem->data.intVal >= SOUND_TEST_SFX_COUNT)
+										thisMenuItem->data.intVal = 0;
+									mDat.updateDraw = true;
+									break;
+							}
+							currentSFXIndex = playNewSound(_sfxMenuMove);
 							break;
 					}
 				}
@@ -874,7 +789,7 @@ void updateMainMenu(){
 					default:
 						break;
 					case ME_SLIDER:
-						thisMenuItem->data.userIntValue = clamp(thisMenuItem->data.userIntValue + moveX, 0, 11);
+						thisMenuItem->data.intVal = clamp(thisMenuItem->data.intVal + moveX, 0, 11);
 						currentSFXIndex = playNewSound(_sfxMenuMove);
 						mDat.updateDraw = true;
 						break;
@@ -994,18 +909,28 @@ void drawMainMenu(){
 						case ME_SLIDER:
 							int slBarX = ((mDat.windowCurrTileXPos + mDat.menuElementsWidth[mDat.currMenuPage]) * TILE_SIZE) + 3;
 							int slBarY = ((mDat.windowCurrTileYPos + 2) * TILE_SIZE) + (i * TILE_SIZE * 2) + 2;
-							drawSliderBar(numDrawnSliders, slBarX, slBarY, 0, thisMenuItem->data.userIntValue);
+							drawSliderBar(numDrawnSliders, slBarX, slBarY, 0, thisMenuItem->data.intVal);
 							numDrawnSliders++;
 							break;
 						case ME_TOGGLE:
 							int togglePosX = ((mDat.windowCurrTileXPos + mDat.menuElementsWidth[mDat.currMenuPage]) * TILE_SIZE) + 4;
 							int togglePosY = ((mDat.windowCurrTileYPos + 2) * TILE_SIZE) + (i * TILE_SIZE * 2) + 1;
-							drawToggle(numDrawnToggles, togglePosX, togglePosY, thisMenuItem->data.userBoolValue);
+							drawToggle(numDrawnToggles, togglePosX, togglePosY, thisMenuItem->data.boolVal);
 							numDrawnToggles++;
 
 							if (cursorOnElement){
 								drawSliderPrompt(123, 48 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE1, false);
 								drawSliderPrompt(170, 48 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE2, true);
+							}
+							break;
+						case ME_SOUND_TESTER:
+							//togglePosX = ((mDat.windowCurrTileXPos + mDat.menuElementsWidth[mDat.currMenuPage]) * TILE_SIZE) + 4;
+							//togglePosY = ((mDat.windowCurrTileYPos + 2) * TILE_SIZE) + (i * TILE_SIZE * 2) + 1;
+							//drawToggle(numDrawnToggles, togglePosX, togglePosY, thisMenuItem->data.boolVal);
+							//numDrawnToggles++;
+							if (cursorOnElement){
+								drawSliderPrompt(123, 48 + 16 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE1, false);
+								drawSliderPrompt(170, 48 + 16 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE2, true);
 							}
 							break;
 					}
@@ -1334,10 +1259,48 @@ void menuInputConfirmEnabled(){
 						break;
 					case ME_TOGGLE:
 						currentSFXIndex = playNewSound(_sfxMenuConfirmA);
-						thisMenuItem->data.userBoolValue = !thisMenuItem->data.userBoolValue;
+						thisMenuItem->data.boolVal = !thisMenuItem->data.boolVal;
 						mDat.updateDraw = true;
 						break;
 					case ME_SOUND_TESTER:
+						switch(thisMenuItem->id) {
+							default:
+								break;
+							case MID_SOUND_TEST_BGM:
+								currentBGMIndex = endAllSound();
+								{
+									int index = thisMenuItem->data.intVal;
+									if (index >= 0 && index < SOUND_TEST_BGM_COUNT) {
+										// Retrieve the group or single track
+										const int* group = bgmGroups[index];
+										
+										// Check if it's a group or a single track
+										if (group[1] == BGM_SINGLE) {
+											// Single track, just play it
+											currentBGMIndex = playNewSound(group[0]);
+										} else {
+											// Group, play each item in the group
+											for (int i = 0; i < 2; ++i) {
+												if (group[i] != BGM_SINGLE) {
+													if (i == 0) {
+														currentBGMIndex = playNewSound(group[i]);
+													} else {
+														playNewSound(group[i]);
+													}
+												}
+											}
+										}
+									}
+								}
+								break;
+							case MID_SOUND_TEST_SFX:
+								endSound(currentSFXIndex);
+								{
+									int sfxID = thisMenuItem->data.intVal + SFX_START;
+									currentSFXIndex = playNewSound(sfxID);
+								}
+								break;
+						}
 						break;
 					case ME_CREDITS_DISPLAY:
 						break;
@@ -1706,4 +1669,121 @@ int interpolateValues(int timer, int targetTime, int lerpStartVal, int lerpTarge
 
 int calculatePercentage(int numerator, int denominator) {
 	return (numerator * 100 + (denominator / 2)) / denominator;
+}
+
+
+void initMenuPages(MenuPage menuPages[]) {
+    menuPages[0] = (MenuPage) {
+        .items = {
+            {"Play Game", ME_PAGE_TRANSFER, .data.intVal = MPI_PLAY_GAME, .dataType = MPIDT_INT, .textGFXIndex = 0},
+            {"Options", ME_PAGE_TRANSFER, .data.intVal = MPI_OPTIONS, .dataType = MPIDT_INT, .textGFXIndex = 2},
+            {"Extras", ME_PAGE_TRANSFER, .data.intVal = MPI_EXTRAS, .dataType = MPIDT_INT, .textGFXIndex = 4}
+        },
+        .itemCount = 3,
+        .pageName = "MAIN MENU",
+        .tileX = 10,
+        .tileY = 6,
+        .tileWidth = 10,
+        .tileHeight = 10,
+        .pxOffX = 0,
+        .backPage = (int)MPI_MAIN_MENU,
+        .showConfirmPrompt = true,
+        .showBackPrompt = false
+    };
+
+    menuPages[1] = (MenuPage) {
+        .items = {
+            {"New Game", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecNewGame, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 6},
+            {"Continue", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecContinue, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 8},
+            {"Load Game", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecLoadGame, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 10},
+            {"Back", ME_PAGE_TRANSFER, .data.intVal = MPI_MAIN_MENU, .dataType = MPIDT_INT, .textGFXIndex = 12}
+        },
+        .itemCount = 4,
+        .pageName = "PLAY GAME",
+        .tileX = 10,
+        .tileY = 6,
+        .tileWidth = 10,
+        .tileHeight = 12,
+        .pxOffX = 0,
+        .backPage = (int)MPI_MAIN_MENU,
+        .showConfirmPrompt = true,
+        .showBackPrompt = true
+    };
+
+    menuPages[2] = (MenuPage) {
+        .items = {
+            {"BGM", ME_SOUND_TESTER, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 16, .id = MID_SOUND_TEST_BGM},
+            {"SFX", ME_SOUND_TESTER, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 18, .id = MID_SOUND_TEST_SFX},
+            {"Back", ME_PAGE_TRANSFER, .data.intVal = MPI_EXTRAS, .dataType = MPIDT_INT, .textGFXIndex = 24}
+        },
+        .itemCount = 3,
+        .pageName = "SOUND TEST",
+        .tileX = 5,
+        .tileY = 6,
+        .tileWidth = 22,
+        .tileHeight = 10,
+        .pxOffX = 4,
+        .backPage = (int)MPI_EXTRAS,
+        .showConfirmPrompt = false,
+        .showBackPrompt = true
+    };
+
+    menuPages[3] = (MenuPage) {
+        .items = {
+            {"Sound Test", ME_PAGE_TRANSFER, .data.intVal = MPI_SOUND_TEST, .dataType = MPIDT_INT, .textGFXIndex = 38},
+            {"Credits", ME_PAGE_TRANSFER, .data.intVal = MPI_CREDITS, .dataType = MPIDT_INT, .textGFXIndex = 40},
+            {"Back", ME_PAGE_TRANSFER, .data.intVal = MPI_MAIN_MENU, .dataType = MPIDT_INT, .textGFXIndex = 42}
+        },
+        .itemCount = 3,
+        .pageName = "EXTRAS",
+        .tileX = 11,
+        .tileY = 6,
+        .tileWidth = 9,
+        .tileHeight = 10,
+        .pxOffX = 4,
+        .backPage = (int)MPI_MAIN_MENU,
+        .showConfirmPrompt = true,
+        .showBackPrompt = true
+    };
+
+    menuPages[4] = (MenuPage) {
+        .items = {
+            {"- Programming -", ME_CREDITS_DISPLAY, .textGFXIndex = 26},
+            {"origamiscienceguy", ME_CREDITS_DISPLAY, .textGFXIndex = 32},
+            {"- Graphics -", ME_CREDITS_DISPLAY, .textGFXIndex = 30},
+            {"n67094", ME_CREDITS_DISPLAY, .textGFXIndex = 36},
+            {"- Audio -", ME_CREDITS_DISPLAY, .textGFXIndex = 28},
+            {"potatoTeto", ME_CREDITS_DISPLAY, .textGFXIndex = 34}
+        },
+        .itemCount = 6,
+        .pageName = "CREDITS",
+        .tileX = 9,
+        .tileY = 4,
+        .tileWidth = 13,
+        .tileHeight = 16,
+        .pxOffX = 4,
+        .backPage = (int)MPI_EXTRAS,
+        .showConfirmPrompt = false,
+        .showBackPrompt = true
+    };
+
+    menuPages[5] = (MenuPage) {
+        .items = {
+            {"Master Volume", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 14, .data.intVal = 10},
+            {"BGM", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 16, .data.intVal = 8},
+            {"SFX", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 18, .data.intVal = 10},
+            {"Grid Enabled", ME_TOGGLE, .data.boolVal = true, .dataType = MPIDT_BOOL, .textGFXIndex = 20, .data.boolVal = true},
+            {"Apply Changes", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 22},
+        },
+        .itemCount = 5,
+        .pageName = "OPTIONS",
+        .tileX = 5,//10,
+        .tileY = 6,
+        .tileWidth = 22,//11
+        .tileHeight = 14,
+        .pxOffX = 4,
+        .backPage = (int)MPI_MAIN_MENU,
+        .showConfirmPrompt = true,
+        .showBackPrompt = true
+    };
 }
