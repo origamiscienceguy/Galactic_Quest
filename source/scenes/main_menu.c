@@ -1,7 +1,11 @@
 #include "main_menu.h"
 
 MainMenuData mDat = {
-	.menuElementsWidth = {10,10,11,9,13,11}
+	.menuElementsWidth = {10,10,11,9,13,11},
+	.blendMode = 0,
+	.eva = 0x81,
+	.evb = 0,
+	.ey = 0
 };
 
 Scene mainMenuScene = {
@@ -137,7 +141,9 @@ void mainMenuInitialize(){
 	REG_BG0CNT = BG_4BPP | BG_SBB(STARRY_IMAGE_TILEMAP) | BG_CBB(STARRY_IMAGE_CHARDATA) | BG_PRIO(3) | BG_REG_64x64; //starry background layer
 	REG_BG1CNT = BG_4BPP | BG_SBB(TITLE_CARD_TILEMAP) | BG_CBB(TITLE_CARD_CHARDATA) | BG_PRIO(2) | BG_REG_32x32; //title screen layer
 	REG_BG2CNT = BG_4BPP | BG_SBB(MENU_WINDOW_TILEMAP) | BG_CBB(MENU_CHARDATA) | BG_PRIO(1) | BG_REG_32x32; //menu page ui layer
-	REG_BLDCNT = BLD_TOP(BLD_BG2 | BLD_BACKDROP | BLD_OBJ) | BLD_WHITE;
+
+	mainMenuInitBlend();
+
 	REG_BLDY = BLDY(0);
 	mDat.starryBG.xPos = 512 - 16;
 	REG_BG0HOFS = mDat.starryBG.xPos;
@@ -647,6 +653,13 @@ void initMainMenu(){
 	mDat.windowTargetHeight = 10;
 	mDat.windowState = MMWS_INITIAL_ZIPPING;
 
+	mDat.windowActionTimer = 0;
+	mDat.windowActionTarget = 0;
+	mDat.evaLerpStart = 0;
+	mDat.evaLerpEnd = 0;
+	mDat.evbLerpStart = 0;
+	mDat.evbLerpEnd = 0;
+
 	mDat.menuBG.xPos = 0;
 	mDat.menuBG.yPos = 0;
 
@@ -654,104 +667,57 @@ void initMainMenu(){
 	mDat.wrappedAround = true;
 
 	mDat.showPageWindowBG = false;
+
+	mDat.secondaryNineSliceYOff = 2;
+	
+	// Draw the Menu Page UI Text now
+	drawMenuPageUIText();
 }
 
 void updateMainMenu(){
-	switch(mDat.windowState) {
+	switch(mDat.windowState){
 		default:
 		case MMWS_OPENING:
 			// Keep expanding the window height until it's the target size it needs to be; re-center as it expands
-			if (mDat.winSliceHeight + 2 < mDat.windowTargetHeight) {
+			if (mDat.winSliceHeight + 2 < mDat.windowTargetHeight){
 				mDat.winSliceHeight+=2;
 				//Ensure that this window never goes beyond the screen boundary
 				if (mDat.windowCurrTileYPos - 1 >= 0)
 					mDat.windowCurrTileYPos--;
-			} else {
+			}else{
 				mDat.winSliceHeight = mDat.windowTargetHeight;
 				//mDat.windowCurrTileYPos = mDat.windowTargetTileY;
 				//mDat.winSliceHeight += 2;
 				//mDat.windowTileYPos -= 2;
 				mDat.updateDraw = true;
 				mDat.windowState = MMWS_READY;
+
+				// Lerp toward making the text completely visible, over 32 frames
+				mDat.evaLerpStart = 0;
+				mDat.evaLerpEnd = 16;
+				mDat.evbLerpStart = 16;
+				mDat.evbLerpEnd = 0;
+				mDat.windowActionTimer = 0;
+				mDat.windowActionTarget = 8;
 			}
-			mDat.windowActionTimer++;
 			break;
 		case MMWS_CLOSING:
 			// Keep expanding the window height until it's the target size it needs to be; re-center as it expands
-			if (mDat.winSliceHeight + 2 > 1) {
+			if (mDat.winSliceHeight + 2 > 1){
 				mDat.winSliceHeight-=2;
 				//Ensure that this window never goes beyond the screen boundary
 				if (mDat.windowCurrTileYPos + 1 < 19)
 					mDat.windowCurrTileYPos++;
-			} else {
+			}else{
 				mDat.winSliceHeight = 1;//mDat.windowTargetHeight;
 				//mDat.winSliceHeight += 2;
+					
 				mDat.windowCurrTileYPos -= 2;
-
-				MenuElementData* dat;
-				FunctionPtr datFunctPtr;
-				int datIntVal;
-				int* datIntArr;
-
-				switch(mDat.windowConfirmDirection) {
-					default:
-					case MWCD_NEUTRAL:
-					case MWCD_FORWARD:
-						mDat.windowState = MMWS_ZIPPING;
-						mDat.zipSpeed = 3;
-						
-						dat = &menuPage->items[mDat.menuCursorPos].data;
-						switch(menuPage->items[mDat.menuCursorPos].dataType) {
-							default:
-							case MPIDT_FUNC_PTR:
-								datFunctPtr = dat->functionPtr;
-								break;
-							case MPIDT_INT:
-								datIntVal = dat->intVal;
-								break;
-							case MPIDT_INT_ARRAY:
-								datIntArr = dat->intArray;
-								break;
-							case MPIDT_BOOL:
-								datIntArr = dat->intArray;
-								break;
-						}
-
-						switch(menuPage->items[mDat.menuCursorPos].menuElement) {
-							case ME_SCRIPT_RUNNER:
-								break;
-							case ME_PAGE_TRANSFER:
-								performPageTransfer(datIntVal);
-								break;
-							case ME_SLIDER:
-								break;
-							case ME_SHIFT:
-								break;
-							case ME_TOGGLE:
-								break;
-							case ME_SOUND_TESTER:
-								break;
-						}
-						break;
-					case MWCD_BACKWARD:
-						// nvm, maybe if there's extra time i'll implement this
-						//mDat.windowState = MMWS_OPENING;
-						//mDat.zipSpeed = 0;
-						mDat.windowState = MMWS_ZIPPING;
-						mDat.zipSpeed = 3;
-
-						// Always perform a Page Transfer for backing out of a menu
-						datIntVal = menuPage->backPage;
-						performPageTransfer(datIntVal);
-						break;
-				}
-
-				mDat.windowTargetTileX = menuPage->tileX;
-				mDat.windowTargetTileY = menuPage->tileY;
-				mDat.windowTargetWidth = menuPage->tileWidth;
-				mDat.windowTargetHeight = menuPage->tileHeight;
+				mDat.windowState = MMWS_ZIPPING;
+				mDat.zipSpeed = 3;
 				mDat.wrappedAround = false;
 			}
+			
 			break;
 		case MMWS_READY:
 			menuPage = &menuPages[mDat.currMenuPage];
@@ -761,8 +727,8 @@ void updateMainMenu(){
 				mDat.updateDraw = true;
 			
 			// Navigate the menu; wrap around if we hit an edge
-			if (menuPage != &menuPages[MPI_CREDITS]) {
-				if (moveY != 0) {
+			if (menuPage != &menuPages[MPI_CREDITS]){
+				if (moveY != 0){
 					currentSFXIndex = playNewSound(_sfxMenuMove);
 					if((mDat.menuCursorPos + moveY) < 0){
 						mDat.menuCursorPos = menuPage->itemCount - 1;
@@ -778,7 +744,7 @@ void updateMainMenu(){
 				menuInputConfirmEnabled();
 			}
 			
-			if (menuPage != &menuPages[MPI_MAIN_MENU]) {
+			if (menuPage != &menuPages[MPI_MAIN_MENU]){
 				menuInputCancelEnabled();
 			}
 			break;
@@ -790,27 +756,92 @@ void updateMainMenu(){
 			//mDat.winSliceWidth = 1;
 			mDat.windowCurrTileXPos-= mDat.zipSpeed;
 			
-			if (mDat.windowCurrTileXPos < 0) {
-				if (!mDat.wrappedAround) {
+			if (mDat.windowCurrTileXPos < 0){
+				if (!mDat.wrappedAround){
 					mDat.windowCurrTileXPos = 29;
 					mDat.wrappedAround = true;
+
+					
+					// If this is a Page Transfer, load the new menu page now
+					MenuElementData* dat;
+					FunctionPtr datFunctPtr;
+					int datIntVal;
+					int* datIntArr;
+
+					switch(mDat.windowConfirmDirection){
+						default:
+						case MWCD_NEUTRAL:
+						case MWCD_FORWARD:
+							dat = &menuPage->items[mDat.menuCursorPos].data;
+							switch(menuPage->items[mDat.menuCursorPos].dataType){
+								default:
+								case MPIDT_FUNC_PTR:
+									datFunctPtr = dat->functionPtr;
+									break;
+								case MPIDT_INT:
+									datIntVal = dat->intVal;
+									break;
+								case MPIDT_INT_ARRAY:
+									datIntArr = dat->intArray;
+									break;
+								case MPIDT_BOOL:
+									datIntArr = dat->intArray;
+									break;
+							}
+
+							switch(menuPage->items[mDat.menuCursorPos].menuElement){
+								default:
+									break;
+								case ME_SCRIPT_RUNNER:
+									break;
+								case ME_PAGE_TRANSFER:
+									performPageTransfer(datIntVal);
+									break;
+								case ME_SLIDER:
+									break;
+								case ME_SHIFT:
+									break;
+								case ME_TOGGLE:
+									break;
+								case ME_SOUND_TESTER:
+									break;
+								case ME_CREDITS_DISPLAY:
+									break;
+							}
+							break;
+						case MWCD_BACKWARD:
+							// nvm, maybe if there's extra time i'll implement this
+							//mDat.windowState = MMWS_OPENING;
+							//mDat.zipSpeed = 0;
+							//mDat.windowActionTimer = 0;
+
+							// Always perform a Page Transfer for backing out of a menu
+							datIntVal = menuPage->backPage;
+							performPageTransfer(datIntVal);
+							break;
+					}
+					
+					mDat.windowTargetTileX = menuPage->tileX;
+					mDat.windowTargetTileY = menuPage->tileY;
+					mDat.windowTargetWidth = menuPage->tileWidth;
+					mDat.windowTargetHeight = menuPage->tileHeight;
+					hidePageUITextSprite();
 				} 
-			} else {
-				if (mDat.wrappedAround) {
-					if (mDat.windowCurrTileXPos < mDat.windowTargetTileX) {
+			}else{
+				if (mDat.wrappedAround){
+					if (mDat.windowCurrTileXPos < mDat.windowTargetTileX){
 						mDat.windowCurrTileXPos = mDat.windowTargetTileX;
 						// Set the xPos Offset
 						mDat.menuBG.xPos = menuPage->pxOffX;
 
 						mDat.winSliceWidth = mDat.windowTargetWidth;
 						mDat.wrappedAround = true;
-						mDat.windowActionTimer = 0;
 						mDat.windowState = MMWS_OPENING;
 					}
 				}
 			}
 
-			if (mDat.wrappedAround) {
+			if (mDat.wrappedAround){
 
 			}
 
@@ -821,23 +852,37 @@ void updateMainMenu(){
 			menuInputConfirmEnabled();
 			
 			menuInputCancelEnabled();
-			if (moveX != 0) {
+			if (moveX != 0){
 				currentSFXIndex = playNewSound(_sfxMenuMove);
 				mDat.updateDraw = true;
 			}
 			break;
 	}
+
+	// Update the main menu sprite blending every frame
+	mDat.eva = interpolateValues(mDat.windowActionTimer, mDat.windowActionTarget, mDat.evaLerpStart, mDat.evaLerpEnd);
+	mDat.evb = interpolateValues(mDat.windowActionTimer, mDat.windowActionTarget, mDat.evbLerpStart, mDat.evbLerpEnd);
+	
+	mainMenuUpdateBlend(mDat.eva, mDat.evb);
+
+	// Ensure the timer is always moving, if it's not at its target yet
+	if (mDat.windowActionTimer < mDat.windowActionTarget){
+		mDat.windowActionTimer++;
+	}else{
+		mDat.windowActionTimer = mDat.windowActionTarget;
+	}
+	updateObjBuffer();
 }
 
-void loadMenuGraphics(MenuPage *menuPage) {
+void loadMenuGraphics(MenuPage *menuPage){
     static int itemIndex = 0;       // Track the current item index
     static u32 vramTileOffset = 0;  // Track the current VRAM tile offset
     static u32 queueChannel = 0;    // Track the current queue channel
     int numItems = menuPage->itemCount;
 
     // Process up to 4 graphics load operations per call
-    for (int i = 0; i < 4; i+=2) {
-        if (itemIndex >= numItems) {
+    for (int i = 0; i < 4; i+=2){
+        if (itemIndex >= numItems){
             // All items have been processed, reset for next call
             itemIndex = 0;
             vramTileOffset = 0;
@@ -863,36 +908,67 @@ void loadMenuGraphics(MenuPage *menuPage) {
 }
 
 void drawMainMenu(){
-		//Clear the menu tilemap every frame
-		memset32(tilemapBuffer1, 0, 512);
-		memset32(tilemapBuffer2, 0, 512);
-		
-		switch(mDat.windowState) {
-			default:
-			case MMWS_OPENING:
-			case MMWS_CLOSING:
-			case MMWS_ZIPPING:
-			case MMWS_INITIAL_ZIPPING:
-				// Draw the Menu Page Window
-				int secondaryNineSliceYOff = 2;
-				if (mDat.currMenuPage == (int)MPI_CREDITS)
-					secondaryNineSliceYOff--;
-				if (mDat.showPageWindowBG)
-					drawSecondaryNineSliceWindowStyle(10, secondaryNineSliceYOff, 10, 2, 2);
+	//Clear the menu tilemap every frame
+	memset32(tilemapBuffer1, 0, 512);
+	memset32(tilemapBuffer2, 0, 512);
+	
+	switch(mDat.windowState){
+		default:
+		case MMWS_OPENING:
+		case MMWS_CLOSING:
+		case MMWS_ZIPPING:
+		case MMWS_INITIAL_ZIPPING:
+			// Draw the Menu Page Window
+			if (mDat.showPageWindowBG)
+				drawSecondaryNineSliceWindowStyle(10, mDat.secondaryNineSliceYOff, 10, 2, 2);
 
-				if (mDat.windowState != MMWS_INITIAL_ZIPPING) {
+			if (mDat.windowState != MMWS_INITIAL_ZIPPING){
+				
+				drawNineSliceWindow(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos, mDat.winSliceWidth, mDat.winSliceHeight, 1);
+			}else
+				drawLaserRow(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos, mDat.winSliceWidth, 1, false);
+			
+			// Queue the tilemap with our drawing functions, using tilemapBuffer1
+			tilemapData[1].position = se_mem[MENU_WINDOW_TILEMAP];
+			tilemapData[1].buffer = (void *)tilemapBuffer1;
+			tilemapData[1].size = 512;
+
+			// Queue the tilemap with our drawing functions, using tilemapBuffer1
+			tilemapData[2].position = se_mem[MENU_PAGE_TILEMAP];
+			tilemapData[2].buffer = (void *)tilemapBuffer2;
+			tilemapData[2].size = 512;
+			
+			drawMenuButtons(true);
+			break;
+		case MMWS_READY:
+		case MMWS_TWEAKING_DATA:
+			if (!mDat.showPageWindowBG)
+				mDat.showPageWindowBG = true;
+			
+			if (mDat.updateDraw){
+				// Draw the Menu Page Window
+				if (mDat.showPageWindowBG)
+					drawSecondaryNineSliceWindowStyle(10, mDat.secondaryNineSliceYOff, 10, 2, 2);
+
+				if (mDat.windowState != MMWS_INITIAL_ZIPPING){
 					
 					drawNineSliceWindow(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos, mDat.winSliceWidth, mDat.winSliceHeight, 1);
-				} else
+				}else
 					drawLaserRow(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos, mDat.winSliceWidth, 1, false);
 				
-				drawMenuPageText(10, mDat.menuPageTextYPos + secondaryNineSliceYOff, 0);
+				menuPage = &menuPages[mDat.currMenuPage];
 
-				if (mDat.showPageWindowBG) {
-					// Draw the Menu Page UI Text now				
-					objectBuffer[MENU_PAGE_TEXT_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SHAPE(1) | ATTR0_Y(secondaryNineSliceYOff * 8);
-					objectBuffer[MENU_PAGE_TEXT_SPRITE].attr1 = ATTR1_SIZE(3) | ATTR1_X(89);
-					objectBuffer[MENU_PAGE_TEXT_SPRITE].attr2 = ATTR2_ID(MENU_PAGE_TEXT_GFX_START + (32 * mDat.currMenuPage)) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_PAGE_TEXT_PAL_START);
+				for(int i = 0; i < menuPage->itemCount; ++i){
+					//MenuPageItem* thisMenuElement = &menuPage->items[i];
+					bool cursorOnElement = (mDat.menuCursorPos == i && (menuPage != &menuPages[MPI_CREDITS]));
+					bool isTweakingData = (mDat.windowState == MMWS_TWEAKING_DATA);
+					drawMenuTextSegment(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos + 2 + (2 * i), i, 2, cursorOnElement && !isTweakingData, mDat.menuElementsWidth[mDat.currMenuPage]);
+				}
+				
+				
+				if (mDat.windowState == MMWS_TWEAKING_DATA){
+					drawSliderPrompt(123, 48 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE1, false);
+					drawSliderPrompt(170, 48 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE2, true);
 				}
 
 				// Queue the tilemap with our drawing functions, using tilemapBuffer1
@@ -904,83 +980,20 @@ void drawMainMenu(){
 				tilemapData[2].position = se_mem[MENU_PAGE_TILEMAP];
 				tilemapData[2].buffer = (void *)tilemapBuffer2;
 				tilemapData[2].size = 512;
-				
-				drawMenuButtons(true);
-				updateObjBuffer();
-				break;
-			case MMWS_READY:
-			case MMWS_TWEAKING_DATA:
-				if (!mDat.showPageWindowBG)
-					mDat.showPageWindowBG = true;
-				
-				if (mDat.updateDraw) {
-					// Draw the Menu Page Window
-					int secondaryNineSliceYOff = 2;
-					if (mDat.currMenuPage == (int)MPI_CREDITS)
-						secondaryNineSliceYOff--;
-					if (mDat.showPageWindowBG)
-						drawSecondaryNineSliceWindowStyle(10, secondaryNineSliceYOff, 10, 2, 2);
-
-					if (mDat.windowState != MMWS_INITIAL_ZIPPING) {
-						
-						drawNineSliceWindow(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos, mDat.winSliceWidth, mDat.winSliceHeight, 1);
-					} else
-						drawLaserRow(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos, mDat.winSliceWidth, 1, false);
-					
-					menuPage = &menuPages[mDat.currMenuPage];
-
-					for(int i = 0; i < menuPage->itemCount; ++i){
-						MenuPageItem* thisMenuElement = &menuPage->items[i];
-						bool cursorOnElement = (mDat.menuCursorPos == i && (menuPage != &menuPages[MPI_CREDITS]));
-						bool isTweakingData = (mDat.windowState == MMWS_TWEAKING_DATA);
-						drawMenuTextSegment(mDat.winSliceWidth, mDat.windowCurrTileXPos, mDat.windowCurrTileYPos + 2 + (2 * i), i, 2, cursorOnElement && !isTweakingData, mDat.menuElementsWidth[mDat.currMenuPage]);
-					}
-					
-					if (mDat.showPageWindowBG) {
-						// Draw the Menu Page UI Text now				
-						objectBuffer[MENU_PAGE_TEXT_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SHAPE(1) | ATTR0_Y(secondaryNineSliceYOff * 8);
-						objectBuffer[MENU_PAGE_TEXT_SPRITE].attr1 = ATTR1_SIZE(3) | ATTR1_X(89);
-						objectBuffer[MENU_PAGE_TEXT_SPRITE].attr2 = ATTR2_ID(MENU_PAGE_TEXT_GFX_START + (32 * mDat.currMenuPage)) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_PAGE_TEXT_PAL_START);
-					}
-					
-					if (mDat.windowState == MMWS_TWEAKING_DATA) {
-						drawSliderPrompt(123, 48 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE1, false);
-						drawSliderPrompt(170, 48 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE2, true);
-					}
-
-					// Queue the tilemap with our drawing functions, using tilemapBuffer1
-					tilemapData[1].position = se_mem[MENU_WINDOW_TILEMAP];
-					tilemapData[1].buffer = (void *)tilemapBuffer1;
-					tilemapData[1].size = 512;
-
-					// Queue the tilemap with our drawing functions, using tilemapBuffer1
-					tilemapData[2].position = se_mem[MENU_PAGE_TILEMAP];
-					tilemapData[2].buffer = (void *)tilemapBuffer2;
-					tilemapData[2].size = 512;
-					mDat.updateDraw = false;
-					updateObjBuffer();
-				}
-				drawMenuButtons(false);
-				break;
-		}
+				mDat.updateDraw = false;
+			}
+			drawMenuButtons(false);
+			
+			break;
+	}
+	
+	// Draw the Menu Page UI Text now
+	drawMenuPageUIText();
 }
 
 void mainMenuEnd(){
 	currentScene.scenePointer = sceneList[GAMEPLAY];
 	currentScene.state = INITIALIZE;
-}
-
-void drawMenuPageText(int xPos, int yPos, int imgIndex) {
-	// Each character data block holds 512 tiles, and is selected per background.
-	// Sprites get character data blocks 4 and 5.
-	// The shooting star takes up the entirety of 4, so I put the rest of the sprites in 5. (that way I can just load them at initialization)
-	// The library I used (tonc) addresses VRAM as a 2-d array, with [charblock][tile ID]
-	
-	//objectBuffer[1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(yPos);
-	//objectBuffer[1].attr1 = ATTR1_SIZE_64 | ATTR1_X(xPos);
-	//objectBuffer[1].attr2 = ATTR2_ID(MENU_GFX_START + MIDDLE_UPPER) | ATTR2_PRIO(1) | ATTR2_PALBANK(2);
-	
-	//(imgIndex << 5) + MENU_PAGE_TEXT_SPRITE
 }
 
 void scrollStarryBG(int addedX, int addedY){
@@ -1045,15 +1058,15 @@ void setTile(int x, int y, int drawingTileIndex, bool flipHorizontal, bool flipV
 /// @param width 
 /// @param height 
 // Function to handle the correct wrapping and drawing for top-right and bottom-right tiles
-void drawNineSliceWindow(int x, int y, int width, int height, int layer) {
+void drawNineSliceWindow(int x, int y, int width, int height, int layer){
     int tilesetIndex = MENU_GFX_START;
     int palette = 2;
 
-    if (height > 1) {
+    if (height > 1){
         // Draw the top-middle row
-        if (height >= 2) {
+        if (height >= 2){
             setTile(wrapX(x), y + 1, tilesetIndex + LM_UPPER, false, false, palette, layer); // Left-middle-upper tile
-            for (int i = 1; i < width - 1; ++i) {
+            for (int i = 1; i < width - 1; ++i){
                 setTile(wrapX(x + i), y + 1, tilesetIndex + MIDDLE_UPPER, false, false, palette, layer); // Middle upper
             }
             setTile(wrapX(x + (width - 1)), y + 1, tilesetIndex + RM_UPPER, false, false, palette, layer); // Right-middle-upper tile
@@ -1063,56 +1076,56 @@ void drawNineSliceWindow(int x, int y, int width, int height, int layer) {
         int bottomY = y + (height - 1);
 
         // Draw center rows
-        for (int j = 2; j < height - 1; ++j) {
+        for (int j = 2; j < height - 1; ++j){
             setTile(wrapX(x), y + j, tilesetIndex + LM, false, false, palette, layer); // Left-middle tile
-            for (int i = 1; i < width - 1; ++i) {
+            for (int i = 1; i < width - 1; ++i){
                 setTile(wrapX(x + i), y + j, tilesetIndex + CENTER, false, false, palette, layer); // Center
             }
             setTile(wrapX(x + (width - 1)), y + j, tilesetIndex + RM, false, false, palette, layer); // Right-middle tile
         }
 
         // Draw the bottom-middle row (mirrored)
-        if (height > 4) {
+        if (height > 4){
             setTile(wrapX(x), bottomY - 1, tilesetIndex + LM_UPPER, false, true, palette, layer); // Left-middle-lower tile (flipped vertically)
-            for (int i = 1; i < width - 1; ++i) {
+            for (int i = 1; i < width - 1; ++i){
                 setTile(wrapX(x + i), bottomY - 1, tilesetIndex + MIDDLE_UPPER, false, true, palette, layer); // Middle lower (flipped vertically)
             }
             setTile(wrapX(x + (width - 1)), bottomY - 1, tilesetIndex + RM_UPPER, false, true, palette, layer); // Right-middle-lower tile (flipped vertically)
         }
 
         // Draw the bottom row
-        if (width > 2) {
+        if (width > 2){
             setTile(wrapX(x + 1), bottomY, tilesetIndex + TL_2, false, true, palette, layer); // Bottom-left corner Part 2 (flipped vertically)
         }
-        if (width > 3) {
+        if (width > 3){
             setTile(wrapX(x + 2), bottomY, tilesetIndex + TL_3, false, true, palette, layer); // Bottom-left corner Part 3 (flipped vertically)
         }
-        for (int i = 3; i < width - 3; ++i) {
+        for (int i = 3; i < width - 3; ++i){
             setTile(wrapX(x + i), bottomY, tilesetIndex + TOP_MIDDLE, false, true, palette, layer); // Bottom middle (flipped vertically)
         }
-        if (width >= 3) {
+        if (width >= 3){
             setTile(wrapX(x + (width - 3)), bottomY, tilesetIndex + TR_1, false, true, palette, layer); // Bottom-right corner Part 1 (flipped vertically)
         }
-        if (width >= 2) {
+        if (width >= 2){
             setTile(wrapX(x + (width - 2)), bottomY, tilesetIndex + TR_2, false, true, palette, layer); // Bottom-right corner Part 2 (flipped vertically)
         }
 
         // Draw the top row
-        for (int i = 3; i < width - 3; ++i) {
+        for (int i = 3; i < width - 3; ++i){
             setTile(wrapX(x + i), y, tilesetIndex + TOP_MIDDLE, false, false, palette, layer); // Top middle
         }
 
-        if (width >= 3) {
+        if (width >= 3){
             setTile(wrapX(x + (width - 3)), y, tilesetIndex + TR_1, false, false, palette, layer); // Top-right corner Part 1
         }
-        if (width >= 2) {
+        if (width >= 2){
             setTile(wrapX(x + 1), y, tilesetIndex + TL_2, false, false, palette, layer); // Top-left corner Part 2
         }
-        if (width >= 3) {
+        if (width >= 3){
             setTile(wrapX(x + 2), y, tilesetIndex + TL_3, false, false, palette, layer); // Top-left corner Part 3
         }
 
-        if (width >= 2) {
+        if (width >= 2){
             setTile(wrapX(x + (width - 2)), y, tilesetIndex + TR_2, false, false, palette, layer); // Top-right corner Part 2
         }
 
@@ -1122,37 +1135,37 @@ void drawNineSliceWindow(int x, int y, int width, int height, int layer) {
 
         setTile(wrapX(x), bottomY, tilesetIndex + TL_1, false, true, palette, layer); // Bottom-left corner Part 1 (flipped vertically)
         setTile(wrapX(x), y, tilesetIndex + TL_1, false, false, palette, layer); // Top-left corner Part 1
-    } else {
+    }else{
 		drawLaserRow(x, y, width, layer, true);
     }
 }
 
 // Helper function to get wrapped x-coordinate
-int wrapX(int x) {
+int wrapX(int x){
     return (x + 30) % 30; // Ensure x is within [0, 29]
 }
 
 // Helper function to ensure y is within bounds
-bool isInBounds(int y) {
+bool isInBounds(int y){
     return y >= 0 && y < 30;
 }
 
 // Draw the LASER_TOP and LASER_BOTTOM tiles with wrapping
-void drawLaserRow(int x, int y, int width, int layer, bool wrapAround) {
+void drawLaserRow(int x, int y, int width, int layer, bool wrapAround){
 	int tilesetIndex = MENU_GFX_START;
     int palette = 2;
-	for (int i = 0; i < width; ++i) {
+	for (int i = 0; i < width; ++i){
         int drawX = x + i;
 
         // Handle wrapping or boundary checking based on the boolean flag
-        if (wrapAround) {
+        if (wrapAround){
             drawX = wrapX(drawX);
-        } else if (!isInBounds(drawX)) {
+        }else if (!isInBounds(drawX)){
             continue; // Skip drawing if out of bounds and not wrapping
         }
 
         // Check bounds for y position (should be within the range 0-29)
-        if (isInBounds(y) && isInBounds(y + 1)) {
+        if (isInBounds(y) && isInBounds(y + 1)){
             setTile(drawX, y, tilesetIndex + LASER_TOP, false, false, palette, layer);
             setTile(drawX, y + 1, tilesetIndex + LASER_BOTTOM, false, false, palette, layer);
         }
@@ -1162,9 +1175,9 @@ void drawLaserRow(int x, int y, int width, int layer, bool wrapAround) {
 /// @brief Draws a nine slice window for the main menu's Menu Page window; Width and Height params are in terms of 8x8 tiles
 /// @param width 
 /// @param height 
-void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int layer) {
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
+void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int layer){
+    for (int i = 0; i < height; i++){
+        for (int j = 0; j < width; j++){
             int tileX = (x + j) % TILEMAP_WIDTH;
             int tileY = (y + i) % TILEMAP_HEIGHT;
             int tileIndex = MENU_GFX_START + SEC_CENTER; // Default to center tile
@@ -1172,26 +1185,26 @@ void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int 
             bool flipVertical = false;
 
             // Determine which tile to draw based on position in the nine-slice grid
-            if (i == 0 && j == 0) {
+            if (i == 0 && j == 0){
                 tileIndex = MENU_GFX_START + SEC_TOP_LEFT;
-            } else if (i == 0 && j == width - 1) {
+            }else if (i == 0 && j == width - 1){
                 tileIndex = MENU_GFX_START + SEC_TOP_LEFT;
                 flipHorizontal = true; // Flip for top-right corner
-            } else if (i == 0) {
+            }else if (i == 0){
                 tileIndex = MENU_GFX_START + SEC_TOP_MIDDLE;
-            } else if (i == height - 1 && j == 0) {
+            }else if (i == height - 1 && j == 0){
                 tileIndex = MENU_GFX_START + SEC_TOP_LEFT;
                 flipVertical = true; // Flip for bottom-left corner
-            } else if (i == height - 1 && j == width - 1) {
+            }else if (i == height - 1 && j == width - 1){
                 tileIndex = MENU_GFX_START + SEC_TOP_LEFT;
                 flipHorizontal = true; // Flip for bottom-right corner
                 flipVertical = true;
-            } else if (i == height - 1) {
+            }else if (i == height - 1){
                 tileIndex = MENU_GFX_START + SEC_TOP_MIDDLE;
                 flipVertical = true; // Flip for bottom edge
-            } else if (j == 0) {
+            }else if (j == 0){
                 tileIndex = MENU_GFX_START + SEC_LEFT;
-            } else if (j == width - 1) {
+            }else if (j == width - 1){
                 tileIndex = MENU_GFX_START + SEC_LEFT;
                 flipHorizontal = true; // Flip for right edge
             }
@@ -1201,7 +1214,7 @@ void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int 
     }
 }
 
-void drawMenuTextSegment(int nineSliceWidth, int tileXPos, int tileYPos, int menuElementPosition, int palette, bool highlighted, int numTextTileColumns){
+void drawMenuTextSegment(int tileXPos, int tileYPos, int menuElementPosition, int palette, bool highlighted, int numTextTileColumns){
 	int tilesetIndex;	
 	if (!highlighted)
 		tilesetIndex = MENU_TEXT_GFX_START;
@@ -1216,7 +1229,7 @@ void drawMenuTextSegment(int nineSliceWidth, int tileXPos, int tileYPos, int men
 	}
 }
 
-void directionalInputEnabled() {
+void directionalInputEnabled(){
 	// Allow Up/Down to navigate the menu; wrap around if we hit the upper/lower limits
 	// Combine both up and down input checks into a single operation
 	moveX = 0;
@@ -1236,11 +1249,13 @@ void directionalInputEnabled() {
 	}
 }
 
-void menuInputConfirmEnabled() {
+void menuInputConfirmEnabled(){
 	if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
-		switch(mDat.windowState) {
+		switch(mDat.windowState){
+			default:
+				break;
 			case MMWS_READY:
-				switch(menuPage->items[mDat.menuCursorPos].menuElement) {
+				switch(menuPage->items[mDat.menuCursorPos].menuElement){
 					default:
 						break;
 					case ME_SCRIPT_RUNNER:
@@ -1250,6 +1265,16 @@ void menuInputConfirmEnabled() {
 						mDat.windowConfirmDirection = MWCD_FORWARD;
 						mDat.windowState = MMWS_CLOSING;
 						mDat.updateDraw = true;
+
+						// Lerp toward making the text completely visible, over 32 frames
+						mDat.evaLerpStart = 16;
+						mDat.evaLerpEnd = 0;
+						mDat.evbLerpStart = 0;
+						mDat.evbLerpEnd = 16;
+						mDat.windowActionTimer = 0;
+						mDat.windowActionTarget = 8;
+
+						hidePageUITextSprite();
 						break;
 					case ME_SLIDER:
 						currentSFXIndex = playNewSound(_sfxMenuConfirmA);
@@ -1267,7 +1292,9 @@ void menuInputConfirmEnabled() {
 				}
 				break;
 			case MMWS_TWEAKING_DATA:
-				switch(menuPage->items[mDat.menuCursorPos].menuElement) {
+				switch(menuPage->items[mDat.menuCursorPos].menuElement){
+					default:
+						break;
 					case ME_SCRIPT_RUNNER:
 						break;
 					case ME_PAGE_TRANSFER:
@@ -1290,16 +1317,28 @@ void menuInputConfirmEnabled() {
 	}
 }
 
-void menuInputCancelEnabled() {
+void menuInputCancelEnabled(){
 	if((inputs.pressed & KEY_B)){
-		switch(mDat.windowState) {
+		switch(mDat.windowState){
 			default:
 				break;
 			case MMWS_READY:
 				currentSFXIndex = playNewSound(_sfxMenuCancel);
 				mDat.windowConfirmDirection = MWCD_BACKWARD;
-				mDat.windowState = MMWS_CLOSING;		
+				mDat.windowState = MMWS_CLOSING;
+				
+				// Lerp toward making the text completely invisible, over 32 frames
+				mDat.evaLerpStart = 16;
+				mDat.evaLerpEnd = 0;
+				mDat.evbLerpStart = 0;
+				mDat.evbLerpEnd = 16;
+				mDat.windowActionTimer = 0;
+				mDat.windowActionTarget = 8;
+
 				mDat.updateDraw = true;
+			
+				// Draw the Menu Page UI Text now
+				//drawMenuPageUIText();
 				break;
 			case MMWS_TWEAKING_DATA:
 				currentSFXIndex = playNewSound(_sfxMenuMove);
@@ -1338,7 +1377,7 @@ int menuExecPlaySFX(u8 soundIndex){
 	return 0;
 }
 
-void performPageTransfer(int datIntVal) {
+void performPageTransfer(int datIntVal){
 	mDat.windowTargetWidth = menuPage->tileWidth;
 	mDat.windowTargetHeight = menuPage->tileHeight;
 
@@ -1348,18 +1387,26 @@ void performPageTransfer(int datIntVal) {
 	mDat.currMenuPage = datIntVal;
 	menuPage = &menuPages[mDat.currMenuPage];
 
-	if (mDat.currMenuPage == MPI_SOUND_TEST) {
+	if (mDat.currMenuPage == MPI_SOUND_TEST){
 		// Kill all sound except for currentSFXIndex (should be _sfxMenuConfirm)
 		endAllSoundExcept(currentSFXIndex);
-	} else if (!isSoundPlaying(_musMainMenu, currentBGMIndex)) {
+	}else if (!isSoundPlaying(_musMainMenu, currentBGMIndex)){
 		// Kill all sound except for currentSFXIndex (should be _sfxMenuCancel)
 		endAllSoundExcept(currentSFXIndex);
 		// Play the Main Menu BGM again if it isn't currently playing when we leave
 		currentBGMIndex = playNewSound(_musMainMenu);
 	}
 
+	// Set the Page UI Drawing Y-Pos, depending on which page we're on
+	mDat.secondaryNineSliceYOff = 2;
+	if (mDat.currMenuPage == (int)MPI_CREDITS)
+		mDat.secondaryNineSliceYOff--;
+
 	// Start loading the new menu page's graphics into VRAM (this will take more than one frame, so this function will keep being called even during MMWS_ZIPPING state)
 	loadMenuGraphics(menuPage);
+
+	// Draw the Menu Page UI Text now
+	drawMenuPageUIText();
 
 	// Reset the xPos Offset before we start zipping
 	mDat.menuBG.xPos = 0;
@@ -1440,18 +1487,18 @@ void drawStarBlocker(int yPos){
 }
 
 void drawMenuButtons(bool hideAll){
-	if (menuPage->showConfirmPrompt && !hideAll) {
+	if (menuPage->showConfirmPrompt && !hideAll){
 		objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(18*8);
 		objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr1 = ATTR1_SIZE_32 | ATTR1_X(26*8);
 		objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr2 = ATTR2_ID(512 + MENU_BUTTON_PROMPT_GFX_START) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_BUTTON_PROMPT_PAL);
-	} else
+	}else
 		objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr0 = ATTR0_HIDE;
 
-	if (menuPage->showBackPrompt && !hideAll) {
+	if (menuPage->showBackPrompt && !hideAll){
 		objectBuffer[MENU_BUTTON_PROMPT_SPRITE2].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(18*8);
 		objectBuffer[MENU_BUTTON_PROMPT_SPRITE2].attr1 = ATTR1_SIZE_32 | ATTR1_X(0);
 		objectBuffer[MENU_BUTTON_PROMPT_SPRITE2].attr2 = ATTR2_ID(512 + MENU_BUTTON_PROMPT_GFX_START + 8) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_BUTTON_PROMPT_PAL);
-	} else
+	}else
 		objectBuffer[MENU_BUTTON_PROMPT_SPRITE2].attr0 = ATTR0_HIDE;
 }
 
@@ -1462,7 +1509,26 @@ void drawSliderPrompt(int xPos, int yPos, int sprIndex, bool flipSpriteHorizonta
 	objectBuffer[sprIndex].attr2 = ATTR2_ID(512 + MENU_SLIDER_PROMPT_GFX_START) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_BUTTON_PROMPT_PAL);
 }
 
-void hideSliderPrompt() {
+void drawMenuPageUIText(){
+	if (mDat.showPageWindowBG){
+		if (mDat.eva >= 2 && mDat.evb <= 14){
+			// Draw the Menu Page UI Text now				
+			objectBuffer[MENU_PAGE_TEXT_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SHAPE(1) | ATTR0_Y(mDat.secondaryNineSliceYOff * 8) | ATTR0_BLEND;
+			objectBuffer[MENU_PAGE_TEXT_SPRITE].attr1 = ATTR1_SIZE(3) | ATTR1_X(89);
+			objectBuffer[MENU_PAGE_TEXT_SPRITE].attr2 = ATTR2_ID(MENU_PAGE_TEXT_GFX_START + (32 * mDat.currMenuPage)) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_PAGE_TEXT_PAL_START);
+		}else{
+			//objectBuffer[MENU_PAGE_TEXT_SPRITE].attr0 = ATTR0_HIDE;
+		}
+	}else{
+		//objectBuffer[MENU_PAGE_TEXT_SPRITE].attr0 = ATTR0_HIDE;
+	}
+}
+
+void hidePageUITextSprite(){
+	objectBuffer[MENU_PAGE_TEXT_SPRITE].attr0 = ATTR0_HIDE;
+}
+
+void hideSliderPrompt(){
 	objectBuffer[MENU_SLIDER_PROMPT_SPRITE1].attr0 = ATTR0_HIDE;
 	objectBuffer[MENU_SLIDER_PROMPT_SPRITE2].attr0 = ATTR0_HIDE;
 }
@@ -1489,4 +1555,69 @@ void updateObjBuffer(){
 	OAMData.position = (void *)oam_mem;
 	OAMData.buffer = objectBuffer;
 	OAMData.size = sizeof(objectBuffer) >> 2;
+}
+
+void mainMenuInitBlend(){
+	REG_BLDCNT = BLD_STD | BLD_TOP(BLD_OBJ) | BLD_BOT(BLD_BG2);
+
+/*
+	//u8 blendLayer = 2;
+	//REG_BLDCNT = BLD_STD | BLD_TOP(BLD_OBJ) | (blendLayer << BLD_BOT_SHIFT);//BLD_TOP(BLD_BG2 | BLD_BACKDROP | BLD_OBJ) | BLD_WHITE;
+	
+    mDat.blendMode = 0;
+
+    // eva, evb and ey are .4 fixeds
+    // eva is full, evb and ey are empty
+    mDat.eva = 0x80;
+	mDat.evb = 0;
+	mDat.ey = 0;
+	REG_BLDCNT= BLD_BUILD(
+        BLD_OBJ,  // Top layers
+        BLD_BG1,            // Bottom layers
+        mDat.blendMode);              // Blend Mode
+*/
+}
+
+void mainMenuUpdateBlend(u32 eva, u32 evb){
+	// Clamp to allowable ranges
+	eva = clamp(eva, 0, 0x81);
+	evb = clamp(evb, 0, 0x81);
+	//ey  = clamp(ey, 0, 0x81);
+	//mode= clamp(mode, 0, 4);
+	
+	REG_BLDALPHA = BLD_EVA(eva) | BLD_EVB(evb);
+	/*
+	// Interactive blend weights
+	mDat.eva += key_tri_horz();
+	mDat.evb -= key_tri_vert();
+	mDat.ey  += key_tri_fire();
+
+	mDat.blendMode += bit_tribool(moveX, KI_R, KI_L);
+
+	// Clamp to allowable ranges
+	mDat.eva = clamp(mDat.eva, 0, 0x81);
+	mDat.evb = clamp(mDat.evb, 0, 0x81);
+	mDat.ey = clamp(mDat.ey, 0, 0x81);
+	mDat.blendMode = clamp(mDat.blendMode, 0, 4);
+
+	// Update blend mode
+	BFN_SET(REG_BLDCNT, mDat.blendMode, BLD_MODE);
+
+	// Update blend weights
+	REG_BLDALPHA= BLDA_BUILD(mDat.eva/8, mDat.evb/8);
+	REG_BLDY= BLDY_BUILD(mDat.ey/8);
+	*/
+}
+
+int interpolateValues(int timer, int targetTime, int lerpStartVal, int lerpTargetVal){
+	// Calculate the interpolation factor t, with proper scaling
+	int actionTimerScaled = timer * FIXED_POINT_SCALE;
+	int actionTargetScaled = targetTime * FIXED_POINT_SCALE;
+	int t = (actionTimerScaled * FIXED_POINT_SCALE) / actionTargetScaled;
+
+	// Apply ease-in-out function
+	int easedT = easeInOut(t, 4);
+
+	// Calculate the interpolated position and update yPos
+	return lerp(lerpStartVal * FIXED_POINT_SCALE, lerpTargetVal * FIXED_POINT_SCALE, easedT) / FIXED_POINT_SCALE;
 }

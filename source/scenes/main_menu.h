@@ -91,10 +91,6 @@
 #define MENU_SLIDER_BARS_GFX_START (FONT_PERCENT_GFX_START + FONT_PERCENT_GFX_SIZE)
 #define MENU_SLIDER_BARS_GFX_SIZE 6
 
-#define MENU_TITLE_TEXT_PAL 3
-#define MENU_TITLE_TEXT_GFX_START (MENU_SLIDER_BARS_GFX_START + MENU_SLIDER_BARS_GFX_SIZE)
-#define MENU_TITLE_TEXT_GFX_SIZE 32
-
 #define STARRY_BG_MAX_VEL 
 
 #define TILE_SIZE 8
@@ -195,6 +191,7 @@ typedef struct MainMenuData{
 	int winSliceHeight;
 	int currMenuPage;
 	u8 menuPageTextYPos;
+	u8 secondaryNineSliceYOff;
 	u8 menuCursorPos;
 	u8 windowConfirmDirection;
 	int windowCurrTileXPos;
@@ -206,8 +203,11 @@ typedef struct MainMenuData{
 	bool wrappedAround;
 	bool showPageWindowBG;
 	u8 windowActionTimer;
+	u8 windowActionTarget;
 	u8 zipSpeed;
 	int menuElementsWidth[MPI_MAX];
+	u32 blendMode, eva, evb, ey;
+	int evaLerpStart, evaLerpEnd, evbLerpStart, evbLerpEnd;
 }MainMenuData;
 
 typedef int (*FunctionPtr)(void);
@@ -300,14 +300,15 @@ void initMainMenu();
 void updateMainMenu();
 void loadMenuGraphics(MenuPage *menuPage);
 void drawMainMenu();
-void drawMenuPageText(int xPos, int yPos, int imgIndex);
+void drawMenuPageUIText();
+void hidePageUITextSprite();
 void setTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical, int palette, int layer);
 void drawNineSliceWindow(int x, int y, int width, int height, int layer);
 int wrapX(int x);
 bool isInBounds(int y);
 void drawLaserRow(int x, int y, int width, int layer, bool wrapAround);
 void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int layer);
-void drawMenuTextSegment(int nineSliceWidth, int tileXPos, int tileYPos, int menuElementPosition, int palette, bool highlighted, int numTextTileColumns);
+void drawMenuTextSegment(int tileXPos, int tileYPos, int menuElementPosition, int palette, bool highlighted, int numTextTileColumns);
 void directionalInputEnabled();
 void menuInputConfirmEnabled();
 void menuInputCancelEnabled();
@@ -315,6 +316,8 @@ void performPageTransfer(int datIntVal);
 void drawMenuButtons(bool hideAll);
 void drawSliderPrompt(int xPos, int yPos, int sprIndex, bool flipSpriteHorizontally);
 void hideSliderPrompt();
+void mainMenuInitBlend();
+void mainMenuUpdateBlend(u32 eva, u32 evb);
 
 int menuExecNewGame();
 int menuExecContinue();
@@ -328,6 +331,7 @@ void loadGFX(u32 VRAMCharBlock, u32 VRAMTileIndex, void *graphicsBasePointer, u3
 int easeInOut(int t, int power);
 int easeOutQuint(int t);
 int lerp(int a, int b, int t);
+int interpolateValues(int timer, int targetTime, int lerpStartVal, int lerpTargetVal);
 
 void printMenuPageItem(const MenuPageItem* item);
 
