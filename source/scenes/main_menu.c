@@ -672,26 +672,32 @@ void updateMainMenu(){
 				}
 
 				// Allow R to stop the sound playing on the cursor option
-				if (inputs.pressed & KEY_R){
-					MenuPageItem* thisMenuItem = &menuPage->items[mDat.menuCursorPos];
-					switch(thisMenuItem->menuElement) {
-						default:
-							break;
-						case ME_SOUND_TESTER:
-							switch(thisMenuItem->id){
-								default:
-									endAllSound();
-									currentSFXIndex = 0;
-									currentBGMIndex = 0;
-									break;
-								case MID_SOUND_TEST_BGM:
-									currentBGMIndex = endSound(currentBGMIndex);
-									break;
-								case MID_SOUND_TEST_SFX:
-									currentSFXIndex = endSound(currentSFXIndex);
-									break;
-							}
-							break;
+				if (mDat.currMenuPage == MPI_SOUND_TEST) {
+					if (inputs.pressed & KEY_R){
+						MenuPageItem* thisMenuItem = &menuPage->items[mDat.menuCursorPos];
+						switch(thisMenuItem->menuElement) {
+							default:
+								break;
+							case ME_PAGE_TRANSFER:
+							case ME_SOUND_TESTER:
+								switch(thisMenuItem->id){
+									default:
+									case MID_SOUND_TEST_CANCEL:
+										currentSFXIndex = 0;
+										currentBGMIndex = 0;
+										endSound(currentBGMIndex);
+										endSound(currentSFXIndex);
+										endAllSound();
+										break;
+									case MID_SOUND_TEST_BGM:
+										currentBGMIndex = endSound(currentBGMIndex);
+										break;
+									case MID_SOUND_TEST_SFX:
+										currentSFXIndex = endSound(currentSFXIndex);
+										break;
+								}
+								break;
+						}
 					}
 				}
 
@@ -1786,7 +1792,7 @@ void initMenuPages(MenuPage menuPages[]) {
         .items = {
             {"BGM", ME_SOUND_TESTER, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 16, .id = MID_SOUND_TEST_BGM},
             {"SFX", ME_SOUND_TESTER, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 18, .id = MID_SOUND_TEST_SFX},
-            {"Back", ME_PAGE_TRANSFER, .data.intVal = MPI_EXTRAS, .dataType = MPIDT_INT, .textGFXIndex = 24}
+            {"Back", ME_PAGE_TRANSFER, .data.intVal = MPI_EXTRAS, .dataType = MPIDT_INT, .textGFXIndex = 24, .id = MID_SOUND_TEST_CANCEL}
         },
         .itemCount = 3,
         .pageName = "SOUND TEST",

@@ -194,6 +194,7 @@ typedef enum{
 typedef enum{
 	MID_SOUND_TEST_BGM,
 	MID_SOUND_TEST_SFX,
+	MID_SOUND_TEST_CANCEL
 }MenuItemID;
 
 //structs
