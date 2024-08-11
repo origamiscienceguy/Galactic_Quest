@@ -462,7 +462,7 @@ void processAudio(){
 	audioProgress = 2;
 }
 
-void processAssetTick(CurrentSoundSettings *assetPointer, u8 soundIndex){	
+void processAssetTick(CurrentSoundSettings *assetPointer, u8 soundIndex){
 	//if the asset just started
 	if(assetPointer->rowNum == 0){
 		nextRow(&assetPointer->asset->patterns[assetPointer->asset->orders[0]], &assetPointer->patternOffset, assetPointer);
@@ -597,13 +597,13 @@ void processAssetTick(CurrentSoundSettings *assetPointer, u8 soundIndex){
 	//now we go through each of the 8 sampled channels, and process all of their data.
 	for(u8 channel = 0; channel < MAX_DMA_CHANNELS; channel++){
 		u8 channelIndex = assetPointer->channelSettings[channel].channelIndex;
-		if(channelIndex != 0xff){
-			processSampledChannel(&assetPointer->channelSettings[channel], &channelsMixData[channelIndex], assetPointer);
-		}
+		//if(channelIndex != 0xff){
+			processSampledChannel(&assetPointer->channelSettings[channel], &channelsMixData[channelIndex], assetPointer, channel);
+		//}
 	}
 }
 
-void processSampledChannel(CurrentChannelSettings *channelPointer, ChannelData *channelMixBuffer, CurrentSoundSettings *assetPointer){
+void processSampledChannel(CurrentChannelSettings *channelPointer, ChannelData *channelMixBuffer, CurrentSoundSettings *assetPointer, u8 channel){
 	//setup some local variables, and set them to default values
 	u8 finalVolume = 128;
 	u16 finalPitch = 0;
@@ -720,7 +720,9 @@ void processSampledChannel(CurrentChannelSettings *channelPointer, ChannelData *
 		channelPointer->offset &= 0xf00;
 	}
 	
-	applySettings(channelMixBuffer, channelPointer->samplePointer, finalPitch, finalVolume, finalPanning, &channelPointer->noteState, offset);
+	if(assetPointer->channelSettings[channel].channelIndex != 0xff){
+		applySettings(channelMixBuffer, channelPointer->samplePointer, finalPitch, finalVolume, finalPanning, &channelPointer->noteState, offset);
+	}
 }
 
 //volume from 0 to 128
@@ -832,6 +834,8 @@ void applySettings(ChannelData *channelMixData, AudioSample *samplePtr, u32 pitc
 				}
 			}
 		}
+		break;
+	default:
 		break;
 	}
 }
