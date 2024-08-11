@@ -189,7 +189,7 @@ void mainMenuInitialize(){
 	characterData[4].position = tile_mem[FLYING_COMET_CHARDATA];
 	characterData[4].buffer = (void *)characterBuffer4;
 	characterData[4].size = sizeof(characterBuffer4) >> 2;
-	characterData[5].position = tile_mem[STAR_BOCKER_CHARDATA];
+	characterData[5].position = tile_mem[STAR_BLOCKER_CHARDATA];
 	characterData[5].buffer = (void *)characterBuffer5;
 	characterData[5].size = sizeof(characterBuffer5) >> 2;
 	
