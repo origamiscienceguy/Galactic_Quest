@@ -227,7 +227,7 @@ typedef struct CurrentChannelSettings{
 	u8 channelIndex; //the index that this channel's results get sent to. 0xff means it is currently not allocated a channel
 }CurrentChannelSettings;
 
-typedef struct CurrentAssetSettings{
+typedef struct CurrentSoundSettings{
 	AssetData *asset; //pointer to the asset that is currently playing
 	AssetGlobalEffects globalEffects; //memory for any global effects that need it
 	u8 globalVolume; //the current global volume of the asset
@@ -246,7 +246,7 @@ typedef struct CurrentAssetSettings{
 	u8 volumeSlideAmount; //the magnitude to change volume by each tick
 	u8 finalVolume; //the desired volume after a volume slide has concluded
 	CurrentChannelSettings channelSettings[MAX_DMA_CHANNELS]; //the data for the channels of this asset
-}CurrentAssetSettings;
+}CurrentSoundSettings;
 
 //global variables
 extern s8 soundBuffer1[MAX_SAMPLES_IN_ONE_FRAME * 2];
@@ -257,9 +257,10 @@ extern u8 audioProgress;
 
 //external data
 extern AudioSample *sampleList[];
-extern AssetData *assetsList[];
+extern AssetData *soundList[];
+extern AssetData *sfxList[];
 extern cu16 numSamples;
-extern cu16 numAssets;
+extern cu16 numSounds;
 extern cu16 pitchTable[];
 extern cu16 envelopeInverseTable[];
 extern cu16 tempoTable[];
@@ -279,13 +280,13 @@ extern cu16 arpeggioTable[];
 extern void mixAudio(ChannelData *, s8 *, u32, u32);
 
 //internal functions
-void processAssetTick(CurrentAssetSettings *, u8);
-void nextRow(PatternData *, u16 *, CurrentAssetSettings *);
+void processAssetTick(CurrentSoundSettings *, u8);
+void nextRow(PatternData *, u16 *, CurrentSoundSettings *);
 void applySettings(ChannelData *, AudioSample *, u32, u8, s8, enum NoteState *, u16);
-void processEffects(CurrentChannelSettings *, CurrentAssetSettings *);
-void processNote(CurrentChannelSettings *, CurrentAssetSettings *);
+void processEffects(CurrentChannelSettings *, CurrentSoundSettings *);
+void processNote(CurrentChannelSettings *, CurrentSoundSettings *);
 void processVolume(CurrentChannelSettings *);
-void processTrigger(CurrentChannelSettings *, CurrentAssetSettings *);
+void processTrigger(CurrentChannelSettings *, CurrentSoundSettings *);
 s8 processEnvelope(ChannelEnvelopeSettings *, EnvelopeData *, enum NoteState);
 void volumeSlideUp(CurrentChannelSettings *, u8);
 void volumeSlideDown(CurrentChannelSettings *, u8);
@@ -295,14 +296,14 @@ u8 portamentoCheck(u8);
 void initVibrato(VibratoSettings *, u8*, u8, u8, u8);
 s8 processVibrato(VibratoSettings *);
 void tonePortamento(CurrentChannelSettings *, u8);
-void positionJump(CurrentAssetSettings *);
-void increaseTempo(u8, CurrentAssetSettings *);
-void decreaseTempo(u8, CurrentAssetSettings *);
+void positionJump(CurrentSoundSettings *);
+void increaseTempo(u8, CurrentSoundSettings *);
+void decreaseTempo(u8, CurrentSoundSettings *);
 void patternLoop(CurrentChannelSettings *, u8);
 void volumeSlide(u8 *, u8 *, u8, u8);
 u8 slideCheck(u8 *, u8);
 void tremor(CurrentChannelSettings *, u8);
-void processSampledChannel(CurrentChannelSettings *, ChannelData *, CurrentAssetSettings *);
+void processSampledChannel(CurrentChannelSettings *, ChannelData *, CurrentSoundSettings *);
 void panningSlide(u8 *, u8 *, u8);
 void retrigger(CurrentChannelSettings *, u8);
 void arpeggio(CurrentChannelSettings *, u8);

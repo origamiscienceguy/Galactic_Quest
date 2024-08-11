@@ -2,6 +2,8 @@
 
 IntroData introData;
 
+u32 currentBGM;
+
 Scene introScene = {
 	.initialize = &introInitialize,
 	.intro = 0,
@@ -34,6 +36,8 @@ void introInitialize(){
 	introData.actionTarget = 16;
 	
 	currentScene.state = NORMAL;
+	
+	currentBGM = playNewSound(_musOpening);
 }
 
 void introNormal(){
@@ -58,12 +62,13 @@ void introNormal(){
 		else{
 			introData.actionTimer++;
 		}
+		IOBuffer0[0] = 0;
 		break;
 	case GBAJAM_LEAVE:
 			if(introData.actionTimer == introData.actionTarget){
 			introData.state = AUDIO_ENGINE_ENTER;
 			introData.actionTimer = 0;
-			introData.actionTarget = 16;
+			introData.actionTarget = 17;
 			memcpy32(pal_bg_mem, Intro_Audio_enginePal, sizeof(Intro_Audio_enginePal) >> 2);
 			memcpy32(m4_mem, Intro_Audio_engineBitmap, sizeof(Intro_Audio_engineBitmap) >> 2);
 		}
@@ -87,11 +92,12 @@ void introNormal(){
 		if(introData.actionTimer == introData.actionTarget){
 			introData.state = AUDIO_ENGINE_LEAVE;
 			introData.actionTimer = 0;
-			introData.actionTarget = 16;
+			introData.actionTarget = 17;
 		}
 		else{
 			introData.actionTimer++;
 		}
+		IOBuffer0[0] = 0;
 		break;
 	case AUDIO_ENGINE_LEAVE:
 			if(introData.actionTimer == introData.actionTarget){
@@ -121,19 +127,43 @@ void introNormal(){
 		if(introData.actionTimer == introData.actionTarget){
 			introData.state = STUDIO_LEAVE;
 			introData.actionTimer = 0;
-			introData.actionTarget = 16;
+			introData.actionTarget = 17;
 		}
 		else{
 			introData.actionTimer++;
 		}
+		IOBuffer0[0] = 0;
 		break;
 	case STUDIO_LEAVE:
-			if(introData.actionTimer == introData.actionTarget){
+		if(introData.actionTimer == introData.actionTarget){
+			introData.state = BLACK_SCREEN_HOLD;
+			introData.actionTimer = 0;
+			introData.actionTarget = BLACK_SCREEN_HOLD_WAIT_FRAMES;
+			memset32(pal_bg_mem, 0, 128);
+			memset32(m4_mem, 0, 8192);
+		}
+		else{
+			IOBuffer0[0] = introData.actionTimer;
+			introData.actionTimer++;
+		}
+		break;
+	case BLACK_SCREEN_HOLD:
+		if(introData.actionTimer == introData.actionTarget){
+			introData.state = BEFORE_FINAL_TRANSITION;
+			introData.actionTimer = 0;
+			introData.actionTarget = FINAL_TRANSITION_WAIT_FRAMES;
+		}
+		else{
+			IOBuffer0[0] = introData.actionTimer;
+			introData.actionTimer++;
+		}
+		IOBuffer0[0] = 0;
+		break;
+	case BEFORE_FINAL_TRANSITION:
+		if(introData.actionTimer == introData.actionTarget){
 			currentScene.state = END;
 			introData.actionTimer = 0;
 			introData.actionTarget = 16;
-			memset32(pal_bg_mem, 0, 128);
-			memset32(m4_mem, 0, 8192);
 		}
 		else{
 			IOBuffer0[0] = introData.actionTimer;
@@ -143,8 +173,7 @@ void introNormal(){
 	}
 	
 	if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
-		currentScene.scenePointer = sceneList[MAIN_MENU];
-		currentScene.state = INITIALIZE;
+		currentScene.state = END;
 	}
 	
 	IOData[0].position = (void *)&REG_BLDY;
@@ -155,4 +184,5 @@ void introNormal(){
 void introEnd(){
 	currentScene.scenePointer = sceneList[MAIN_MENU];
 	currentScene.state = INITIALIZE;
+	endSound(currentBGM);
 }

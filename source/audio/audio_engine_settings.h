@@ -8,8 +8,8 @@
 //Adding any further songs will remove a song based on priority.
 //EWRAM usage will be slightly increased by increasing this value.
 //Performance will be slightly increased as this value increases.
-#ifndef MAX_SONGS_IN_QUEUE
-	#define MAX_ASSETS_IN_QUEUE 6
+#ifndef MAX_SOUNDS_IN_QUEUE
+	#define MAX_SOUNDS_IN_QUEUE 6
 #endif
 
 //the number of cycles between each DMA value being sent to the DAC.

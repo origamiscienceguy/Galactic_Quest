@@ -3,7 +3,32 @@
 #define audioAssetEnumh
 
 enum AudioAssetName{
-	_musMainMenu, _musOpening, _musThemeA_Battle, _musThemeA_Peace, _musThemeB, _musThemeB_Battle, _musThemeC_Battle, _musThemeC_Peace, _musThemeD_Battle, _musThemeD_Peace, _musTitle, 
+	_musMainMenu, 			// 0
+	_musOpening, 			// 1
+	_musThemeA_Battle, 			// 2
+	_musThemeA_Peace, 			// 3
+	_musThemeB, 			// 4
+	_musThemeB_Battle, 			// 5
+	_musThemeC_Battle, 			// 6
+	_musThemeC_Peace, 			// 7
+	_musThemeD_Battle, 			// 8
+	_musThemeD_Peace, 			// 9
+	_musTitle, 			// 10
+	_sfxCursorMove, 			// 11
+	_sfxMenuCancel, 			// 12
+	_sfxMenuConfirmA, 			// 13
+	_sfxMenuConfirmB, 			// 14
+	_sfxMenuConfirmC, 			// 15
+	_sfxMenuMove, 			// 16
+	_sfxShipDmgL, 			// 17
+	_sfxShipDmgM, 			// 18
+	_sfxShipDmgS, 			// 19
+	_sfxShipExplodeL, 			// 20
+	_sfxShipExplodeM, 			// 21
+	_sfxShipExplodeS, 			// 22
+	_sfxShipIdle, 			// 23
+	_sfxShipMove, 			// 24
+	
 };
 
 #endif

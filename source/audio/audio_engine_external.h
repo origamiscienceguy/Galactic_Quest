@@ -10,11 +10,19 @@ extern void audioInitialize();
 
 //will add a new song to the queue if it's priority is higher than another songs in the queue.
 //Return value is the index into the current song array.
-extern u8 playNewAsset(u16 assetName);
+extern u8 playNewSound(u16 assetName);
 
 //will remove an asset from the queue. Can be called at any time by the programmer, or called automatically after an asset reaches the end.
-//returns the number of assets still palying after this one is removed
-extern u8 endAsset(u8 assetIndex);
+//returns the number of assets still playing after this one is removed
+extern u8 endSound(u8 assetIndex);
+
+//will remove all assets from the queue. Can be called at any time by the programmer, or called automatically after an asset reaches the end.
+//returns the number of assets still playing after this one is removed (always 0)
+extern u8 endAllSound();
+
+//will remove all assets from the queue except for the provided sound index. Can be called at any time by the programmer, or called automatically after an asset reaches the end.
+//returns the number of assets still playing after the rest are removed
+extern u8 endAllSoundExcept(u8 soundIndex);
 
 //will temporarilly stop playing a song in the queue. It will still maintain it's position in the queue.
 extern void pauseAsset(u8 assetIndex);
@@ -32,4 +40,4 @@ extern void setAssetVolume(u8 assetIndex, u8 volume);
 extern void syncAsset(u8 assetIndex1, u8 assetIndex2);
 
 //returns 1 if the specified asset is playing at the specified index
-extern u8 isAssetPlaying(u16 assetName, u8 assetIndex);
+extern u8 isSoundPlaying(u16 assetName, u8 assetIndex);

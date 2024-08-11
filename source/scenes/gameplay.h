@@ -279,6 +279,7 @@ extern const unsigned short list_ships_focused_leftTiles[1792];
 extern const unsigned short list_ships_rightTiles[128];
 extern const unsigned short list_ships_focused_rightTiles[128];
 extern const unsigned short carretTiles[32];
+extern const unsigned short list_numbers_32x16Tiles[12928];
 
 extern const u8 selectAShipYPos[];
 extern const u8 selectAShipXPos[];

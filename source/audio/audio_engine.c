@@ -6,7 +6,7 @@ s8 soundBuffer2[MAX_SAMPLES_IN_ONE_FRAME * 2] ALIGN(4) EWRAM_DATA;
 s8 audioError;
 u8 audioTimer;
 ChannelData channelsMixData[MAX_DMA_CHANNELS] EWRAM_DATA;
-CurrentAssetSettings currentAssets[MAX_ASSETS_IN_QUEUE] EWRAM_DATA;
+CurrentSoundSettings activeSounds[MAX_SOUNDS_IN_QUEUE] EWRAM_DATA;
 CurrentChannelSettings *allocatedMixChannels[MAX_DMA_CHANNELS] EWRAM_DATA;
 u8 audioProgress;
 
@@ -66,10 +66,10 @@ void audioInitialize(){
 	}
 	
 	//initialize all assets
-	for(u32 i = 0; i < MAX_ASSETS_IN_QUEUE; i++){
-		currentAssets[i].enabled = 0;
+	for(u32 i = 0; i < MAX_SOUNDS_IN_QUEUE; i++){
+		activeSounds[i].enabled = 0;
 		for(u32 j = 0; j < MAX_DMA_CHANNELS; j++){
-			currentAssets[i].channelSettings[j].channelIndex = 0xff;
+			activeSounds[i].channelSettings[j].channelIndex = 0xff;
 		}
 	}
 	
@@ -78,87 +78,88 @@ void audioInitialize(){
 }
 
 //starts a new asset playing, based on the id into the audio_list asset list.
-u8 playNewAsset(u16 assetID){
+u8 playNewSound(u16 assetID){
 	
 	u8 lowestPriority = 0xff;
 	u8 lowestIndex = 0;
-	u32 assetIndex = 0;
+	u32 soundIndex = 0;
 	
 	//find an open assetID slot, or the one with the lowest priority.
-	for(;assetIndex < MAX_ASSETS_IN_QUEUE; assetIndex++){
+	for(;soundIndex < MAX_SOUNDS_IN_QUEUE; soundIndex++){
 		//if we find an open asset slot, select it.
-		if(currentAssets[assetIndex].enabled == 0){
+		if(activeSounds[soundIndex].enabled == 0){
 			lowestPriority = 0;
-			lowestIndex = assetIndex;
+			lowestIndex = soundIndex;
 			break;
 		}
 		//otherwise, record the lowest priority slot.
-		if(currentAssets[assetIndex].priority <= lowestPriority){
-			lowestIndex = assetIndex;
-			lowestPriority = currentAssets[assetIndex].priority;
+		if(activeSounds[soundIndex].priority <= lowestPriority){
+			lowestIndex = soundIndex;
+			lowestPriority = activeSounds[soundIndex].priority;
 		}
 	}
 	
 	//check if this asset has a higher priority than the lowest-priority asset currently playing, exit
-	if(*assetsList[assetID]->assetPriority < lowestPriority){
+
+	if(*soundList[assetID]->assetPriority < lowestPriority){
 		return 0xff;
 	}
 	
-	assetIndex = lowestIndex;
+	soundIndex = lowestIndex;
 	
-	if(currentAssets[assetIndex].enabled != 0){
-		endAsset(assetIndex);
+	if(activeSounds[soundIndex].enabled != 0){
+		endSound(soundIndex);
 	}
 	
-	CurrentAssetSettings *assetPointer = &currentAssets[assetIndex];
+	CurrentSoundSettings *soundPointer = &activeSounds[soundIndex];
 	
-	assetPointer->asset = assetsList[assetID];
-	assetPointer->assetID = assetID;
-	assetPointer->rowNum = 0;
-	assetPointer->patternOffset = 0;
-	assetPointer->orderIndex = 0;
-	assetPointer->enabled = 1;
-	assetPointer->currentTickSpeed = assetsList[assetID]->initTickSpeed;
-	assetPointer->tickCounter = 0;
-	assetPointer->currentTempo = assetsList[assetID]->initTempo;
-	assetPointer->leftoverSamples = 0;
-	assetPointer->globalVolume = assetsList[assetID]->initGlobalVol;
-	assetPointer->globalEffects.A = 0xff;
-	assetPointer->globalEffects.B = 0xff;
-	assetPointer->globalEffects.C = 0xff;
-	assetPointer->globalEffects.SE = 0xff;
-	assetPointer->priority = *assetsList[assetID]->assetPriority;
-	assetPointer->mixVolume = 0xff;
+	soundPointer->asset = soundList[assetID];
+	soundPointer->assetID = assetID;
+	soundPointer->rowNum = 0;
+	soundPointer->patternOffset = 0;
+	soundPointer->orderIndex = 0;
+	soundPointer->enabled = 1;
+	soundPointer->currentTickSpeed = soundList[assetID]->initTickSpeed;
+	soundPointer->tickCounter = 0;
+	soundPointer->currentTempo = soundList[assetID]->initTempo;
+	soundPointer->leftoverSamples = 0;
+	soundPointer->globalVolume = soundList[assetID]->initGlobalVol;
+	soundPointer->globalEffects.A = 0xff;
+	soundPointer->globalEffects.B = 0xff;
+	soundPointer->globalEffects.C = 0xff;
+	soundPointer->globalEffects.SE = 0xff;
+	soundPointer->priority = *soundList[assetID]->assetPriority;
+	soundPointer->mixVolume = 0xff;
 	
 	for(u32 channel = 0; channel < MAX_DMA_CHANNELS; channel++){
-		assetPointer->channelSettings[channel].noteState = NO_NOTE;
-		assetPointer->channelSettings[channel].effectMemory.SBx = 0xff;
-		assetPointer->channelSettings[channel].channelVolume = assetsList[assetID]->initChannelVol[channel];
-		assetPointer->channelSettings[channel].instrumentPointer = &assetsList[0]->instruments[0]; //pointer to the instrument struct that is currently playing
-		assetPointer->channelSettings[channel].samplePointer = sampleList[0]; //pointer to the sample that is currently playing
-		assetPointer->channelSettings[channel].pitchModifier = 0x1000;
-		assetPointer->channelSettings[channel].channelPan = assetsList[assetID]->initChannelPan[channel];
-		assetPointer->channelSettings[channel].vibrato.waveformType = 0;
-		assetPointer->channelSettings[channel].tremolo.waveformType = 0;
-		assetPointer->channelSettings[channel].panbrello.waveformType = 0;
-		assetPointer->channelSettings[channel].autoVibrato.waveformType = 0;
-		assetPointer->channelSettings[channel].priority = assetsList[assetID]->assetChannelPriority[channel];
-		assetPointer->channelSettings[channel].channelIndex = 0xff;
+		soundPointer->channelSettings[channel].noteState = NO_NOTE;
+		soundPointer->channelSettings[channel].effectMemory.SBx = 0xff;
+		soundPointer->channelSettings[channel].channelVolume = soundList[assetID]->initChannelVol[channel];
+		soundPointer->channelSettings[channel].instrumentPointer = &soundList[0]->instruments[0]; //pointer to the instrument struct that is currently playing
+		soundPointer->channelSettings[channel].samplePointer = sampleList[0]; //pointer to the sample that is currently playing
+		soundPointer->channelSettings[channel].pitchModifier = 0x1000;
+		soundPointer->channelSettings[channel].channelPan = soundList[assetID]->initChannelPan[channel];
+		soundPointer->channelSettings[channel].vibrato.waveformType = 0;
+		soundPointer->channelSettings[channel].tremolo.waveformType = 0;
+		soundPointer->channelSettings[channel].panbrello.waveformType = 0;
+		soundPointer->channelSettings[channel].autoVibrato.waveformType = 0;
+		soundPointer->channelSettings[channel].priority = soundList[assetID]->assetChannelPriority[channel];
+		soundPointer->channelSettings[channel].channelIndex = 0xff;
 	}
 	
 	//allocate this asset's channels among the available mixing channels
 	allocateChannels();
 	
-	return assetIndex;
+	return soundIndex;
 }
 
-u8 endAsset(u8 assetIndex){
-	currentAssets[assetIndex].enabled = 0;
+u8 endSound(u8 soundIndex){
+	activeSounds[soundIndex].enabled = 0;
 	for(u32 i = 0; i < MAX_DMA_CHANNELS; i++){
-		if(currentAssets[assetIndex].channelSettings[i].channelIndex != 0xff){
-			channelsMixData[currentAssets[assetIndex].channelSettings[i].channelIndex].state = 0;
-			allocatedMixChannels[currentAssets[assetIndex].channelSettings[i].channelIndex] = 0;
-			currentAssets[assetIndex].channelSettings[i].channelIndex = 0xff;
+		if(activeSounds[soundIndex].channelSettings[i].channelIndex != 0xff){
+			channelsMixData[activeSounds[soundIndex].channelSettings[i].channelIndex].state = 0;
+			allocatedMixChannels[activeSounds[soundIndex].channelSettings[i].channelIndex] = 0;
+			activeSounds[soundIndex].channelSettings[i].channelIndex = 0xff;
 		}
 	}
 	
@@ -166,47 +167,63 @@ u8 endAsset(u8 assetIndex){
 	allocateChannels();
 	
 	//check if there are still assets playing
-	u32 howManyAssetsPlaying = 0;
+	u32 numActiveSounds = 0;
 	//check if there is at least one asset playing right now
-	for(u32 assetIndex = 0; assetIndex < MAX_ASSETS_IN_QUEUE; assetIndex++){
-		if(currentAssets[assetIndex].enabled == 1){
-			howManyAssetsPlaying++;
+	for(u32 slotIndex = 0; slotIndex < MAX_SOUNDS_IN_QUEUE; slotIndex++){
+		if(activeSounds[slotIndex].enabled == 1){
+			numActiveSounds++;
 		}
 	}
 	//if nothing is playing, fill the buffers with 0
-	if(howManyAssetsPlaying == 0){
+	if(numActiveSounds == 0){
 		for(u32 i = 0; i < (MAX_SAMPLES_IN_ONE_FRAME / 2); i++){
 			((u32 *)soundBuffer1)[i] = 0;
 			((u32 *)soundBuffer2)[i] = 0;
 		}
 	}
 	
-	return howManyAssetsPlaying;
+	return numActiveSounds;
 }
 
-void pauseAsset(u8 assetIndex){
+u8 endAllSound(){
+	for (int i = 0; i < MAX_SOUNDS_IN_QUEUE; i++){
+		endSound(i);
+	}
+	return 0;
+}
+
+u8 endAllSoundExcept(u8 soundIndex){
+	u32 numActiveSounds = 0;
+	for (int i = 0; i < MAX_SOUNDS_IN_QUEUE; i++){
+		if (i != soundIndex)
+			numActiveSounds = endSound(i);
+	}
+	return numActiveSounds;
+}
+
+void pauseAsset(u8 soundIndex){
 	//pause the asset
-	if(currentAssets[assetIndex].enabled == 1){
-		currentAssets[assetIndex].enabled = 2;
+	if(activeSounds[soundIndex].enabled == 1){
+		activeSounds[soundIndex].enabled = 2;
 	}
 	
 	for(u32 i = 0; i < MAX_DMA_CHANNELS; i++){
-		if(currentAssets[assetIndex].channelSettings[i].channelIndex != 0xff){
-			ChannelData *mixDataPointer = &channelsMixData[currentAssets[assetIndex].channelSettings[i].channelIndex];
+		if(activeSounds[soundIndex].channelSettings[i].channelIndex != 0xff){
+			ChannelData *mixDataPointer = &channelsMixData[activeSounds[soundIndex].channelSettings[i].channelIndex];
 			mixDataPointer->padding = mixDataPointer->state;
 			mixDataPointer->state = 0;
 		}
 	}
 	
-	u32 howManyAssetsPlaying = 0;
+	u32 numActiveSounds = 0;
 	//check if there is at least one asset playing right now
-	for(u32 assetIndex = 0; assetIndex < MAX_ASSETS_IN_QUEUE; assetIndex++){
-		if(currentAssets[assetIndex].enabled == 1){
-			howManyAssetsPlaying++;
+	for(u32 slotIndex = 0; slotIndex < MAX_SOUNDS_IN_QUEUE; slotIndex++){
+		if(activeSounds[slotIndex].enabled == 1){
+			numActiveSounds++;
 		}
 	}
 	//if nothing is playing, fill the buffers with 0
-	if(howManyAssetsPlaying == 0){
+	if(numActiveSounds == 0){
 		for(u32 i = 0; i < (MAX_SAMPLES_IN_ONE_FRAME / 2); i++){
 			((u32 *)soundBuffer1)[i] = 0;
 			((u32 *)soundBuffer2)[i] = 0;
@@ -214,34 +231,34 @@ void pauseAsset(u8 assetIndex){
 	}
 }
 
-void resumeAsset(u8 assetIndex){
+void resumeAsset(u8 soundIndex){
 	//resume the asset
-	if(currentAssets[assetIndex].enabled == 2){
-		currentAssets[assetIndex].enabled = 1;
+	if(activeSounds[soundIndex].enabled == 2){
+		activeSounds[soundIndex].enabled = 1;
 	}
 	
 	for(u32 i = 0; i < MAX_DMA_CHANNELS; i++){
-		if(currentAssets[assetIndex].channelSettings[i].channelIndex != 0xff){
-			ChannelData *mixDataPointer = &channelsMixData[currentAssets[assetIndex].channelSettings[i].channelIndex];
+		if(activeSounds[soundIndex].channelSettings[i].channelIndex != 0xff){
+			ChannelData *mixDataPointer = &channelsMixData[activeSounds[soundIndex].channelSettings[i].channelIndex];
 			mixDataPointer->state = mixDataPointer->padding;
 			mixDataPointer->padding = 0;
 		}
 	}
 }
 
-void setAssetVolume(u8 assetIndex, u8 volume){
-	currentAssets[assetIndex].mixVolume = volume;
+void setAssetVolume(u8 soundIndex, u8 volume){
+	activeSounds[soundIndex].mixVolume = volume;
 }
 
 void volumeSlideAsset(u8 assetIndex, u8 volumePerTick, u8 finalVolume){
-	currentAssets[assetIndex].volumeSlideAmount = volumePerTick;
-	currentAssets[assetIndex].finalVolume = finalVolume;
+	activeSounds[assetIndex].volumeSlideAmount = volumePerTick;
+	activeSounds[assetIndex].finalVolume = finalVolume;
 }
 
-void syncAsset(u8 assetIndex1, u8 assetIndex2){
-	CurrentAssetSettings *assetPointer1 = &currentAssets[assetIndex1];
-	currentAssets[assetIndex1].orderIndex = currentAssets[assetIndex2].orderIndex;
-	currentAssets[assetIndex1].rowNum = currentAssets[assetIndex2].rowNum;
+void syncAsset(u8 soundIndex1, u8 soundIndex2){
+	CurrentSoundSettings *assetPointer1 = &activeSounds[soundIndex1];
+	activeSounds[soundIndex1].orderIndex = activeSounds[soundIndex2].orderIndex;
+	activeSounds[soundIndex1].rowNum = activeSounds[soundIndex2].rowNum;
 	
 	PatternData *patternPtr = &assetPointer1->asset->patterns[assetPointer1->asset->orders[assetPointer1->orderIndex]];
 	assetPointer1->patternOffset = 0;
@@ -262,12 +279,12 @@ void syncAsset(u8 assetIndex1, u8 assetIndex2){
 		assetPointer1->channelSettings[channel].pitchState = NO_PITCH;
 	}
 	
-	currentAssets[assetIndex1].tickCounter = currentAssets[assetIndex2].tickCounter;
-	currentAssets[assetIndex1].leftoverSamples = currentAssets[assetIndex2].leftoverSamples;
+	activeSounds[soundIndex1].tickCounter = activeSounds[soundIndex2].tickCounter;
+	activeSounds[soundIndex1].leftoverSamples = activeSounds[soundIndex2].leftoverSamples;
 }
 
-u8 isAssetPlaying(u16 assetName, u8 assetIndex){
-	if((currentAssets[assetIndex].assetID == assetName) && (currentAssets[assetIndex].enabled != 0)){
+u8 isSoundPlaying(u16 assetName, u8 assetIndex){
+	if((activeSounds[assetIndex].assetID == assetName) && (activeSounds[assetIndex].enabled != 0)){
 		return 1;
 	}
 	else{
@@ -279,7 +296,7 @@ void allocateChannels(){
 	u32 unallocatedMixNum = 0;
 	u8 unallocatedMix[MAX_DMA_CHANNELS];
 	u32 unallocatedAssetNum = 0;
-	CurrentChannelSettings *unallocatedAsset[MAX_ASSETS_IN_QUEUE * MAX_DMA_CHANNELS];
+	CurrentChannelSettings *unallocatedSound[MAX_SOUNDS_IN_QUEUE * MAX_DMA_CHANNELS];
 	
 	//count the number of unallocated mix channels
 	for(u32 i = 0; i < MAX_DMA_CHANNELS; i++){
@@ -290,13 +307,13 @@ void allocateChannels(){
 	}
 	
 	//count the number of unallocated asset channels
-	for(u32 j = 0; j < MAX_ASSETS_IN_QUEUE; j++){
-		if(currentAssets[j].enabled == 0){
+	for(u32 j = 0; j < MAX_SOUNDS_IN_QUEUE; j++){
+		if(activeSounds[j].enabled == 0){
 			continue;
 		}
 		for(u32 i = 0; i < MAX_DMA_CHANNELS; i++){
-			if(currentAssets[j].channelSettings[i].channelIndex == 0xff){
-				unallocatedAsset[unallocatedAssetNum] = &currentAssets[j].channelSettings[i];
+			if(activeSounds[j].channelSettings[i].channelIndex == 0xff){
+				unallocatedSound[unallocatedAssetNum] = &activeSounds[j].channelSettings[i];
 				unallocatedAssetNum++;
 			}
 		}
@@ -311,17 +328,17 @@ void allocateChannels(){
 		u32 highestPriorityAsset = 0xff;
 		u32 highestAssetPriority = 0;
 		for(u32 i = 0; i < unallocatedAssetNum; i++){
-			if(unallocatedAsset[i]->priority > highestAssetPriority){
-				highestAssetPriority = unallocatedAsset[i]->priority;
+			if(unallocatedSound[i]->priority > highestAssetPriority){
+				highestAssetPriority = unallocatedSound[i]->priority;
 				highestPriorityAsset = i;
 			}
 		}
 		if(highestPriorityAsset == 0xff){
 			return;
 		}
-		allocatedMixChannels[unallocatedMix[unallocatedMixNum - 1]] = unallocatedAsset[highestPriorityAsset];
-		unallocatedAsset[highestPriorityAsset]->channelIndex = unallocatedMix[unallocatedMixNum - 1];
-		unallocatedAsset[highestPriorityAsset] = unallocatedAsset[unallocatedAssetNum - 1];
+		allocatedMixChannels[unallocatedMix[unallocatedMixNum - 1]] = unallocatedSound[highestPriorityAsset];
+		unallocatedSound[highestPriorityAsset]->channelIndex = unallocatedMix[unallocatedMixNum - 1];
+		unallocatedSound[highestPriorityAsset] = unallocatedSound[unallocatedAssetNum - 1];
 		unallocatedMixNum--;
 		unallocatedAssetNum--;
 	}
@@ -343,8 +360,8 @@ void allocateChannels(){
 		
 		//find the highest priority unallocated asset
 		for(u32 i = 0; i < unallocatedAssetNum; i++){
-			if(unallocatedAsset[i]->priority >= highestUnallocatedPriority){
-				highestUnallocatedPriority = unallocatedAsset[i]->priority;
+			if(unallocatedSound[i]->priority >= highestUnallocatedPriority){
+				highestUnallocatedPriority = unallocatedSound[i]->priority;
 				highestUnallocatedChannel = i;
 			}
 		}
@@ -360,9 +377,9 @@ void allocateChannels(){
 		//check if the unallocated channel is higher priority than the allocated channel
 		if(highestUnallocatedPriority >= lowestAllocatedPriority){
 			allocatedMixChannels[lowestAllocatedChannel]->channelIndex = 0xff;
-			allocatedMixChannels[lowestAllocatedChannel] = unallocatedAsset[highestUnallocatedChannel];
-			unallocatedAsset[highestUnallocatedChannel]->channelIndex = lowestAllocatedChannel;
-			unallocatedAsset[highestUnallocatedChannel] = unallocatedAsset[unallocatedAssetNum - 1];
+			allocatedMixChannels[lowestAllocatedChannel] = unallocatedSound[highestUnallocatedChannel];
+			unallocatedSound[highestUnallocatedChannel]->channelIndex = lowestAllocatedChannel;
+			unallocatedSound[highestUnallocatedChannel] = unallocatedSound[unallocatedAssetNum - 1];
 			unallocatedAssetNum--;
 		}
 	}
@@ -395,8 +412,8 @@ void processAudio(){
 	
 	u32 areAssetsPlaying = 0;
 	//check if there is at least one asset playing right now
-	for(u32 assetIndex = 0; assetIndex < MAX_ASSETS_IN_QUEUE; assetIndex++){
-		if(currentAssets[assetIndex].enabled == 1){
+	for(u32 slotIndex = 0; slotIndex < MAX_SOUNDS_IN_QUEUE; slotIndex++){
+		if(activeSounds[slotIndex].enabled == 1){
 			areAssetsPlaying = 1;
 		}
 	}
@@ -407,18 +424,18 @@ void processAudio(){
 		while(samplesNeeded != 0){
 			//check which channel has the fewest leftoverSamples
 			u32 samplesThisBatch = 0x10000;
-			for(u32 assetIndex = 0; assetIndex < MAX_ASSETS_IN_QUEUE; assetIndex++){
+			for(u32 slotIndex = 0; slotIndex < MAX_SOUNDS_IN_QUEUE; slotIndex++){
 				//ignore assets that aren't playing
-				if(currentAssets[assetIndex].enabled != 1){
+				if(activeSounds[slotIndex].enabled != 1){
 					continue;
 				}
 				//if this asset has no leftover samples, process a tick
-				if(currentAssets[assetIndex].leftoverSamples == 0){
-					processAssetTick(&currentAssets[assetIndex], assetIndex);
-					currentAssets[assetIndex].leftoverSamples = tempoTable[currentAssets[assetIndex].currentTempo - 32];
+				if(activeSounds[slotIndex].leftoverSamples == 0){
+					processAssetTick(&activeSounds[slotIndex], slotIndex);
+					activeSounds[slotIndex].leftoverSamples = tempoTable[activeSounds[slotIndex].currentTempo - 32];
 				}
-				if(currentAssets[assetIndex].leftoverSamples < samplesThisBatch){
-					samplesThisBatch = currentAssets[assetIndex].leftoverSamples;
+				if(activeSounds[slotIndex].leftoverSamples < samplesThisBatch){
+					samplesThisBatch = activeSounds[slotIndex].leftoverSamples;
 				}
 			}
 			//check if the value is bigger than the maximum batch size
@@ -435,8 +452,8 @@ void processAudio(){
 			
 			samplesNeeded -= samplesThisBatch;
 			//update the leftover samples of every channel
-			for(u32 assetIndex = 0; assetIndex < MAX_ASSETS_IN_QUEUE; assetIndex++){
-				currentAssets[assetIndex].leftoverSamples -= samplesThisBatch;
+			for(u32 assetIndex = 0; assetIndex < MAX_SOUNDS_IN_QUEUE; assetIndex++){
+				activeSounds[assetIndex].leftoverSamples -= samplesThisBatch;
 			}
 		}
 	}
@@ -445,7 +462,7 @@ void processAudio(){
 	audioProgress = 2;
 }
 
-void processAssetTick(CurrentAssetSettings *assetPointer, u8 assetIndex){	
+void processAssetTick(CurrentSoundSettings *assetPointer, u8 soundIndex){	
 	//if the asset just started
 	if(assetPointer->rowNum == 0){
 		nextRow(&assetPointer->asset->patterns[assetPointer->asset->orders[0]], &assetPointer->patternOffset, assetPointer);
@@ -513,7 +530,7 @@ void processAssetTick(CurrentAssetSettings *assetPointer, u8 assetIndex){
 			//check if the asset is over
 			if((assetPointer->orderIndex >= (assetPointer->asset->ordersNum)) || (assetPointer->asset->orders[assetPointer->orderIndex] == 0xff)){
 				//end this asset and free it's slot for others
-				endAsset(assetIndex);
+				endSound(soundIndex);
 				return;
 			}
 			assetPointer->rowNum = 1;
@@ -552,7 +569,7 @@ void processAssetTick(CurrentAssetSettings *assetPointer, u8 assetIndex){
 				assetPointer->volumeSlideAmount = 0;
 				assetPointer->mixVolume = finalVolume;
 				if(finalVolume == 0){
-					endAsset(assetIndex);
+					endSound(soundIndex);
 					return;
 				}
 			}
@@ -586,7 +603,7 @@ void processAssetTick(CurrentAssetSettings *assetPointer, u8 assetIndex){
 	}
 }
 
-void processSampledChannel(CurrentChannelSettings *channelPointer, ChannelData *channelMixBuffer, CurrentAssetSettings *assetPointer){
+void processSampledChannel(CurrentChannelSettings *channelPointer, ChannelData *channelMixBuffer, CurrentSoundSettings *assetPointer){
 	//setup some local variables, and set them to default values
 	u8 finalVolume = 128;
 	u16 finalPitch = 0;
@@ -819,7 +836,7 @@ void applySettings(ChannelData *channelMixData, AudioSample *samplePtr, u32 pitc
 	}
 }
 
-void nextRow(PatternData *patternPtr, u16 *patternOffsetPtr, CurrentAssetSettings *assetPointer){
+void nextRow(PatternData *patternPtr, u16 *patternOffsetPtr, CurrentSoundSettings *assetPointer){
 	u8 channelMask;
 	ChannelBasicSettings *previousSettings;
 	ChannelBasicSettings *currentSettings;
@@ -931,7 +948,7 @@ void nextRow(PatternData *patternPtr, u16 *patternOffsetPtr, CurrentAssetSetting
 	*patternOffsetPtr = patternOffset;
 }
 
-void processEffects(CurrentChannelSettings *channelPointer, CurrentAssetSettings *assetPointer){
+void processEffects(CurrentChannelSettings *channelPointer, CurrentSoundSettings *assetPointer){
 	u8 command = channelPointer->currentBasicSettings.effect;
 	u8 commandAmount = channelPointer->currentBasicSettings.effectValue;
 	//if there was no effect command to process
@@ -1592,7 +1609,7 @@ void processVolume(CurrentChannelSettings *channelPointer){
 	}
 }
 
-void processTrigger(CurrentChannelSettings *channelPointer, CurrentAssetSettings *assetPointer){
+void processTrigger(CurrentChannelSettings *channelPointer, CurrentSoundSettings *assetPointer){
 	//if a note just got triggered, record the new instrument and sample
 	if(channelPointer->triggerState == TRIGGER){
 		channelPointer->instrumentPointer = &assetPointer->asset->instruments[channelPointer->currentBasicSettings.instrument - 1];
@@ -1672,7 +1689,7 @@ void processTrigger(CurrentChannelSettings *channelPointer, CurrentAssetSettings
 	}
 }
 
-void processNote(CurrentChannelSettings *channelPointer, CurrentAssetSettings *assetPointer){
+void processNote(CurrentChannelSettings *channelPointer, CurrentSoundSettings *assetPointer){
 	//if it is a regular note
 	if(channelPointer->currentBasicSettings.note <= 119){
 		channelPointer->instrumentPointer = &assetPointer->asset->instruments[channelPointer->currentBasicSettings.instrument - 1];
@@ -2002,7 +2019,7 @@ void tonePortamento(CurrentChannelSettings *channelPointer, u8 commandAmount){
 	}
 }
 
-void positionJump(CurrentAssetSettings *assetPointer){
+void positionJump(CurrentSoundSettings *assetPointer){
 
 	u8 nextOrder;
 	u8 nextRow;
@@ -2038,7 +2055,7 @@ void positionJump(CurrentAssetSettings *assetPointer){
 }
 
 
-void increaseTempo(u8 commandAmount, CurrentAssetSettings *assetPointer){
+void increaseTempo(u8 commandAmount, CurrentSoundSettings *assetPointer){
 	//do bounds checking
 	if((assetPointer->currentTempo + commandAmount) > 0xff){
 		assetPointer->currentTempo = 0xff;
@@ -2047,7 +2064,7 @@ void increaseTempo(u8 commandAmount, CurrentAssetSettings *assetPointer){
 		assetPointer->currentTempo = assetPointer->currentTempo + commandAmount;
 	}
 }
-void decreaseTempo(u8 commandAmount, CurrentAssetSettings *assetPointer){
+void decreaseTempo(u8 commandAmount, CurrentSoundSettings *assetPointer){
 	//do bounds checking
 	if(assetPointer->currentTempo - commandAmount < 0x20){
 		assetPointer->currentTempo = 0x20;
