@@ -62,11 +62,11 @@
 #define MENU_PAGE_TEXT_CHARDATA 4
 #define MENU_PAGE_TEXT_SPRITE 0
 
-#define MENU_BUTTON_PROMPT_SPRITE1 1
-#define MENU_BUTTON_PROMPT_SPRITE2 2
-#define MENU_SLIDER_PROMPT_SPRITE1 3
-#define MENU_SLIDER_PROMPT_SPRITE2 4
-#define MENU_SLIDER_BAR_SPRITE_FIRST 5
+#define MENU_BUTTON_PROMPT_SPRITE_FIRST 1
+#define MENU_BUTTON_PROMPT_SPRITE_LAST (MENU_BUTTON_PROMPT_SPRITE_FIRST + 3)
+#define MENU_SLIDER_PROMPT_SPRITE1 5
+#define MENU_SLIDER_PROMPT_SPRITE2 6
+#define MENU_SLIDER_BAR_SPRITE_FIRST 7
 #define MENU_SLIDER_BAR_SPRITE_LAST (MENU_SLIDER_BAR_SPRITE_FIRST + (5 * 3) - 1)
 
 #define MENU_SLIDER_PROMPT_PAL 3
@@ -85,15 +85,19 @@
 
 #define MENU_BUTTON_PROMPT_PAL 3
 #define MENU_BUTTON_PROMPT_GFX_START (MENU_SLIDER_BARS_GFX_START + MENU_SLIDER_BARS_GFX_SIZE)
-#define MENU_BUTTON_PROMPT_GFX_SIZE 16
+#define MENU_BUTTON_PROMPT_GFX_SIZE 32
 
 #define FONT_NUMBERS_PROMPT_PAL 3
 #define FONT_NUMBERS_GFX_START (MENU_BUTTON_PROMPT_GFX_START + MENU_BUTTON_PROMPT_GFX_SIZE)
 #define FONT_NUMBERS_GFX_SIZE 20
+#define FONT_NUMBERS_SPRITE_FIRST (MENU_TOGGLE_SPRITE_LAST)
+#define FONT_NUMBERS_SPRITE_LAST (FONT_NUMBERS_SPRITE_FIRST + (3 * 5))
 
 #define FONT_PERCENT_PAL 3
 #define FONT_PERCENT_GFX_START (FONT_NUMBERS_GFX_START + FONT_NUMBERS_GFX_SIZE)
 #define FONT_PERCENT_GFX_SIZE 4
+#define FONT_PERCENT_SPRITE_FIRST (FONT_NUMBERS_SPRITE_LAST)
+#define FONT_PERCENT_SPRITE_LAST (FONT_PERCENT_SPRITE_FIRST + 5)
 
 
 #define STARRY_BG_MAX_VEL 
@@ -271,6 +275,7 @@ typedef struct{
 	u8 pxOffX;
 	bool showConfirmPrompt;
 	bool showBackPrompt;
+	bool showSoundTestPrompts;
 } MenuPage;
 
 //globals
@@ -298,7 +303,7 @@ extern const unsigned short tsMenuUIPal[16];
 extern const unsigned short menu_action_focusedTiles[8320];
 extern const unsigned short menu_actionTiles[8320];
 extern const unsigned short page_name_ui_64x16Tiles[3072];
-extern const unsigned short menu_button_prompt_32x16Tiles[256];
+extern const unsigned short menu_button_prompt_32x16Tiles[512];
 extern const unsigned short menu_button_prompt_32x16Pal[16];
 extern const unsigned short menu_slider_prompt_8x16Tiles[32];
 extern const unsigned short menu_toggle_prompt_64x32Tiles[1024];
@@ -318,6 +323,10 @@ void hidePressStart();
 void hideAllUIWindowSprites();
 void drawPressStart();
 void drawStarBlocker(int yPos);
+
+void drawDigit(int sprIndex, int singleDigit, int xPos, int yPos);
+int drawNumber(int startIndex, int numberToDraw, int xPos, int yPos, bool rightAlign);
+int drawPercent(int sprIndex, int xPos, int yPos);
 
 void scrollStarryBG(int addedX, int addedY);
 void interpolateStarryBG();

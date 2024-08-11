@@ -652,8 +652,8 @@ void updateMainMenu(){
 									break;
 								case MID_SOUND_TEST_BGM:
 									if (thisMenuItem->data.intVal < 0)
-										thisMenuItem->data.intVal = SOUND_TEST_BGM_COUNT;
-									else if (thisMenuItem->data.intVal > SOUND_TEST_BGM_COUNT)
+										thisMenuItem->data.intVal = SOUND_TEST_BGM_COUNT - 1;
+									else if (thisMenuItem->data.intVal > SOUND_TEST_BGM_COUNT - 1)
 										thisMenuItem->data.intVal = 0;
 									mDat.updateDraw = true;
 									break;
@@ -666,6 +666,30 @@ void updateMainMenu(){
 									break;
 							}
 							currentSFXIndex = playNewSound(_sfxMenuMove);
+							break;
+					}
+				}
+
+				// Allow R to stop the sound playing on the cursor option
+				if (inputs.pressed & KEY_R){
+					MenuPageItem* thisMenuItem = &menuPage->items[mDat.menuCursorPos];
+					switch(thisMenuItem->menuElement) {
+						default:
+							break;
+						case ME_SOUND_TESTER:
+							switch(thisMenuItem->id){
+								default:
+									endAllSound();
+									currentSFXIndex = 0;
+									currentBGMIndex = 0;
+									break;
+								case MID_SOUND_TEST_BGM:
+									currentBGMIndex = endSound(currentBGMIndex);
+									break;
+								case MID_SOUND_TEST_SFX:
+									currentSFXIndex = endSound(currentSFXIndex);
+									break;
+							}
 							break;
 					}
 				}
@@ -898,6 +922,8 @@ void drawMainMenu(){
 
 				u8 numDrawnSliders = 0;
 				u8 numDrawnToggles = 0;
+				u8 numDrawnDigits = 0;
+				u8 numDrawnPercentSigns = 0;
 				for(int i = 0; i < menuPage->itemCount; ++i){
 					MenuPageItem* thisMenuItem = &menuPage->items[i];
 					bool cursorOnElement = (mDat.menuCursorPos == i && (menuPage != &menuPages[MPI_CREDITS]));
@@ -910,6 +936,8 @@ void drawMainMenu(){
 							int slBarY = ((mDat.windowCurrTileYPos + 2) * TILE_SIZE) + (i * TILE_SIZE * 2) + 2;
 							drawSliderBar(numDrawnSliders, slBarX, slBarY, 0, thisMenuItem->data.intVal);
 							numDrawnSliders++;
+							numDrawnDigits += drawNumber(FONT_NUMBERS_SPRITE_FIRST + (i * 3), thisMenuItem->data.intVal * 10, slBarX + (8 * TILE_SIZE) + 2, slBarY + 1, true);
+							numDrawnPercentSigns += drawPercent(FONT_PERCENT_SPRITE_FIRST + i, slBarX + (8 * TILE_SIZE) - 3, slBarY + 1);
 							break;
 						case ME_TOGGLE:
 							int togglePosX = ((mDat.windowCurrTileXPos + mDat.menuElementsWidth[mDat.currMenuPage]) * TILE_SIZE) + 4;
@@ -927,6 +955,11 @@ void drawMainMenu(){
 							//togglePosY = ((mDat.windowCurrTileYPos + 2) * TILE_SIZE) + (i * TILE_SIZE * 2) + 1;
 							//drawToggle(numDrawnToggles, togglePosX, togglePosY, thisMenuItem->data.boolVal);
 							//numDrawnToggles++;int 
+							
+							int posX = ((mDat.windowCurrTileXPos + mDat.menuElementsWidth[mDat.currMenuPage] - 5) * TILE_SIZE) + 3;
+							int posY = ((mDat.windowCurrTileYPos + 2) * TILE_SIZE) + (i * TILE_SIZE * 2) + 2;
+							numDrawnDigits += drawNumber(FONT_NUMBERS_SPRITE_FIRST + (i * 3), thisMenuItem->data.intVal, posX + (8 * TILE_SIZE) + 2, posY + 1, true);
+
 							if (cursorOnElement){
 								drawSliderPrompt(123, 48 + 16 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE1, false);
 								drawSliderPrompt(170, 48 + 16 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE2, true);
@@ -1503,18 +1536,27 @@ void drawStarBlocker(int yPos){
 
 void drawMenuButtons(bool hideAll){
 	if (menuPage->showConfirmPrompt && !hideAll){
-		objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(18*8);
-		objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr1 = ATTR1_SIZE_32 | ATTR1_X(26*8);
-		objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr2 = ATTR2_ID(512 + MENU_BUTTON_PROMPT_GFX_START) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_BUTTON_PROMPT_PAL);
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE_FIRST].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(18*8);
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE_FIRST].attr1 = ATTR1_SIZE_32 | ATTR1_X(26*8);
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE_FIRST].attr2 = ATTR2_ID(512 + MENU_BUTTON_PROMPT_GFX_START) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_BUTTON_PROMPT_PAL);
 	}else
-		objectBuffer[MENU_BUTTON_PROMPT_SPRITE1].attr0 = ATTR0_HIDE;
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE_FIRST].attr0 = ATTR0_HIDE;
 
+	// B Prompt
 	if (menuPage->showBackPrompt && !hideAll){
-		objectBuffer[MENU_BUTTON_PROMPT_SPRITE2].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(18*8);
-		objectBuffer[MENU_BUTTON_PROMPT_SPRITE2].attr1 = ATTR1_SIZE_32 | ATTR1_X(0);
-		objectBuffer[MENU_BUTTON_PROMPT_SPRITE2].attr2 = ATTR2_ID(512 + MENU_BUTTON_PROMPT_GFX_START + 8) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_BUTTON_PROMPT_PAL);
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE_FIRST + 1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(18*8);
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE_FIRST + 1].attr1 = ATTR1_SIZE_32 | ATTR1_X(0);
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE_FIRST + 1].attr2 = ATTR2_ID(512 + MENU_BUTTON_PROMPT_GFX_START + 8) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_BUTTON_PROMPT_PAL);
 	}else
-		objectBuffer[MENU_BUTTON_PROMPT_SPRITE2].attr0 = ATTR0_HIDE;
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE_FIRST + 1].attr0 = ATTR0_HIDE;
+	
+	// R Prompt
+	if (menuPage->showSoundTestPrompts && !hideAll){
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE_FIRST + 2].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(18*8);
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE_FIRST + 2].attr1 = ATTR1_SIZE_32 | ATTR1_X(20*8);
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE_FIRST + 2].attr2 = ATTR2_ID(512 + MENU_BUTTON_PROMPT_GFX_START + 16) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_BUTTON_PROMPT_PAL);
+	}else
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE_FIRST + 2].attr0 = ATTR0_HIDE;
 }
 
 void drawSliderPrompt(int xPos, int yPos, int sprIndex, bool flipSpriteHorizontally){
@@ -1535,6 +1577,60 @@ void drawSliderBar(int sprIndex, int xPos, int yPos, int imgIndex, int barValue)
         objectBuffer[MENU_SLIDER_BAR_SPRITE_FIRST + (sprIndex * barCount) + i].attr2 = ATTR2_ID(512 + MENU_SLIDER_BARS_GFX_START + (imgIndex * 2)) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_SLIDER_BARS_PAL);
     }
 }
+
+void drawDigit(int sprIndex, int singleDigit, int xPos, int yPos) {
+    // Ensure the digit is within the valid range (0-9)
+    singleDigit = clamp(singleDigit, 0, 10);
+
+    // Calculate the correct tile ID based on the digit value
+    int tileID = FONT_NUMBERS_GFX_START + (singleDigit * 2);
+
+    // Set the attributes for the sprite
+    objectBuffer[sprIndex].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SHAPE(2) | ATTR0_Y(yPos);
+    objectBuffer[sprIndex].attr1 = ATTR1_SIZE(0) | ATTR1_X(xPos);
+    objectBuffer[sprIndex].attr2 = ATTR2_ID(512 + tileID) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_SLIDER_BARS_PAL);
+}
+
+int drawPercent(int sprIndex, int xPos, int yPos) {
+    // Set the attributes for the sprite
+    objectBuffer[sprIndex].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SHAPE(0) | ATTR0_Y(yPos);
+    objectBuffer[sprIndex].attr1 = ATTR1_SIZE(1) | ATTR1_X(xPos);
+    objectBuffer[sprIndex].attr2 = ATTR2_ID(512 + FONT_PERCENT_GFX_START) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_SLIDER_BARS_PAL);
+	return 1;
+}
+
+int drawNumber(int startIndex, int numberToDraw, int xPos, int yPos, bool rightAlign) {
+    char digits[3];  // Array to hold the digits of the number
+    int digitCount = 0;
+
+    // Extract the digits from the number
+    do {
+        digits[digitCount++] = numberToDraw % 10;
+        numberToDraw /= 10;
+    } while (numberToDraw > 0 && digitCount < 3);
+
+    // Adjust the starting x position for right alignment if needed
+    if (rightAlign) {
+        xPos -= (digitCount * 6);
+    }
+
+    // Flag to track if we’ve drawn any digit yet
+    bool leadingZeroSkipped = false;
+
+    // Draw each digit, from left to right
+    for (int i = digitCount - 1; i >= 0; i--) {
+        // Skip leading zeros until we hit a non-zero digit or it's the last digit
+        if (digits[i] != 0 || leadingZeroSkipped || i == 0) {
+            leadingZeroSkipped = true;
+            drawDigit(startIndex++, digits[i], xPos, yPos);
+            xPos += 6;  // Move to the next digit's position
+        }
+    }
+
+    return startIndex; // Return the next available sprite index
+}
+
+
 
 void drawToggle(int sprIndex, int xPos, int yPos, bool isEnabled) {
 	u8 imgIndex = 0;
@@ -1578,7 +1674,7 @@ void hidePressStart(){
 }
 
 void hideAllUIWindowSprites(){
-	for (int i = MENU_SLIDER_PROMPT_SPRITE1; i < MENU_TOGGLE_SPRITE_LAST; i++) {
+	for (int i = MENU_SLIDER_PROMPT_SPRITE1; i < FONT_PERCENT_SPRITE_LAST; i++) {
 		objectBuffer[i].attr0 = ATTR0_HIDE;
 	}
 }
@@ -1723,7 +1819,8 @@ void initMenuPages(MenuPage menuPages[]) {
         .tileHeight = 10,
         .pxOffX = 4,
         .backPage = (int)MPI_EXTRAS,
-        .showConfirmPrompt = false,
+        .showConfirmPrompt = true,
+        .showSoundTestPrompts = true,
         .showBackPrompt = true
     };
 
