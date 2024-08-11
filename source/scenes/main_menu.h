@@ -139,7 +139,7 @@
 
 #define MENU_TEXT_LAYER_ID 1
 
-#define BGM_SINGLE -1 // Marker for single track
+#define BGM_SINGLE 999 // Marker for single track
 
 // Define the grouped BGM assets
 const int bgmGroups[][2] = {
@@ -153,7 +153,7 @@ const int bgmGroups[][2] = {
     {_musTitle, BGM_SINGLE} // Singular Group
 };
 
-#define SOUND_TEST_BGM_COUNT (sizeof(bgmGroups) / sizeof(bgmGroups[0]))
+#define SOUND_TEST_BGM_COUNT (int)(sizeof(bgmGroups) / sizeof(bgmGroups[0]))
 #define SOUND_TEST_SFX_COUNT 14
 #define SFX_START 11
 
@@ -314,72 +314,66 @@ extern const unsigned short menu_slider_bars_8x16Pal[16];
 
 int yStart, yTarget, titleCardYStart, titleCardYTarget, titleRevealFadeDirection;
 
-//local functions
+// Local Functions
 void mainMenuInitialize();
 void mainMenuNormal();
 void mainMenuEnd();
 
-void hidePressStart();
-void hideAllUIWindowSprites();
-void drawPressStart();
-void drawStarBlocker(int yPos);
+// Init Functions
+void initMainMenu();
+void initMenuPages(MenuPage menuPages[]);
+void mainMenuInitBlend();
 
-void drawDigit(int sprIndex, int singleDigit, int xPos, int yPos);
-int drawNumber(int startIndex, int numberToDraw, int xPos, int yPos, bool rightAlign);
-int drawPercent(int sprIndex, int xPos, int yPos);
-
+// Update Functions
 void scrollStarryBG(int addedX, int addedY);
 void interpolateStarryBG();
 void updateBGScrollRegisters(u16 bg0XPos, u16 bg0YPos, u16 bg1XPos, u16 bg1YPos);
 void startMatch();
 void skipToMenu();
 void updateObjBuffer();
-
-void initMainMenu();
-void initMenuPages(MenuPage menuPages[]);
-
+void mainMenuUpdateBlend(u32 eva, u32 evb);
 void updateMainMenu();
-void loadMenuGraphics(MenuPage *menuPage);
-void drawMainMenu();
-void drawMenuPageUIText();
-void hidePageUITextSprite();
-void setTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical, int palette, int layer);
-void drawNineSliceWindow(int x, int y, int width, int height, int layer);
-int wrapTileX(int x);
-bool tileYInBounds(int y);
-void drawLaserRow(int x, int y, int width, int layer, bool wrapAround);
-void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int layer);
-void drawMenuTextSegment(int tileXPos, int tileYPos, int menuElementPosition, int palette, bool highlighted, int numTextTileColumns);
-void directionalInputEnabled();
 void menuInputConfirmEnabled();
 void menuInputCancelEnabled();
+
 void performPageTransfer(int datIntVal);
-void drawMenuButtons(bool hideAll);
-void drawSliderPrompt(int xPos, int yPos, int sprIndex, bool flipSpriteHorizontally);
-void hideSliderPrompt();
-void drawSliderBar(int sprIndex, int xPos, int yPos, int imgIndex, int barValue);
-void drawToggle(int sprIndex, int xPos, int yPos, bool isEnabled);
-void mainMenuInitBlend();
-void mainMenuUpdateBlend(u32 eva, u32 evb);
 
 int menuExecNewGame();
 int menuExecContinue();
 int menuExecLoadGame();
 int menuExecOptionsApplyChanges();
-int menuExecPlayBGM(u8 soundIndex);
-int menuExecPlaySFX(u8 soundIndex);
 
+// Drawing Functions
+void setTile(int x, int y, int tileIndex, bool flipHorizontal, bool flipVertical, int palette, int layer);
+void hideSprite(int sprIndex);
+void hideSpriteRange(int firstSprite, int lastSprite);
+void drawPressStart();
+void drawStarBlocker(int yPos);
+void drawDigit(int sprIndex, int singleDigit, int xPos, int yPos);
+int drawNumber(int startIndex, int numberToDraw, int xPos, int yPos, bool rightAlign);
+int drawPercent(int sprIndex, int xPos, int yPos);
+void drawMenuButtons(bool hideAll);
+void drawSliderPrompt(int xPos, int yPos, int sprIndex, bool flipSpriteHorizontally);
+void drawSliderBar(int sprIndex, int xPos, int yPos, int imgIndex, int barValue);
+void drawToggle(int sprIndex, int xPos, int yPos, bool isEnabled);
+void drawLaserRow(int x, int y, int width, int layer, bool wrapAround);
+void drawSecondaryNineSliceWindowStyle(int x, int y, int width, int height, int layer);
+void drawMenuTextSegment(int tileXPos, int tileYPos, int menuElementPosition, int palette, bool highlighted, int numTextTileColumns);
+void directionalInputEnabled();
+void drawMainMenu();
+void drawMenuPageUIText();
+void drawNineSliceWindow(int x, int y, int width, int height, int layer);
+
+// Helper Functions
 void loadGFX(u32 VRAMCharBlock, u32 VRAMTileIndex, void *graphicsBasePointer, u32 graphicsTileOffset, u32 numTilesToSend, u32 queueChannel);
-
 int easeInOut(int t, int power);
 int easeOutQuint(int t);
 int lerp(int a, int b, int t);
 int interpolateValues(int timer, int targetTime, int lerpStartVal, int lerpTargetVal);
 int calculatePercentage(int numerator, int denominator);
-
-void printMenuPageItem(const MenuPageItem* item);
-
-size_t menuSize;
+int wrapTileX(int x);
+bool tileYInBounds(int y);
+void loadMenuGraphics(MenuPage *menuPage);
 
 //external functions
 #endif

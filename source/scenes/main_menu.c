@@ -307,7 +307,7 @@ void mainMenuNormal(){
 		if(mDat.actionTimer % 128 < 64){
 			drawPressStart();
 		}else{
-			hidePressStart();
+			hideSpriteRange(PRESS_START_SPRITE1, PRESS_START_SPRITE3);
 		}
 		// Make the starry background scroll up-left
 		scrollStarryBG(-1, -1);
@@ -318,7 +318,7 @@ void mainMenuNormal(){
 		break;
 	case TITLE_AFTER_PRESS_START:
 		if(mDat.actionTimer >= mDat.actionTarget){
-			hidePressStart();
+			hideSpriteRange(PRESS_START_SPRITE1, PRESS_START_SPRITE3);
 			skipToMenu();
 		}else{
 			mDat.actionTimer++;
@@ -328,7 +328,7 @@ void mainMenuNormal(){
 		if(mDat.actionTimer % 16 >= 8){
 			drawPressStart();
 		}else{
-			hidePressStart();
+			hideSpriteRange(PRESS_START_SPRITE1, PRESS_START_SPRITE3);
 		}
 
 		updateObjBuffer();
@@ -616,7 +616,8 @@ void updateMainMenu(){
 			directionalInputEnabled();
 
 			if (moveY != 0) {
-				hideSliderPrompt();
+				// Hide the slider prompt
+				hideSpriteRange(MENU_SLIDER_PROMPT_SPRITE1, MENU_SLIDER_PROMPT_SPRITE2);
 				mDat.updateDraw = true;
 			}
 
@@ -718,7 +719,7 @@ void updateMainMenu(){
 					// If this is a Page Transfer, load the new menu page now
 					MenuElementData* dat;
 					FunctionPtr datFunctPtr;
-					int datIntVal;
+					int datIntVal = 0;
 					int* datIntArr;
 
 					switch(mDat.windowConfirmDirection){
@@ -778,7 +779,9 @@ void updateMainMenu(){
 					mDat.windowTargetTileY = menuPage->tileY;
 					mDat.windowTargetWidth = menuPage->tileWidth;
 					mDat.windowTargetHeight = menuPage->tileHeight;
-					hidePageUITextSprite();
+
+					// Hide the Pade UI Text Sprite
+					hideSprite(MENU_PAGE_TEXT_SPRITE);
 				} 
 			}else{
 				if (mDat.wrappedAround){
@@ -1279,8 +1282,9 @@ void menuInputConfirmEnabled(){
 						mDat.evbLerpEnd = 16;
 						mDat.windowActionTimer = 0;
 						mDat.windowActionTarget = 8;
-
-						hidePageUITextSprite();
+						
+						// Hide the Pade UI Text Sprite
+						hideSprite(MENU_PAGE_TEXT_SPRITE);
 						break;
 					case ME_SLIDER:
 						currentSFXIndex = playNewSound(_sfxMenuConfirmA);
@@ -1348,7 +1352,8 @@ void menuInputConfirmEnabled(){
 						break;
 					case ME_SLIDER:
 						currentSFXIndex = playNewSound(_sfxMenuConfirmA);
-						hideSliderPrompt();
+						// Hide the slider prompt
+						hideSpriteRange(MENU_SLIDER_PROMPT_SPRITE1, MENU_SLIDER_PROMPT_SPRITE2);
 						mDat.windowState = MMWS_READY;
 						mDat.updateDraw = true;
 						break;
@@ -1375,7 +1380,7 @@ void menuInputCancelEnabled(){
 				mDat.windowState = MMWS_CLOSING;
 				
 				// If there are any menu toggles/sliders/cursors visible, hide them right now
-				hideAllUIWindowSprites();
+				hideSpriteRange(MENU_SLIDER_PROMPT_SPRITE1, FONT_PERCENT_SPRITE_LAST);
 
 				// Lerp toward making the text completely invisible, over 32 frames
 				mDat.evaLerpStart = 16;
@@ -1390,7 +1395,8 @@ void menuInputCancelEnabled(){
 				break;
 			case MMWS_TWEAKING_DATA:
 				currentSFXIndex = playNewSound(_sfxMenuMove);
-				hideSliderPrompt();
+				// Hide the slider prompt
+				hideSpriteRange(MENU_SLIDER_PROMPT_SPRITE1, MENU_SLIDER_PROMPT_SPRITE2);
 				mDat.windowState = MMWS_READY;
 				mDat.updateDraw = true;
 				break;
@@ -1414,14 +1420,6 @@ int menuExecLoadGame(){
 }
 
 int menuExecOptionsApplyChanges(){
-	return 0;
-}
-
-int menuExecPlayBGM(u8 soundIndex){
-	return 0;
-}
-
-int menuExecPlaySFX(u8 soundIndex){
 	return 0;
 }
 
@@ -1624,7 +1622,9 @@ int drawNumber(int startIndex, int numberToDraw, int xPos, int yPos, bool rightA
             leadingZeroSkipped = true;
             drawDigit(startIndex++, digits[i], xPos, yPos);
             xPos += 6;  // Move to the next digit's position
-        }
+        } else {
+			hideSprite(startIndex);
+		}
     }
 
     return startIndex; // Return the next available sprite index
@@ -1658,23 +1658,12 @@ void drawMenuPageUIText(){
 	}
 }
 
-void hidePageUITextSprite(){
-	objectBuffer[MENU_PAGE_TEXT_SPRITE].attr0 = ATTR0_HIDE;
+void hideSprite(int sprIndex){
+	objectBuffer[sprIndex].attr0 = ATTR0_HIDE;
 }
 
-void hideSliderPrompt(){
-	objectBuffer[MENU_SLIDER_PROMPT_SPRITE1].attr0 = ATTR0_HIDE;
-	objectBuffer[MENU_SLIDER_PROMPT_SPRITE2].attr0 = ATTR0_HIDE;
-}
-
-void hidePressStart(){
-	objectBuffer[PRESS_START_SPRITE1].attr0 = ATTR0_HIDE;
-	objectBuffer[PRESS_START_SPRITE2].attr0 = ATTR0_HIDE;
-	objectBuffer[PRESS_START_SPRITE3].attr0 = ATTR0_HIDE;
-}
-
-void hideAllUIWindowSprites(){
-	for (int i = MENU_SLIDER_PROMPT_SPRITE1; i < FONT_PERCENT_SPRITE_LAST; i++) {
+void hideSpriteRange(int firstSprite, int lastSprite){
+	for (u8 i = firstSprite; i <= lastSprite; i++){
 		objectBuffer[i].attr0 = ATTR0_HIDE;
 	}
 }
@@ -1865,10 +1854,10 @@ void initMenuPages(MenuPage menuPages[]) {
 
     menuPages[5] = (MenuPage) {
         .items = {
-            {"Master Volume", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 14, .data.intVal = 10},
-            {"BGM", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 16, .data.intVal = 8},
-            {"SFX", ME_SLIDER, .data.intArray = dataRange, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 18, .data.intVal = 10},
-            {"Grid Enabled", ME_TOGGLE, .data.boolVal = true, .dataType = MPIDT_BOOL, .textGFXIndex = 20, .data.boolVal = true},
+            {"Master Volume", ME_SLIDER, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 14, .data.intVal = 10},
+            {"BGM", ME_SLIDER, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 16, .data.intVal = 8},
+            {"SFX", ME_SLIDER, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 18, .data.intVal = 10},
+            {"Grid Enabled", ME_TOGGLE, .dataType = MPIDT_BOOL, .textGFXIndex = 20, .data.boolVal = true},
             {"Apply Changes", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 22},
         },
         .itemCount = 5,
