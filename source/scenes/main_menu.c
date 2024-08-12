@@ -559,11 +559,15 @@ void initMainMenu(){
 	mDat.wrappedAround = true;
 
 	mDat.showPageWindowBG = false;
-
+	
 	mDat.secondaryNineSliceYOff = 2;
 	
 	// Draw the Menu Page UI Text now
 	drawMenuPageUIText();
+
+	mDat.updateSpriteDraw = false;
+	mDat.updateBGTileDraw = false;
+	mDat.updateUITileDraw = false;
 }
 
 void updateMainMenu(){
@@ -577,11 +581,12 @@ void updateMainMenu(){
 				if (mDat.windowCurrTileYPos - 1 >= 0)
 					mDat.windowCurrTileYPos--;
 			}else{
+				// Set the window 9-slice height to the target window height (defined as an array at mDat.menuElementsWidth[<menu page>])
 				mDat.winSliceHeight = mDat.windowTargetHeight;
-				//mDat.windowCurrTileYPos = mDat.windowTargetTileY;
-				//mDat.winSliceHeight += 2;
-				//mDat.windowTileYPos -= 2;
-				mDat.updateDraw = true;
+
+				// Enable drawing sprites and the UI tiles for this frame
+				mDat.updateSpriteDraw = true;
+				mDat.updateUITileDraw = true;
 				mDat.windowState = MMWS_READY;
 
 				// Lerp toward making the text completely visible, over 32 frames
@@ -592,6 +597,9 @@ void updateMainMenu(){
 				mDat.windowActionTimer = 0;
 				mDat.windowActionTarget = 8;
 			}
+
+			// Allow the background to draw tiles every frame that this state is active
+			mDat.updateBGTileDraw = true;
 			break;
 		case MMWS_CLOSING:
 			// Keep expanding the window height until it's the target size it needs to be; re-center as it expands
@@ -609,7 +617,7 @@ void updateMainMenu(){
 				mDat.zipSpeed = 3;
 				mDat.wrappedAround = false;
 			}
-			
+			mDat.updateBGTileDraw = true;
 			break;
 		case MMWS_READY:
 			menuPage = &menuPages[mDat.currMenuPage];
@@ -618,7 +626,8 @@ void updateMainMenu(){
 			if (moveY != 0) {
 				// Hide the slider prompt
 				hideSpriteRange(MENU_SLIDER_PROMPT_SPRITE1, MENU_SLIDER_PROMPT_SPRITE2);
-				mDat.updateDraw = true;
+				mDat.updateSpriteDraw = true;
+				mDat.updateUITileDraw = true;
 			}
 
 			// Navigate the menu; wrap around if we hit an edge
@@ -644,7 +653,7 @@ void updateMainMenu(){
 						case ME_TOGGLE:
 							currentSFXIndex = playNewSound(_sfxMenuConfirmA);
 							thisMenuItem->data.boolVal = !thisMenuItem->data.boolVal;
-							mDat.updateDraw = true;
+							mDat.updateSpriteDraw = true;
 							break;
 						case ME_SOUND_TESTER:
 							thisMenuItem->data.intVal += moveX;
@@ -656,14 +665,14 @@ void updateMainMenu(){
 										thisMenuItem->data.intVal = SOUND_TEST_BGM_COUNT - 1;
 									else if (thisMenuItem->data.intVal > SOUND_TEST_BGM_COUNT - 1)
 										thisMenuItem->data.intVal = 0;
-									mDat.updateDraw = true;
+									mDat.updateSpriteDraw = true;
 									break;
 								case MID_SOUND_TEST_SFX:
 									if (thisMenuItem->data.intVal < 0)
 										thisMenuItem->data.intVal = SOUND_TEST_SFX_COUNT - 1;
 									else if (thisMenuItem->data.intVal >= SOUND_TEST_SFX_COUNT)
 										thisMenuItem->data.intVal = 0;
-									mDat.updateDraw = true;
+									mDat.updateSpriteDraw = true;
 									break;
 							}
 							currentSFXIndex = playNewSound(_sfxMenuMove);
@@ -803,10 +812,7 @@ void updateMainMenu(){
 				}
 			}
 
-			if (mDat.wrappedAround){
-
-			}
-
+			mDat.updateBGTileDraw = true;
 			mDat.windowActionTimer++;
 			break;
 		case MMWS_TWEAKING_DATA:
@@ -823,7 +829,7 @@ void updateMainMenu(){
 					case ME_SLIDER:
 						thisMenuItem->data.intVal = clamp(thisMenuItem->data.intVal + moveX, 0, 11);
 						currentSFXIndex = playNewSound(_sfxMenuMove);
-						mDat.updateDraw = true;
+						mDat.updateSpriteDraw = true;
 						break;
 				}
 			}
@@ -879,9 +885,11 @@ void loadMenuGraphics(MenuPage *menuPage){
 }
 
 void drawMainMenu(){
-	//Clear the menu tilemap every frame
-	memset32(tilemapBuffer1, 0, 512);
-	memset32(tilemapBuffer2, 0, 512);
+	if (mDat.updateBGTileDraw){
+		//Clear the menu tilemap every frame
+		memset32(tilemapBuffer1, 0, 512);
+		memset32(tilemapBuffer2, 0, 512);
+	}
 	
 	switch(mDat.windowState){
 		default:
@@ -916,7 +924,7 @@ void drawMainMenu(){
 			if (!mDat.showPageWindowBG)
 				mDat.showPageWindowBG = true;
 			
-			if (mDat.updateDraw){
+			if (mDat.updateBGTileDraw){
 				// Draw the Menu Page Window
 				if (mDat.showPageWindowBG)
 					drawSecondaryNineSliceWindowStyle(10, mDat.secondaryNineSliceYOff, 10, 2, 2);
@@ -928,7 +936,9 @@ void drawMainMenu(){
 					drawLaserRow(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos, mDat.winSliceWidth, 1, false);
 				
 				menuPage = &menuPages[mDat.currMenuPage];
-
+				mDat.updateBGTileDraw = false;
+			}
+			if (mDat.updateSpriteDraw){
 				// First, hide all of these number/percent sprites from the previous frame
 				hideSpriteRange(FONT_NUMBERS_SPRITE_FIRST, FONT_PERCENT_SPRITE_LAST);
 				
@@ -973,11 +983,14 @@ void drawMainMenu(){
 							}
 							break;
 					}
-					drawMenuTextSegment(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos + 2 + (2 * i), i, 2, cursorOnElement && !isTweakingData, mDat.menuElementsWidth[mDat.currMenuPage]);
 
-
+					// Draw the tiles that draw all of the text on the left half of the main menu, if we're allowed to update them on this frame
+					if (mDat.updateUITileDraw)
+						drawMenuTextSegment(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos + 2 + (2 * i), i, 2, cursorOnElement && !isTweakingData, mDat.menuElementsWidth[mDat.currMenuPage]);
 				}
 				
+				mDat.updateUITileDraw = false;
+
 				if (mDat.windowState == MMWS_TWEAKING_DATA){
 					drawSliderPrompt(123, 48 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE1, false);
 					drawSliderPrompt(170, 48 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE2, true);
@@ -992,7 +1005,7 @@ void drawMainMenu(){
 				tilemapData[2].position = se_mem[MENU_PAGE_TILEMAP];
 				tilemapData[2].buffer = (void *)tilemapBuffer2;
 				tilemapData[2].size = 512;
-				mDat.updateDraw = false;
+				mDat.updateSpriteDraw = false;
 			}
 			drawMenuButtons(false);
 			
@@ -1269,7 +1282,7 @@ void menuInputConfirmEnabled(){
 						currentSFXIndex = playNewSound(_sfxMenuConfirmA);
 						mDat.windowConfirmDirection = MWCD_FORWARD;
 						mDat.windowState = MMWS_CLOSING;
-						mDat.updateDraw = true;
+						mDat.updateSpriteDraw = true;
 
 						// Lerp toward making the text completely visible, over 32 frames
 						mDat.evaLerpStart = 16;
@@ -1288,14 +1301,14 @@ void menuInputConfirmEnabled(){
 					case ME_SLIDER:
 						currentSFXIndex = playNewSound(_sfxMenuConfirmA);
 						mDat.windowState = MMWS_TWEAKING_DATA;
-						mDat.updateDraw = true;
+						mDat.updateSpriteDraw = true;
 						break;
 					case ME_SHIFT:
 						break;
 					case ME_TOGGLE:
 						currentSFXIndex = playNewSound(_sfxMenuConfirmA);
 						thisMenuItem->data.boolVal = !thisMenuItem->data.boolVal;
-						mDat.updateDraw = true;
+						mDat.updateSpriteDraw = true;
 						break;
 					case ME_SOUND_TESTER:
 						switch(thisMenuItem->id) {
@@ -1354,7 +1367,7 @@ void menuInputConfirmEnabled(){
 						// Hide the slider prompt
 						hideSpriteRange(MENU_SLIDER_PROMPT_SPRITE1, MENU_SLIDER_PROMPT_SPRITE2);
 						mDat.windowState = MMWS_READY;
-						mDat.updateDraw = true;
+						mDat.updateSpriteDraw = true;
 						break;
 					case ME_SHIFT:
 						break;
@@ -1389,7 +1402,7 @@ void menuInputCancelEnabled(){
 				mDat.windowActionTimer = 0;
 				mDat.windowActionTarget = 8;
 
-				mDat.updateDraw = true;
+				mDat.updateSpriteDraw = true;
 			
 				break;
 			case MMWS_TWEAKING_DATA:
@@ -1397,7 +1410,7 @@ void menuInputCancelEnabled(){
 				// Hide the slider prompt
 				hideSpriteRange(MENU_SLIDER_PROMPT_SPRITE1, MENU_SLIDER_PROMPT_SPRITE2);
 				mDat.windowState = MMWS_READY;
-				mDat.updateDraw = true;
+				mDat.updateSpriteDraw = true;
 				break;
 		}
 	}

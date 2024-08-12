@@ -212,7 +212,7 @@ typedef struct BGData{
 typedef struct MainMenuData{
 	enum TitleSceneState state;
 	enum MainMenuWindowState windowState;
-	bool updateDraw;
+	bool updateBGTileDraw, updateSpriteDraw, updateUITileDraw;
 	BGData starryBG;
 	BGData titleCardBG;
 	BGData menuBG;
