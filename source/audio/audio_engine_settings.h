@@ -30,3 +30,20 @@
 #ifndef MAX_SAMPLE_MIXED_AT_ONCE
 	#define MAX_SAMPLE_MIXED_AT_ONCE 64
 #endif
+
+//defines an enum that allows for easier handling of priority values for each audio asset.
+//treats priority by utilizing layers
+#ifndef AUDIO_PRIORITY_H
+	#define AUDIO_PRIORITY_H
+
+	#ifndef __ASSEMBLER__
+	// Enum for audio priority layers
+	enum AudioPriorityLayers {
+		ALAYER_BGM_CHANNEL_PERSISTENT = 150,
+		ALAYER_SFX = 100,
+		ALAYER_BGM_CUTOFF = 50,
+		ALAYER_UNALLOCATED = 0
+	};
+#endif // __ASSEMBLER__
+
+#endif // AUDIO_PRIORITY_H

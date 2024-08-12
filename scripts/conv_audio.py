@@ -28,14 +28,16 @@ def ProcessAssetList(assetList, processedAssetList, originalAssetDir, isBGM):
 			if not os.path.exists(os.path.join(assetPriorityDir, (currentAssetFileName + "_Priority.c"))):
 				#write the priority file for this asset
 				assetPriorityFile = open(os.path.join(assetPriorityDir, (currentAssetFileName + "_Priority.c")), 'w')
-				assetPriorityFile.write("#include \"audio_engine_settings.h\"\n#include \"tonc.h\"\n\n//type in the priority of this asset. Higher number means higher priority\ncu8 " + \
-				currentAssetFileName + "_Priority = 0;\n\n//type in the priority of each channel in this asset. Leave unused channels as blank, or set to 0\ncu8 " + \
-				currentAssetFileName + "_ChannelPriority[MAX_DMA_CHANNELS] = { ")
-
+				assetPriorityFile.write("#include \"audio_engine_settings.h\"\n#include \"tonc.h\"\n\n//type in the priority of this asset. Higher number means higher priority\ncu8 ");
+				
 				if (isBGM):
-					assetPriorityFile.write("\n\t100,\t\t// Channel 1\n\t99,\t\t\t// Channel 2\n\t98,\t\t\t// Channel 3\n\t97,\t\t\t// Channel 4\n\t96,\t\t\t// Channel 5\n\t95,\t\t\t// Channel 6\n\t94,\t\t\t// Channel 7\n\t93,\t\t\t// Channel 8\n\t51,\t\t\t// Channel 9\n\t50\t\t\t// Channel 10\n")
+					assetPriorityFile.write(currentAssetFileName + "_Priority = ALAYER_BGM_CHANNEL_PERSISTENT;\n\n//type in the priority of each channel in this asset. Leave unused channels as blank, or set to 0\ncu8 " + \
+						currentAssetFileName + "_ChannelPriority[MAX_DMA_CHANNELS] = { ")
+					assetPriorityFile.write("\n\tALAYER_BGM_CHANNEL_PERSISTENT,\t\t\t\t// Channel 1\n\tALAYER_BGM_CHANNEL_PERSISTENT - 1,\t\t\t// Channel 2\n\tALAYER_BGM_CHANNEL_PERSISTENT - 2,\t\t\t// Channel 3\n\tALAYER_BGM_CHANNEL_PERSISTENT - 3,\t\t\t// Channel 4\n\tALAYER_BGM_CHANNEL_PERSISTENT - 4,\t\t\t// Channel 5\n\tALAYER_BGM_CHANNEL_PERSISTENT - 5,\t\t\t// Channel 6\n\tALAYER_BGM_CHANNEL_PERSISTENT - 7,\t\t\t// Channel 7\n\tALAYER_BGM_CHANNEL_PERSISTENT - 8,\t\t\t// Channel 8\n\tALAYER_BGM_CUTOFF,\t\t\t\t\t\t\t// Channel 9\n\tALAYER_BGM_CUTOFF - 1\t\t\t\t\t\t// Channel 10\n")
 				else:
-					assetPriorityFile.write("\n\t80,\t\t// Channel 1\n\t80,\t\t// Channel 2\n\t0,\t\t// Channel 3\n\t0,\t\t// Channel 4\n\t0,\t\t// Channel 5\n\t0,\t\t// Channel 6\n\t0,\t\t// Channel 7\n\t0,\t\t// Channel 8\n\t0,\t\t// Channel 9\n\t0\t\t// Channel 10\n")
+					assetPriorityFile.write(currentAssetFileName + "_Priority = ALAYER_SFX;\n\n//type in the priority of each channel in this asset. Leave unused channels as blank, or set to 0\ncu8 " + \
+						currentAssetFileName + "_ChannelPriority[MAX_DMA_CHANNELS] = { ")
+					assetPriorityFile.write("\n\tALAYER_SFX,\t\t\t\t// Channel 1\n\tALAYER_UNALLOCATED,\t\t// Channel 2\n\tALAYER_UNALLOCATED,\t\t// Channel 3\n\tALAYER_UNALLOCATED,\t\t// Channel 4\n\tALAYER_UNALLOCATED,\t\t// Channel 5\n\tALAYER_UNALLOCATED,\t\t// Channel 6\n\tALAYER_UNALLOCATED,\t\t// Channel 7\n\tALAYER_UNALLOCATED,\t\t// Channel 8\n\tALAYER_UNALLOCATED,\t\t// Channel 9\n\tALAYER_UNALLOCATED\t\t// Channel 10\n")
 				assetPriorityFile.write(" };")
 		else:
 			print("Skipping _Template.it Priority file generation...")
