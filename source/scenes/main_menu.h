@@ -143,14 +143,14 @@
 
 // Define the grouped BGM assets
 const int bgmGroups[][2] = {
-    {_musThemeA_Battle, _musThemeA_Peace},
-    {_musThemeB, BGM_SINGLE}, // Group with itself
-    {_musThemeB_Battle, BGM_SINGLE}, // Group with itself
-    {_musThemeC_Battle, _musThemeC_Peace},
-    {_musThemeD_Battle, _musThemeD_Peace},
-    {_musMainMenu, BGM_SINGLE}, // Singular Group
-    {_musOpening, BGM_SINGLE}, // Singular Group
-    {_musTitle, BGM_SINGLE} // Singular Group
+    {_musOpening, BGM_SINGLE}, 					// Singular Group
+    {_musTitle, BGM_SINGLE},					// Singular Group
+    {_musMainMenu, BGM_SINGLE},					// Singular Group
+    {_musThemeA_Battle, _musThemeA_Peace},		// Dual Group
+    {_musThemeB, BGM_SINGLE},					// Group with itself
+    {_musThemeB_Battle, BGM_SINGLE},			// Group with itself
+	{_musThemeC_Battle, _musThemeC_Peace},		// Dual Group
+    {_musThemeD_Battle, _musThemeD_Peace}		// Dual Group
 };
 
 #define SOUND_TEST_BGM_COUNT (int)(sizeof(bgmGroups) / sizeof(bgmGroups[0]))
@@ -338,6 +338,7 @@ void menuInputConfirmEnabled();
 void menuInputCancelEnabled();
 
 void performPageTransfer(int datIntVal);
+void endCurrentBGM();
 
 int menuExecNewGame();
 int menuExecContinue();
@@ -375,6 +376,7 @@ int calculatePercentage(int numerator, int denominator);
 int wrapTileX(int x);
 bool tileYInBounds(int y);
 void loadMenuGraphics(MenuPage *menuPage);
+bool sfxIsPlaying(int sfxIndex);
 
 //external functions
 #endif
