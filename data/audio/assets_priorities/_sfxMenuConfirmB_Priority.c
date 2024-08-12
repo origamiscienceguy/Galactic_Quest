@@ -7,7 +7,7 @@ cu8 _sfxMenuConfirmB_Priority = ALAYER_SFX;
 //type in the priority of each channel in this asset. Leave unused channels as blank, or set to 0
 cu8 _sfxMenuConfirmB_ChannelPriority[MAX_DMA_CHANNELS] = { 
 	ALAYER_SFX,				// Channel 1
-	ALAYER_UNALLOCATED,		// Channel 2
+	ALAYER_SFX - 1,			// Channel 2
 	ALAYER_UNALLOCATED,		// Channel 3
 	ALAYER_UNALLOCATED,		// Channel 4
 	ALAYER_UNALLOCATED,		// Channel 5
