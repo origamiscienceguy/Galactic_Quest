@@ -8,12 +8,12 @@ cu8 _musThemeC_Peace_Priority = ALAYER_BGM_CHANNEL_PERSISTENT;
 cu8 _musThemeC_Peace_ChannelPriority[MAX_DMA_CHANNELS] = { 
 	ALAYER_BGM_CHANNEL_PERSISTENT,				// Channel 1
 	ALAYER_BGM_CHANNEL_PERSISTENT - 1,			// Channel 2
-	ALAYER_BGM_CHANNEL_PERSISTENT - 2,			// Channel 3
-	ALAYER_BGM_CHANNEL_PERSISTENT - 3,			// Channel 4
-	ALAYER_BGM_CHANNEL_PERSISTENT - 4,			// Channel 5
-	ALAYER_BGM_CHANNEL_PERSISTENT - 5,			// Channel 6
-	ALAYER_BGM_CHANNEL_PERSISTENT - 7,			// Channel 7
-	ALAYER_BGM_CHANNEL_PERSISTENT - 8,			// Channel 8
-	ALAYER_BGM_CUTOFF,							// Channel 9
-	ALAYER_BGM_CUTOFF - 1						// Channel 10
+	ALAYER_BGM_CUTOFF - 1,						// Channel 3
+	ALAYER_BGM_CHANNEL_PERSISTENT - 2,			// Channel 4
+	ALAYER_BGM_CUTOFF,							// Channel 5
+	ALAYER_BGM_CHANNEL_PERSISTENT - 3,			// Channel 6
+	ALAYER_UNALLOCATED,							// Channel 7
+	ALAYER_UNALLOCATED,							// Channel 8
+	ALAYER_UNALLOCATED,							// Channel 9
+	ALAYER_UNALLOCATED,							// Channel 10
  };

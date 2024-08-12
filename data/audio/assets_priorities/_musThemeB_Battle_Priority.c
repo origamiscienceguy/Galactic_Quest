@@ -15,5 +15,5 @@ cu8 _musThemeB_Battle_ChannelPriority[MAX_DMA_CHANNELS] = {
 	ALAYER_BGM_CHANNEL_PERSISTENT - 7,			// Channel 7
 	ALAYER_BGM_CHANNEL_PERSISTENT - 8,			// Channel 8
 	ALAYER_BGM_CUTOFF,							// Channel 9
-	ALAYER_BGM_CUTOFF - 1						// Channel 10
+	ALAYER_UNALLOCATED							// Channel 10
  };
