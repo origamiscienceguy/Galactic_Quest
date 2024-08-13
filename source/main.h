@@ -21,12 +21,20 @@ typedef struct Inputs{
 	u16 released;
 }Inputs;
 
+typedef struct Options{
+	u8 gridOn;
+	u8 masterVolume;
+	u8 bgmVolume;
+	u8 sfVolume;
+}Options;
+
 //globals
 extern u32 globalCounter;
 extern u8 taskData[64];
 extern Inputs inputs;
 extern volatile enum GameLoopState gameLoopState;
 extern vu8 gameState;
+extern Options options;
 
 //local functions
 void gameLoop();
