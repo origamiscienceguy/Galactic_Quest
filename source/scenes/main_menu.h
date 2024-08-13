@@ -44,8 +44,8 @@
 #define PRESS_START_GFX_SIZE 12
 
 #define MENU_CHARDATA 1
-#define MENU_WINDOW_TILEMAP 27
-#define MENU_PAGE_TILEMAP 28
+#define MENU_WINDOW_TILEMAP (STARRY_IMAGE_TILEMAP - 1)
+#define MENU_PAGE_TILEMAP (MENU_WINDOW_TILEMAP - 1)
 #define MENU_PAL_START 2
 #define MENU_GFX_START (TITLE_CARD_GFX_START + TITLE_CARD_GFX_SIZE)
 #define MENU_GFX_SIZE 20
@@ -135,7 +135,7 @@
 
 #define TITLE_CAM_PAN_BOTTOM 250
 #define TITLE_CAM_PAN_TOP 104
-#define FIXED_POINT_SCALE 1000
+#define FIXED_POINT_SCALE 1024
 
 #define MENU_TEXT_LAYER_ID 1
 
@@ -291,6 +291,9 @@ extern const unsigned short shootingStarPal[16];
 extern cu8 shootingStarXPos[16];
 extern cu8 shootingStarYPos[16];
 extern cu8 starBlockerYPos[31];
+extern cu16 starryBGPanYPos[100];
+extern cu8 titleCardBGPanYPos[9];
+
 extern const unsigned short starBlockerTiles[256];
 extern const unsigned short starBlockerPal[16];
 extern const unsigned short sprTitlePressStartTextTiles[192];
@@ -313,7 +316,7 @@ extern const unsigned short font_percent_16x16Tiles[64];
 extern const unsigned short menu_slider_bars_8x16Tiles[96];
 extern const unsigned short menu_slider_bars_8x16Pal[16];
 
-int yStart, yTarget, titleCardYStart, titleCardYTarget, titleRevealFadeDirection;
+int starryBGYPosInit, starryBGYPosTarget, titleCardYStart, titleCardYTarget, titleRevealFadeDirection;
 
 // Local Functions
 void mainMenuInitialize();

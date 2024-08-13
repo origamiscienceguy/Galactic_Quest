@@ -348,7 +348,6 @@ void mainMenuNormal(){
 			mDat.menuBG.xPos = 512 - 2;
 			mDat.menuBG.yPos = 0;
 
-			
 			//Clear the menu tilemaps
 			memset32(tilemapBuffer1, 0, 512);
 			memset32(tilemapBuffer2, 0, 512);
@@ -358,7 +357,7 @@ void mainMenuNormal(){
 			tilemapData[1].buffer = (void *)tilemapBuffer1;
 			tilemapData[1].size = 512;
 
-			// Queue the tilemap with our drawing functions, using tilemapBuffer1
+			// Queue the tilemap with our drawing functions, using tilemapBuffer2
 			tilemapData[2].position = se_mem[MENU_PAGE_TILEMAP];
 			tilemapData[2].buffer = (void *)tilemapBuffer2;
 			tilemapData[2].size = 512;
@@ -367,7 +366,9 @@ void mainMenuNormal(){
 			loadGFX(MENU_CHARDATA, MENU_TEXT_FOCUSED_GFX_START, (void *)menu_action_focusedTiles, MENU_TEXT_TILE_WIDTH * 0, MENU_TEXT_TILE_WIDTH * 6, 1);
 		}else{
 			// Make the starry background scroll up, *very* quickly. Use quadratic interpolation
+			
 
+			
 			// Calculate the interpolation factor t, with proper scaling
 			int actionTimerScaled = mDat.actionTimer * FIXED_POINT_SCALE;
 			int actionTargetScaled = mDat.actionTarget * FIXED_POINT_SCALE;
@@ -379,15 +380,17 @@ void mainMenuNormal(){
 			int easedT2 = easeInOut(t2, 4);
 
 			// Calculate the interpolated position and update yPos
-			mDat.starryBG.yPos = lerp(yStart, yTarget, easedT) / FIXED_POINT_SCALE;
-			mDat.titleCardBG.yPos = lerp(titleCardYStart, titleCardYTarget, easedT2) / FIXED_POINT_SCALE;
+			//mDat.starryBG.yPos = lerp(starryBGYPosInit, starryBGYPosTarget, easedT) / FIXED_POINT_SCALE;
+			//mDat.titleCardBG.yPos = lerp(titleCardYStart, titleCardYTarget, easedT2) / FIXED_POINT_SCALE;
+			mDat.starryBG.yPos = starryBGPanYPos[mDat.actionTimer];
+			mDat.titleCardBG.yPos = titleCardBGPanYPos[clamp(mDat.actionTimer, 0, 9)];
 			mDat.actionTimer++;
 		}
 		
 		updateObjBuffer();
 		
-		if (mDat.actionTimer > 40){
-			// Hide the title card after 40 frames in this state
+		if (mDat.actionTimer > 12){
+			// Hide the title card after 12 frames in this state
 			memset32(tilemapBuffer1, 0, sizeof(sprTitleLogoMap) >> 2);
 			tilemapData[1].size = sizeof(sprTitleLogoMap) >> 2;
 			tilemapData[1].buffer = tilemapBuffer1;
@@ -455,9 +458,9 @@ void mainMenuNormal(){
 		if((inputs.pressed & KEY_A) || (inputs.pressed & KEY_START)){
 			REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_OBJ | DCNT_OBJ_1D;
 			//clear the titlecard tilemap
-			memset32(tilemapBuffer0, 0, sizeof(tilemapBuffer0) >> 2);
-			tilemapData[1].size = sizeof(tilemapBuffer0) >> 2;
-			tilemapData[1].buffer = tilemapBuffer0;
+			memset32(tilemapBuffer1, 0, sizeof(tilemapBuffer1) >> 2);
+			tilemapData[1].size = sizeof(tilemapBuffer1) >> 2;
+			tilemapData[1].buffer = tilemapBuffer1;
 			tilemapData[1].position = &se_mem[TITLE_CARD_TILEMAP];
 
 			mDat.state = TITLE_AFTER_PRESS_START;
@@ -499,10 +502,11 @@ void mainMenuNormal(){
 
 			currentSFXIndex = playNewSound(_sfxMenuConfirmC);
 
-			yStart = mDat.starryBG.yPos * FIXED_POINT_SCALE; // Start position (scaled)
-			yTarget = -4504 * FIXED_POINT_SCALE; // Target position (scaled)
-			titleCardYStart = mDat.titleCardBG.yPos * FIXED_POINT_SCALE;
-			titleCardYTarget = (mDat.titleCardBG.yPos + 140) * FIXED_POINT_SCALE;
+			//starryBGYPosInit = mDat.starryBG.yPos * FIXED_POINT_SCALE; // Start position (scaled)
+			//starryBGYPosTarget = -4504 * FIXED_POINT_SCALE; // Target position (scaled)
+			//starryBGYPosTarget = -2004 * FIXED_POINT_SCALE; // Target position (scaled)
+			//titleCardYStart = mDat.titleCardBG.yPos * FIXED_POINT_SCALE;
+			//titleCardYTarget = (mDat.titleCardBG.yPos + 140) * FIXED_POINT_SCALE;
 
 			updateBGScrollRegisters(mDat.starryBG.xPos, mDat.starryBG.yPos, mDat.titleCardBG.xPos, mDat.titleCardBG.yPos);
 		}
@@ -520,12 +524,22 @@ void initMainMenu(){
 	REG_BG1CNT = BG_4BPP | BG_SBB(MENU_WINDOW_TILEMAP) | BG_CBB(MENU_CHARDATA) | BG_PRIO(2) | BG_REG_32x32; //title screen layer
 	REG_BG2CNT = BG_4BPP | BG_SBB(MENU_PAGE_TILEMAP) | BG_CBB(MENU_CHARDATA) | BG_PRIO(1) | BG_REG_32x32; //menu page ui layer
 
+	//Clear all of the tilemaps
+	memset32(tilemapBuffer0, 0, sizeof(tilemapBuffer0) >> 2);
+	memset32(tilemapBuffer1, 0, sizeof(tilemapBuffer1) >> 2);
+	memset32(tilemapBuffer2, 0, sizeof(tilemapBuffer2) >> 2);
+
+	//send the starry BG tilemap
+	tilemapData[0].position = &se_mem[STARRY_IMAGE_TILEMAP];
+	tilemapData[0].buffer = (void *)main_menu_starfieldMetaTiles;
+	tilemapData[0].size = sizeof(main_menu_starfieldMetaTiles) >> 2;
+
 	// Queue the tilemap with our drawing functions, using tilemapBuffer1
 	tilemapData[1].position = se_mem[MENU_WINDOW_TILEMAP];
 	tilemapData[1].buffer = (void *)tilemapBuffer1;
 	tilemapData[1].size = 512;
 
-	// Queue the tilemap with our drawing functions, using tilemapBuffer1
+	// Queue the tilemap with our drawing functions, using tilemapBuffer2
 	tilemapData[2].position = se_mem[MENU_PAGE_TILEMAP];
 	tilemapData[2].buffer = (void *)tilemapBuffer2;
 	tilemapData[2].size = 512;
@@ -903,24 +917,21 @@ void loadMenuGraphics(MenuPage *menuPage){
 }
 
 void drawMainMenu(){
-	if (mDat.updateBGTileDraw){
-		//Clear the menu tilemap every frame
-		memset32(tilemapBuffer1, 0, 512);
-		memset32(tilemapBuffer2, 0, 512);
-	}
-	
 	switch(mDat.windowState){
 		default:
 		case MMWS_OPENING:
 		case MMWS_CLOSING:
 		case MMWS_ZIPPING:
 		case MMWS_INITIAL_ZIPPING:
+			//Clear the menu tilemap every frame
+			memset32(tilemapBuffer1, 0, 512);
+			memset32(tilemapBuffer2, 0, 512);
+
 			// Draw the Menu Page Window
 			if (mDat.showPageWindowBG)
 				drawSecondaryNineSliceWindowStyle(10, mDat.secondaryNineSliceYOff, 10, 2, 2);
 
 			if (mDat.windowState != MMWS_INITIAL_ZIPPING){
-				
 				drawNineSliceWindow(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos, mDat.winSliceWidth, mDat.winSliceHeight, 1);
 			}else
 				drawLaserRow(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos, mDat.winSliceWidth, 1, false);
@@ -943,6 +954,10 @@ void drawMainMenu(){
 				mDat.showPageWindowBG = true;
 			
 			if (mDat.updateBGTileDraw){
+				//Clear the menu tilemap
+				memset32(tilemapBuffer1, 0, 512);
+				memset32(tilemapBuffer2, 0, 512);
+
 				// Draw the Menu Page Window
 				if (mDat.showPageWindowBG)
 					drawSecondaryNineSliceWindowStyle(10, mDat.secondaryNineSliceYOff, 10, 2, 2);
@@ -1019,7 +1034,7 @@ void drawMainMenu(){
 				tilemapData[1].buffer = (void *)tilemapBuffer1;
 				tilemapData[1].size = 512;
 
-				// Queue the tilemap with our drawing functions, using tilemapBuffer1
+				// Queue the tilemap with our drawing functions, using tilemapBuffer2
 				tilemapData[2].position = se_mem[MENU_PAGE_TILEMAP];
 				tilemapData[2].buffer = (void *)tilemapBuffer2;
 				tilemapData[2].size = 512;
@@ -1532,11 +1547,6 @@ void loadGFX(u32 VRAMCharBlock, u32 VRAMTileIndex, void *graphicsBasePointer, u3
 }
 
 void updateBGScrollRegisters(u16 bg0XPos, u16 bg0YPos, u16 bg1XPos, u16 bg1YPos){
-	// Send the buffer to get processed
-	IOData[0].position = (void *)(&REG_BG0HOFS);
-	IOData[0].buffer = IOBuffer0;
-	IOData[0].size = 4;
-
 	IOBuffer0[0] = bg0XPos;
 	IOBuffer0[1] = bg0YPos;
 	IOBuffer0[2] = bg1XPos;
@@ -1545,6 +1555,11 @@ void updateBGScrollRegisters(u16 bg0XPos, u16 bg0YPos, u16 bg1XPos, u16 bg1YPos)
 	IOBuffer0[5] = 0;
 	IOBuffer0[6] = 0;
 	IOBuffer0[7] = 0;
+
+	// Send the buffer to get processed
+	IOData[0].position = (void *)(&REG_BG0HOFS);
+	IOData[0].buffer = IOBuffer0;
+	IOData[0].size = 4;
 }
 
 int lerp(int a, int b, int t){
@@ -1752,7 +1767,7 @@ void skipToMenu(){
 	currentScene.state = NORMAL;
 	mDat.state = TITLE_FLY_OUT;
 	mDat.actionTimer = 1;
-	mDat.actionTarget = 300;
+	mDat.actionTarget = 100;
 }
 
 void updateObjBuffer(){
