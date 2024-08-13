@@ -339,6 +339,9 @@ void allocateChannels(){
 		allocatedMixChannels[unallocatedMix[unallocatedMixNum - 1]] = unallocatedSound[highestPriorityAsset];
 		unallocatedSound[highestPriorityAsset]->channelIndex = unallocatedMix[unallocatedMixNum - 1];
 		unallocatedSound[highestPriorityAsset] = unallocatedSound[unallocatedAssetNum - 1];
+		channelsMixData[unallocatedMix[unallocatedMixNum - 1]].state = 0;
+		allocatedMixChannels[unallocatedMix[unallocatedMixNum - 1]]->noteState = NO_NOTE;
+		allocatedMixChannels[unallocatedMix[unallocatedMixNum - 1]]->triggerState = CANCEL_TRIGGER;
 		unallocatedMixNum--;
 		unallocatedAssetNum--;
 	}
@@ -379,7 +382,11 @@ void allocateChannels(){
 			allocatedMixChannels[lowestAllocatedChannel]->channelIndex = 0xff;
 			allocatedMixChannels[lowestAllocatedChannel] = unallocatedSound[highestUnallocatedChannel];
 			unallocatedSound[highestUnallocatedChannel]->channelIndex = lowestAllocatedChannel;
+			channelsMixData[lowestAllocatedChannel].state = 0;
+			allocatedMixChannels[lowestAllocatedChannel]->noteState = NO_NOTE;
+			allocatedMixChannels[lowestAllocatedChannel]->triggerState = CANCEL_TRIGGER;
 			unallocatedSound[highestUnallocatedChannel] = unallocatedSound[unallocatedAssetNum - 1];
+			
 			unallocatedAssetNum--;
 		}
 	}
@@ -597,13 +604,13 @@ void processAssetTick(CurrentSoundSettings *assetPointer, u8 soundIndex){
 	//now we go through each of the 8 sampled channels, and process all of their data.
 	for(u8 channel = 0; channel < MAX_DMA_CHANNELS; channel++){
 		u8 channelIndex = assetPointer->channelSettings[channel].channelIndex;
-		//if(channelIndex != 0xff){
-			processSampledChannel(&assetPointer->channelSettings[channel], &channelsMixData[channelIndex], assetPointer, channel);
-		//}
+		if(channelIndex != 0xff){
+			processSampledChannel(&assetPointer->channelSettings[channel], &channelsMixData[channelIndex], assetPointer);
+		}
 	}
 }
 
-void processSampledChannel(CurrentChannelSettings *channelPointer, ChannelData *channelMixBuffer, CurrentSoundSettings *assetPointer, u8 channel){
+void processSampledChannel(CurrentChannelSettings *channelPointer, ChannelData *channelMixBuffer, CurrentSoundSettings *assetPointer){
 	//setup some local variables, and set them to default values
 	u8 finalVolume = 128;
 	u16 finalPitch = 0;
@@ -720,9 +727,7 @@ void processSampledChannel(CurrentChannelSettings *channelPointer, ChannelData *
 		channelPointer->offset &= 0xf00;
 	}
 	
-	if(assetPointer->channelSettings[channel].channelIndex != 0xff){
-		applySettings(channelMixBuffer, channelPointer->samplePointer, finalPitch, finalVolume, finalPanning, &channelPointer->noteState, offset);
-	}
+	applySettings(channelMixBuffer, channelPointer->samplePointer, finalPitch, finalVolume, finalPanning, &channelPointer->noteState, offset);
 }
 
 //volume from 0 to 128

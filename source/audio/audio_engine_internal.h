@@ -303,7 +303,7 @@ void patternLoop(CurrentChannelSettings *, u8);
 void volumeSlide(u8 *, u8 *, u8, u8);
 u8 slideCheck(u8 *, u8);
 void tremor(CurrentChannelSettings *, u8);
-void processSampledChannel(CurrentChannelSettings *, ChannelData *, CurrentSoundSettings *, u8);
+void processSampledChannel(CurrentChannelSettings *, ChannelData *, CurrentSoundSettings *);
 void panningSlide(u8 *, u8 *, u8);
 void retrigger(CurrentChannelSettings *, u8);
 void arpeggio(CurrentChannelSettings *, u8);
