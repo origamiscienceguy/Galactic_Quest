@@ -18,9 +18,9 @@ Scene mainMenuScene = {
 };
 
 int dataRange[] = {0, 100};
-static u8 currentBGMIndex[2] = {-1, -1};
-static u8 currentSFXIndex = -1;
-static u8 currentShipMoveSFX = -1;
+static u8 currentBGMIndex[2] = {0xFF, 0xFF};
+static u8 currentSFXIndex = 0xFF;
+static u8 currentShipMoveSFX = 0xFF;
 int moveY = 0, moveX = 0; // Player directional input
 
 // Initialize the Menu Pages
@@ -138,7 +138,7 @@ void mainMenuNormal(){
 
 			if (mDat.actionTimer == 16) {
 				currentBGMIndex[0] = playNewSound(_musTitle);
-				currentBGMIndex[1] = -1;
+				currentBGMIndex[1] = 0xFF;
 			}
 			IOBuffer1[0] = mDat.actionTimer >> 1;
 		}
@@ -343,7 +343,7 @@ void mainMenuNormal(){
 			mDat.state = MAIN_MENU_FLY_IN;
 			
 			currentBGMIndex[0] = playNewSound(_musMainMenu);
-			currentBGMIndex[1] = -1;
+			currentBGMIndex[1] = 0xFF;
 
 			mDat.menuBG.xPos = 512 - 2;
 			mDat.menuBG.yPos = 0;
@@ -710,21 +710,21 @@ void updateMainMenu(){
 										if (sfxIsPlaying(currentSFXIndex))
 											currentSFXIndex = endSound(currentSFXIndex);
 										else
-											currentSFXIndex = -1;
+											currentSFXIndex = 0xFF;
 										if (sfxIsPlaying(currentShipMoveSFX))
 											currentShipMoveSFX = endSound(currentShipMoveSFX);
 										else
-											currentShipMoveSFX = -1;
+											currentShipMoveSFX = 0xFF;
 										break;
 								}
 								break;
 						}
 					} else if (inputs.pressed & KEY_L){
 						endAllSound();
-						currentSFXIndex = -1;
-						currentShipMoveSFX = -1;
-						currentBGMIndex[0] = -1;
-						currentBGMIndex[1] = -1;
+						currentSFXIndex = 0xFF;
+						currentShipMoveSFX = 0xFF;
+						currentBGMIndex[0] = 0xFF;
+						currentBGMIndex[1] = 0xFF;
 					}
 				}
 
@@ -1343,7 +1343,7 @@ void menuInputConfirmEnabled(){
 									if (group[1] == BGM_SINGLE) {
 										// Single track, just play it
 										currentBGMIndex[0] = playNewSound(group[0]);
-										currentBGMIndex[1] = -1;
+										currentBGMIndex[1] = 0xFF;
 									} else {
 										// Group, play each item in the group
 										for (int i = 0; i < 2; ++i) {
@@ -1365,14 +1365,14 @@ void menuInputConfirmEnabled(){
 									if (sfxIsPlaying(currentShipMoveSFX)) {
 										currentShipMoveSFX = endSound(currentShipMoveSFX);
 									} else
-										currentShipMoveSFX = -1;
+										currentShipMoveSFX = 0xFF;
 									
 									currentShipMoveSFX = playNewSound(sfxID);
 								} else {
 									if (sfxIsPlaying(currentSFXIndex))
 										currentSFXIndex = endSound(currentSFXIndex);
 									else
-										currentSFXIndex = -1;
+										currentSFXIndex = 0xFF;
 									
 									currentSFXIndex = playNewSound(sfxID);
 								}
@@ -1477,15 +1477,15 @@ void performPageTransfer(int datIntVal){
 	if (mDat.currMenuPage == MPI_SOUND_TEST){
 		// Kill all sound except for currentSFXIndex (should be _sfxMenuConfirm)
 		endAllSoundExcept(currentSFXIndex);
-		currentSFXIndex = -1;
-		currentShipMoveSFX = -1;
-		currentBGMIndex[0] = -1;
-		currentBGMIndex[1] = -1;
+		currentSFXIndex = 0xFF;
+		currentShipMoveSFX = 0xFF;
+		currentBGMIndex[0] = 0xFF;
+		currentBGMIndex[1] = 0xFF;
 	}else if (!isSoundPlaying(_musMainMenu, currentBGMIndex[0])){
 		// Kill all sound except for currentSFXIndex (should be _sfxMenuCancel)
 		endAllSoundExcept(currentSFXIndex);
-		currentShipMoveSFX = -1;
-		currentBGMIndex[1] = -1;
+		currentShipMoveSFX = 0xFF;
+		currentBGMIndex[1] = 0xFF;
 
 		// Play the Main Menu BGM again if it isn't currently playing when we leave
 		currentBGMIndex[0] = playNewSound(_musMainMenu);
@@ -1508,13 +1508,13 @@ void performPageTransfer(int datIntVal){
 
 void endCurrentBGM(){
 	// Check if any BGM is playing in either slot, and then end it
-	if (currentBGMIndex[0] >= 0)
+	if (currentBGMIndex[0] >= 0 && currentBGMIndex[0] < 0xFF)
 		endSound(currentBGMIndex[0]);
-	if (currentBGMIndex[1] >= 0)
+	if (currentBGMIndex[1] >= 0 && currentBGMIndex[1] < 0xFF)
 		endSound(currentBGMIndex[1]);
 
-	currentBGMIndex[1] = -1;
-	currentBGMIndex[0] = -1;
+	currentBGMIndex[1] = 0xFF;
+	currentBGMIndex[0] = 0xFF;
 }
 
 //example usage to load the portion of the image starting 6 tile rows down, and 8 tile rows deep.
@@ -1734,7 +1734,7 @@ void hideSpriteRange(int firstSprite, int lastSprite){
 }
 
 bool sfxIsPlaying(int sfxIndex) {
-	if (sfxIndex < 0)
+	if (sfxIndex == 0xFF)
 		return false;
 	for (u8 i = SFX_START; i < SFX_START + SOUND_TEST_SFX_COUNT; i++) {
 		if (isSoundPlaying(i, sfxIndex))
