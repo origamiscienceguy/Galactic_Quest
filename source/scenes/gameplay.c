@@ -257,7 +257,7 @@ IWRAM_CODE void createGridTilemap(u16 *tilemapBuffer){
 	drawHighlight(highlightDrawBuffer);
 	
 	//if the grid is enabled
-	if(mapData.highlight.gridState == GRID_ON){
+	if(options.gridOn){
 		//fill the screen with the base grid graphics
 		memset32(tilemapIndexBuffer, BG_GRID_HIGHLIGHT_GRID_ON_OFFSET, sizeof(tilemapIndexBuffer) >> 2);
 		

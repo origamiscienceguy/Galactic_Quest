@@ -10,6 +10,7 @@ VideoData characterData[6] EWRAM_DATA;
 VideoData paletteData[2] EWRAM_DATA;
 VideoData OAMData EWRAM_DATA;
 VideoData IOData[8] EWRAM_DATA;
+Options options;
 
 u16 tilemapBuffer0[0x1000] EWRAM_DATA;
 u16 tilemapBuffer1[0x1000] EWRAM_DATA;
