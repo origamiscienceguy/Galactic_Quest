@@ -930,7 +930,7 @@ void updateMainMenu(){
 					mDat.actionTimer = 0;
 					mDat.actionTarget = 240;
 					mDat.starryBG.scrollStartPos = mDat.starryBG.xPos;
-					mDat.starryBG.scrollTargetPos = 4000;
+					mDat.starryBG.scrollTargetPos = 6000;
 					mDat.starryBG.scrollTimerCurrent = 0;
 					mDat.starryBG.scrollTimerTarget = 200;
 				}
