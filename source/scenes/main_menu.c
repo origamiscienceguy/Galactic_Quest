@@ -430,22 +430,37 @@ void mainMenuNormal(){
 		} else {
 			mDat.actionTimer++;
 		}
+		
 
-		if (mDat.actionTimer >= 87) {
-    		if (mDat.actionTimer <= 103) {
-				// For 16 consecutive frames, draw a black vertical line across the right-most tiles just past the edge of the screen border.
-				int tx = (mDat.starryBG.xPos & 0x1FF) >> 3;  //  int tx = floor((mDat.starryBG.xPos % 512) / 8);
+		/// Perform the fadeout wipe transition
 
-				for (u8 ty = 0; ty < TILEMAP_HEIGHT; ty++)
-					setTile(tx, ty, 0, false, false, 2, 0); // Left-middle-upper tile
+		static int lastQuadrantWrittenTo = -1;
+		// Check the actionTimer
+		if (mDat.actionTimer == 103) {
+			// Snap to the next quadrant
+			int currentQuadrant = (mDat.starryBG.xPos / TILEMAP_QUADRANT_SIZE) % 2;
+			int nextQuadrant = (currentQuadrant + 1) % 2;
 
-				// Queue the tilemap with our drawing functions, using tilemapBuffer0
-				int quadrantOffset = (mDat.actionTimer >= 95) ? 1 : 0;
+			// Snap the starry BG's x position to the next quadrant, regardless of where it is
+			mDat.starryBG.xPos = nextQuadrant * TILEMAP_QUADRANT_SIZE;
+			mDat.starryBG.scrollStartPos = nextQuadrant * TILEMAP_QUADRANT_SIZE;
+			mDat.starryBG.snappedThisFrame = true;
 
-				tilemapData[0].position = se_mem[STARRY_IMAGE_TILEMAP + quadrantOffset];
-				tilemapData[0].buffer = (void *)tilemapBuffer0;
-				tilemapData[0].size = 512;
-			}
+			// Clear the entire quadrant
+			tilemapData[0].position = se_mem[STARRY_IMAGE_TILEMAP + currentQuadrant];
+			tilemapData[0].buffer = (void *)tilemapBuffer0;
+			tilemapData[0].size = 512;
+
+			// Update the last quadrant written to
+			lastQuadrantWrittenTo = currentQuadrant;
+		} else if (mDat.actionTimer == 103 + 12) {
+			// Determine the opposite quadrant
+			int oppositeQuadrant = (lastQuadrantWrittenTo + 1) % 2;
+
+			// Clear the entire opposite quadrant
+			tilemapData[0].position = se_mem[STARRY_IMAGE_TILEMAP + oppositeQuadrant];
+			tilemapData[0].buffer = (void *)tilemapBuffer0;
+			tilemapData[0].size = 512;
 		}
 
 		// Make the starry background scroll up-left
@@ -599,6 +614,7 @@ void initMainMenu(){
 	mDat.updateSpriteDraw = false;
 	mDat.updateBGTileDraw = false;
 	mDat.updateUITileDraw = false;
+	mDat.starryBG.snappedThisFrame = false;
 }
 
 void updateMainMenu(){
@@ -1144,14 +1160,19 @@ void interpolateStarryBG(bool scrollYAxis){
 	int t = (actionTimerScaled * FIXED_POINT_SCALE) / actionTargetScaled;
 
 	// Apply ease-in-out function
-	int easedT = easeInOut(t, 4);
+	int easedT = t;
+	
+	easedT = easeInOut(t, 4);
 
 	// Calculate the interpolated position and update yPos (or xPos)
 	if (scrollYAxis)
 		mDat.starryBG.yPos = lerp(mDat.starryBG.scrollStartPos * FIXED_POINT_SCALE, mDat.starryBG.scrollTargetPos * FIXED_POINT_SCALE, easedT) / FIXED_POINT_SCALE;
-	else
+	else if (!mDat.starryBG.snappedThisFrame){
 		mDat.starryBG.xPos = lerp(mDat.starryBG.scrollStartPos * FIXED_POINT_SCALE, mDat.starryBG.scrollTargetPos * FIXED_POINT_SCALE, easedT) / FIXED_POINT_SCALE;
-	
+	} else {
+		mDat.starryBG.xPos += 19; // sorry for the spaghetti lol
+	}
+
 	if (mDat.starryBG.scrollTimerCurrent < mDat.starryBG.scrollTimerTarget)
 		mDat.starryBG.scrollTimerCurrent++;
 	else

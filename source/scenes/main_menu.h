@@ -105,6 +105,7 @@
 #define TILE_SIZE 8
 #define TILEMAP_WIDTH 30
 #define TILEMAP_HEIGHT 20
+#define TILEMAP_QUADRANT_SIZE 256
 
 //define the maximum number of menu items on a single page
 #define MAX_MENU_ITEMS 10
@@ -210,6 +211,7 @@ typedef struct BGData{
 	u16 scrollTimerTarget;
 	u16 scrollStartPos;
 	u16 scrollTargetPos;
+	bool snappedThisFrame;
 }BGData;
 
 typedef struct MainMenuData{
