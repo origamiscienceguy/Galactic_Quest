@@ -431,20 +431,21 @@ void mainMenuNormal(){
 			mDat.actionTimer++;
 		}
 
-		if (mDat.actionTimer == 87) {
-			// Clear the starry BG in Quadrant II with pure black
-			memset32(tilemapBuffer0, 0, sizeof(tilemapBuffer0) >> 2);
-			tilemapData[0].position = &se_mem[STARRY_IMAGE_TILEMAP];
-			tilemapData[0].buffer = (void *)tilemapBuffer0;
-			//tilemapData[0].size = sizeof(tilemapBuffer0) >> 2;
-			tilemapData[0].size = 512;//sizeof(tilemapBuffer0) >> 2;
-		} else if (mDat.actionTimer == 95) {
-			// Clear the starry BG in Quadrant I with pure black
-			memset32(tilemapBuffer0, 0, sizeof(tilemapBuffer0) >> 2);
-			tilemapData[0].position = &se_mem[STARRY_IMAGE_TILEMAP + 1];
-			tilemapData[0].buffer = (void *)tilemapBuffer0;
-			//tilemapData[0].size = sizeof(tilemapBuffer0) >> 2;
-			tilemapData[0].size = 512;//sizeof(tilemapBuffer0) >> 2;
+		if (mDat.actionTimer >= 87) {
+    		if (mDat.actionTimer <= 103) {
+				// For 16 consecutive frames, draw a black vertical line across the right-most tiles just past the edge of the screen border.
+				int tx = (mDat.starryBG.xPos & 0x1FF) >> 3;  //  int tx = floor((mDat.starryBG.xPos % 512) / 8);
+
+				for (u8 ty = 0; ty < TILEMAP_HEIGHT; ty++)
+					setTile(tx, ty, 0, false, false, 2, 0); // Left-middle-upper tile
+
+				// Queue the tilemap with our drawing functions, using tilemapBuffer0
+				int quadrantOffset = (mDat.actionTimer >= 95) ? 1 : 0;
+
+				tilemapData[0].position = se_mem[STARRY_IMAGE_TILEMAP + quadrantOffset];
+				tilemapData[0].buffer = (void *)tilemapBuffer0;
+				tilemapData[0].size = 512;
+			}
 		}
 
 		// Make the starry background scroll up-left
