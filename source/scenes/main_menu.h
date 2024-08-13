@@ -170,6 +170,7 @@ enum MainMenuWindowState {
 	MMWS_ZIPPING,
 	MMWS_INITIAL_ZIPPING,
 	MMWS_TWEAKING_DATA,
+	MMWS_APPLIED_OPTIONS,
 	MMWS_FINALIZING,
 	MMWS_ZIPPING_OUT,
 	MMWS_DONE
@@ -183,6 +184,13 @@ enum MenuWindowConfirmDirection {
 	MWCD_NEUTRAL,
 	MWCD_FORWARD,
 	MWCD_BACKWARD,
+};
+
+enum OPTION_IDS{
+	OPTID_MASTER_VOL,
+	OPTID_BGM,
+	OPTID_SFX,
+	OPTID_GRID_ENABLED
 };
 
 typedef enum{
@@ -339,16 +347,17 @@ void scrollStarryBG(int addedX, int addedY);
 void interpolateStarryBG(bool scrollYAxis);
 void updateBGScrollRegisters(u16 bg0XPos, u16 bg0YPos, u16 bg1XPos, u16 bg1YPos);
 void matchBegin();
+void updateOptions();
 void skipToMenu();
 void updateObjBuffer();
 void mainMenuUpdateBlend(u32 eva, u32 evb);
 void updateMainMenu();
 void menuInputConfirmEnabled();
 void menuInputCancelEnabled();
-
 void performPageTransfer(int datIntVal);
 void endCurrentBGM();
 
+// Menu Functions
 int menuExecNewGame();
 int menuExecContinue();
 int menuExecLoadGame();

@@ -572,6 +572,7 @@ void initMainMenu(){
 	//example usage to load the portion of the image starting 6 tile rows down, and 8 tile rows deep.
 	//loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8);
 
+	updateOptions();
 	mDat.currMenuPage = 0;
 	menuPage = &menuPages[mDat.currMenuPage];
 
@@ -621,6 +622,35 @@ void updateMainMenu(){
 	switch(mDat.windowState){
 		default:
 		case MMWS_DONE:
+			break;
+		case MMWS_APPLIED_OPTIONS:
+			if (mDat.windowActionTimer >= mDat.windowActionTarget) {
+				// Send the player back to the previous menu
+				mDat.windowConfirmDirection = MWCD_BACKWARD;
+				mDat.windowState = MMWS_CLOSING;
+				
+				// If there are any menu toggles/sliders/cursors visible, hide them right now
+				hideSpriteRange(MENU_SLIDER_PROMPT_SPRITE1, FONT_PERCENT_SPRITE_LAST);
+
+				mDat.updateSpriteDraw = true;
+
+				// Lerp toward making the text completely visible, over 32 frames
+				mDat.evaLerpStart = 16;
+				mDat.evaLerpEnd = 0;
+				mDat.evbLerpStart = 0;
+				mDat.evbLerpEnd = 16;
+				mDat.windowActionTimer = 0;
+				mDat.windowActionTarget = 8;
+
+				mDat.hideMenuCursor = true;
+			} else
+				mDat.windowActionTimer++;
+	
+			if (mDat.windowActionTimer % 8 == 0) {
+				mDat.hideMenuCursor = !mDat.hideMenuCursor;
+				mDat.updateUITileDraw = true;
+			}
+			mDat.updateSpriteDraw = true;
 			break;
 		case MMWS_OPENING:
 			// Keep expanding the window height until it's the target size it needs to be; re-center as it expands
@@ -931,7 +961,7 @@ void updateMainMenu(){
 	}
 
 	// Update the main menu sprite blending every frame, unless we're leaving the Main Menu
-	if (mDat.windowState != MMWS_FINALIZING) {
+	if (mDat.windowState != MMWS_FINALIZING && mDat.windowState != MMWS_APPLIED_OPTIONS) {
 		mDat.eva = interpolateValues(mDat.windowActionTimer, mDat.windowActionTarget, mDat.evaLerpStart, mDat.evaLerpEnd);
 		mDat.evb = interpolateValues(mDat.windowActionTimer, mDat.windowActionTarget, mDat.evbLerpStart, mDat.evbLerpEnd);
 		
@@ -1026,6 +1056,7 @@ void drawMainMenu(){
 		case MMWS_READY:
 		case MMWS_TWEAKING_DATA:
 		case MMWS_FINALIZING:
+		case MMWS_APPLIED_OPTIONS:
 			if (!mDat.showPageWindowBG)
 				mDat.showPageWindowBG = true;
 			
@@ -1423,7 +1454,7 @@ void menuInputConfirmEnabled(){
 						mDat.windowState = MMWS_CLOSING;
 						mDat.updateSpriteDraw = true;
 
-						// Lerp toward making the text completely visible, over 32 frames
+						// Lerp toward making the text completely invisible, over 32 frames
 						mDat.evaLerpStart = 16;
 						mDat.evaLerpEnd = 0;
 						mDat.evbLerpStart = 0;
@@ -1564,42 +1595,6 @@ void menuInputCancelEnabled(){
 				break;
 		}
 	}
-}
-
-int menuExecNewGame(){
-	endAllSound();
-	currentSFXIndex = 0xFF;
-	currentShipMoveSFX = 0xFF;
-	currentBGMIndex[0] = 0xFF;
-	currentBGMIndex[1] = 0xFF;
-	
-	currentSFXIndex = playNewSound(_sfxMenuConfirmC);
-	
-	mDat.windowState = MMWS_FINALIZING;
-	mDat.windowConfirmDirection = MWCD_FORWARD;
-	mDat.updateSpriteDraw = true;
-	
-	// Once it's relevant (during MMWS_CLOSING state), lerp toward making the text completely visible
-	mDat.evaLerpStart = 16;
-	mDat.evaLerpEnd = 0;
-	mDat.evbLerpStart = 0;
-	mDat.evbLerpEnd = 16;
-
-	mDat.windowActionTimer = 0;
-	mDat.windowActionTarget = 100;
-	return 0;
-}
-
-int menuExecContinue(){
-	return 0;
-}
-
-int menuExecLoadGame(){
-	return 0;
-}
-
-int menuExecOptionsApplyChanges(){
-	return 0;
 }
 
 void performPageTransfer(int datIntVal){
@@ -2086,7 +2081,55 @@ void initMenuPages(MenuPage menuPages[]) {
     };
 }
 
+
+int menuExecNewGame(){
+	endAllSound();
+	currentSFXIndex = 0xFF;
+	currentShipMoveSFX = 0xFF;
+	currentBGMIndex[0] = 0xFF;
+	currentBGMIndex[1] = 0xFF;
+	
+	currentSFXIndex = playNewSound(_sfxMenuConfirmC);
+	
+	mDat.windowState = MMWS_FINALIZING;
+	mDat.windowConfirmDirection = MWCD_FORWARD;
+	mDat.updateSpriteDraw = true;
+	
+	// Once it's relevant (during MMWS_CLOSING state), lerp toward making the text completely visible
+	mDat.evaLerpStart = 16;
+	mDat.evaLerpEnd = 0;
+	mDat.evbLerpStart = 0;
+	mDat.evbLerpEnd = 16;
+
+	mDat.windowActionTimer = 0;
+	mDat.windowActionTarget = 100;
+	return 0;
+}
+
+int menuExecContinue(){
+	return 0;
+}
+
+int menuExecLoadGame(){
+	return 0;
+}
+
+int menuExecOptionsApplyChanges(){
+	currentSFXIndex = playNewSound(_sfxMenuConfirmB);
+	updateOptions();
+	mDat.windowState = MMWS_APPLIED_OPTIONS;
+	mDat.windowActionTimer = 0;
+	mDat.windowActionTarget = 50;
+	return 0;
+}
+
+// Finalizes whatever options are currently set in the Options Menu
+void updateOptions(){	
+	MenuPageItem* mp_items = &menuPages[MPI_OPTIONS].items;
+	options.gridOn = mp_items[OPTID_GRID_ENABLED].data.boolVal;
+}
 void matchBegin(){
+	// Change the scene
 	currentScene.scenePointer = sceneList[GAMEPLAY];
 	currentScene.state = INITIALIZE;
 
