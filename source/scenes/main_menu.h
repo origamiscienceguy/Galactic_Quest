@@ -159,7 +159,7 @@ const int bgmGroups[][2] = {
 
 //enums
 enum TitleSceneState{
-	FLASH_WHITE, FADE_TO_TITLE, TITLE_PAN_UP, TITLE_FLASH, TITLE_REVEAL, TITLE_FLYING_COMET_ANIMATION, TITLE_BEFORE_HOLD, TITLE_HOLD, TITLE_AFTER_PRESS_START, TITLE_FLY_OUT, MAIN_MENU_FLY_IN, MAIN_MENU_HOLD, MAIN_MENU_FLY_OUT, 
+	FLASH_WHITE, FADE_TO_TITLE, TITLE_PAN_UP, TITLE_FLASH, TITLE_REVEAL, TITLE_FLYING_COMET_ANIMATION, TITLE_BEFORE_HOLD, TITLE_HOLD, TITLE_AFTER_PRESS_START, TITLE_FLY_OUT, MAIN_MENU_FLY_IN, MAIN_MENU_HOLD, MAIN_MENU_FLY_OUT,
 };
 
 enum MainMenuWindowState {
@@ -168,7 +168,10 @@ enum MainMenuWindowState {
 	MMWS_READY,
 	MMWS_ZIPPING,
 	MMWS_INITIAL_ZIPPING,
-	MMWS_TWEAKING_DATA
+	MMWS_TWEAKING_DATA,
+	MMWS_FINALIZING,
+	MMWS_ZIPPING_OUT,
+	MMWS_DONE
 };
 
 enum MenuPageIndex{
@@ -203,16 +206,17 @@ typedef struct BGData{
 	u16 yPos;
 	s16 xVel;
 	s16 yVel;
-	u16 yScrollTimerCurrent;
-	u16 yScrollTimerTarget;
-	u16 yScrollStartPos;
-	u16 yScrollTargetPos;
+	u16 scrollTimerCurrent;
+	u16 scrollTimerTarget;
+	u16 scrollStartPos;
+	u16 scrollTargetPos;
 }BGData;
 
 typedef struct MainMenuData{
 	enum TitleSceneState state;
 	enum MainMenuWindowState windowState;
 	bool updateBGTileDraw, updateSpriteDraw, updateUITileDraw;
+	bool windowFinalizing, hideMenuCursor;
 	BGData starryBG;
 	BGData titleCardBG;
 	BGData menuBG;
@@ -330,9 +334,9 @@ void mainMenuInitBlend();
 
 // Update Functions
 void scrollStarryBG(int addedX, int addedY);
-void interpolateStarryBG();
+void interpolateStarryBG(bool scrollYAxis);
 void updateBGScrollRegisters(u16 bg0XPos, u16 bg0YPos, u16 bg1XPos, u16 bg1YPos);
-void startMatch();
+void matchBegin();
 void skipToMenu();
 void updateObjBuffer();
 void mainMenuUpdateBlend(u32 eva, u32 evb);
@@ -357,7 +361,7 @@ void drawStarBlocker(int yPos);
 void drawDigit(int sprIndex, int singleDigit, int xPos, int yPos);
 int drawNumber(int startIndex, int numberToDraw, int xPos, int yPos, bool rightAlign);
 int drawPercent(int sprIndex, int xPos, int yPos);
-void drawMenuButtons(bool hideAll);
+void drawMenuButtonPrompts(bool hideAll);
 void drawSliderPrompt(int xPos, int yPos, int sprIndex, bool flipSpriteHorizontally);
 void drawSliderBar(int sprIndex, int xPos, int yPos, int imgIndex, int barValue);
 void drawToggle(int sprIndex, int xPos, int yPos, bool isEnabled);

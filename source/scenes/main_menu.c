@@ -105,20 +105,17 @@ void mainMenuInitialize(){
 	currentScene.state = NORMAL;
 
 	// Prepare values for the starryBG to start panning upward, even during the fade-in transition
-	mDat.starryBG.yScrollTimerCurrent = 0;
-	mDat.starryBG.yScrollTimerTarget = 32+16+2+53;
-	mDat.starryBG.yScrollStartPos = TITLE_CAM_PAN_BOTTOM; // Start position (scaled)
-	mDat.starryBG.yScrollTargetPos = TITLE_CAM_PAN_TOP; // Target position (scaled)
+	mDat.starryBG.scrollTimerCurrent = 0;
+	mDat.starryBG.scrollTimerTarget = 32+16+2+53;
+	mDat.starryBG.scrollStartPos = TITLE_CAM_PAN_BOTTOM; // Start position (scaled)
+	mDat.starryBG.scrollTargetPos = TITLE_CAM_PAN_TOP; // Target position (scaled)
 }
 
 void mainMenuNormal(){
 	//temporary debug input
 	if(inputs.pressed & KEY_START){
-		currentScene.scenePointer = sceneList[GAMEPLAY];
-		currentScene.state = INITIALIZE;
-		
-		// End the current BGM
-		endCurrentBGM();
+		// Start the match
+		matchBegin();
 	}
 
 	switch(mDat.state){
@@ -152,7 +149,7 @@ void mainMenuNormal(){
 		objectBuffer[STAR_BLOCKER_SPRITE].attr0 = ATTR0_HIDE;
 
 		// Update the BG Positions (using IOBuffer0)
-		interpolateStarryBG();
+		interpolateStarryBG(true);
 		updateBGScrollRegisters(mDat.starryBG.xPos, mDat.starryBG.yPos, mDat.titleCardBG.xPos, mDat.titleCardBG.yPos);
 		break;
 	case FADE_TO_TITLE:
@@ -177,7 +174,7 @@ void mainMenuNormal(){
 		updateObjBuffer();
 
 		// Update the BG Positions (using IOBuffer0)
-		interpolateStarryBG();
+		interpolateStarryBG(true);
 		updateBGScrollRegisters(mDat.starryBG.xPos, mDat.starryBG.yPos, mDat.titleCardBG.xPos, mDat.titleCardBG.yPos);
 		break;
 	case TITLE_PAN_UP:
@@ -195,7 +192,7 @@ void mainMenuNormal(){
 		}
 
 		// Update the BG Positions (using IOBuffer0)
-		interpolateStarryBG();
+		interpolateStarryBG(true);
 		updateBGScrollRegisters(mDat.starryBG.xPos, mDat.starryBG.yPos, mDat.titleCardBG.xPos, mDat.titleCardBG.yPos);
 		break;
 	case TITLE_FLASH:
@@ -244,7 +241,7 @@ void mainMenuNormal(){
 		updateObjBuffer();
 
 		// Update the BG Positions (using IOBuffer0)
-		interpolateStarryBG();
+		interpolateStarryBG(true);
 		updateBGScrollRegisters(mDat.starryBG.xPos, mDat.starryBG.yPos, mDat.titleCardBG.xPos, mDat.titleCardBG.yPos);
 		break;
 	case TITLE_REVEAL:
@@ -365,23 +362,21 @@ void mainMenuNormal(){
 			loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, (void *)menu_actionTiles, MENU_TEXT_TILE_WIDTH * 0, MENU_TEXT_TILE_WIDTH * 6, 0);
 			loadGFX(MENU_CHARDATA, MENU_TEXT_FOCUSED_GFX_START, (void *)menu_action_focusedTiles, MENU_TEXT_TILE_WIDTH * 0, MENU_TEXT_TILE_WIDTH * 6, 1);
 		}else{
-			// Make the starry background scroll up, *very* quickly. Use quadratic interpolation
-			
+			// Make the starry background scroll up, *very* quickly. Use quadratic interpolation			
+			/*
+				// Calculate the interpolation factor t, with proper scaling
+				int actionTimerScaled = mDat.actionTimer * FIXED_POINT_SCALE;
+				int actionTargetScaled = mDat.actionTarget * FIXED_POINT_SCALE;
+				int t = (actionTimerScaled * FIXED_POINT_SCALE) / actionTargetScaled;
+				int t2 = t * 8;
 
-			
-			// Calculate the interpolation factor t, with proper scaling
-			int actionTimerScaled = mDat.actionTimer * FIXED_POINT_SCALE;
-			int actionTargetScaled = mDat.actionTarget * FIXED_POINT_SCALE;
-			int t = (actionTimerScaled * FIXED_POINT_SCALE) / actionTargetScaled;
-			int t2 = t * 8;
-
-			// Apply ease-in-out function
-			int easedT = easeOutQuint(t);
-			int easedT2 = easeInOut(t2, 4);
-
-			// Calculate the interpolated position and update yPos
-			//mDat.starryBG.yPos = lerp(starryBGYPosInit, starryBGYPosTarget, easedT) / FIXED_POINT_SCALE;
-			//mDat.titleCardBG.yPos = lerp(titleCardYStart, titleCardYTarget, easedT2) / FIXED_POINT_SCALE;
+				// Apply ease-in-out function
+				int easedT = easeOutQuint(t);
+				int easedT2 = easeInOut(t2, 4);
+				// Calculate the interpolated position and update yPos
+				mDat.starryBG.yPos = lerp(starryBGYPosInit, starryBGYPosTarget, easedT) / FIXED_POINT_SCALE;
+				mDat.titleCardBG.yPos = lerp(titleCardYStart, titleCardYTarget, easedT2) / FIXED_POINT_SCALE;
+			*/
 			mDat.starryBG.yPos = starryBGPanYPos[mDat.actionTimer];
 			mDat.titleCardBG.yPos = titleCardBGPanYPos[clamp(mDat.actionTimer, 0, 9)];
 			mDat.actionTimer++;
@@ -428,24 +423,33 @@ void mainMenuNormal(){
 		
 		break;
 	case MAIN_MENU_FLY_OUT:
-		if(mDat.actionTimer >= mDat.actionTarget){
-			// Start the match
-			mainMenuEnd();
-		}else{
+		if(mDat.actionTimer >= mDat.actionTarget) {
+			mDat.actionTimer = 0;
+			mDat.actionTarget = 0;
+			matchBegin();
+		} else {
 			mDat.actionTimer++;
 		}
-		
-		/*
-		tilemapData[1].position = &se_mem[MENU_TILEMAP];
-		tilemapData[1].buffer = (void *)tilemapBuffer1;
-		tilemapData[1].size = 512;
-		
-		tilemapData[2].position = &se_mem[MENU_TILEMAP];
-		tilemapData[2].buffer = (void *)tilemapBuffer2;
-		tilemapData[2].size = 512;*/
+
+		if (mDat.actionTimer == 87) {
+			// Clear the starry BG in Quadrant II with pure black
+			memset32(tilemapBuffer0, 0, sizeof(tilemapBuffer0) >> 2);
+			tilemapData[0].position = &se_mem[STARRY_IMAGE_TILEMAP];
+			tilemapData[0].buffer = (void *)tilemapBuffer0;
+			//tilemapData[0].size = sizeof(tilemapBuffer0) >> 2;
+			tilemapData[0].size = 512;//sizeof(tilemapBuffer0) >> 2;
+		} else if (mDat.actionTimer == 95) {
+			// Clear the starry BG in Quadrant I with pure black
+			memset32(tilemapBuffer0, 0, sizeof(tilemapBuffer0) >> 2);
+			tilemapData[0].position = &se_mem[STARRY_IMAGE_TILEMAP + 1];
+			tilemapData[0].buffer = (void *)tilemapBuffer0;
+			//tilemapData[0].size = sizeof(tilemapBuffer0) >> 2;
+			tilemapData[0].size = 512;//sizeof(tilemapBuffer0) >> 2;
+		}
 
 		// Make the starry background scroll up-left
-		scrollStarryBG(-1, -1);
+		//scrollStarryBG(-1, 0);
+		interpolateStarryBG(false);
 
 		// Queue BG Scroll registers for the Starry BG and Menu Positions
 		updateBGScrollRegisters(mDat.starryBG.xPos, mDat.starryBG.yPos, mDat.menuBG.xPos, mDat.menuBG.yPos);
@@ -570,6 +574,9 @@ void initMainMenu(){
 
 	mDat.windowActionTimer = 0;
 	mDat.windowActionTarget = 0;
+	mDat.windowFinalizing = false;
+	mDat.hideMenuCursor = false;
+
 	mDat.evaLerpStart = 0;
 	mDat.evaLerpEnd = 0;
 	mDat.evbLerpStart = 0;
@@ -596,6 +603,8 @@ void initMainMenu(){
 void updateMainMenu(){
 	switch(mDat.windowState){
 		default:
+		case MMWS_DONE:
+			break;
 		case MMWS_OPENING:
 			// Keep expanding the window height until it's the target size it needs to be; re-center as it expands
 			if (mDat.winSliceHeight + 2 < mDat.windowTargetHeight){
@@ -636,11 +645,31 @@ void updateMainMenu(){
 				//mDat.winSliceHeight += 2;
 					
 				mDat.windowCurrTileYPos -= 2;
-				mDat.windowState = MMWS_ZIPPING;
+
+				if (mDat.windowFinalizing)
+					mDat.windowState = MMWS_ZIPPING_OUT;
+				else
+					mDat.windowState = MMWS_ZIPPING;
+				
 				mDat.zipSpeed = 3;
 				mDat.wrappedAround = false;
 			}
 			mDat.updateBGTileDraw = true;
+			break;
+		case MMWS_FINALIZING:
+			if (mDat.windowActionTimer >= mDat.windowActionTarget) {
+				mDat.windowState = MMWS_CLOSING;
+				mDat.windowFinalizing = true;
+				mDat.windowActionTimer = 0;
+				mDat.windowActionTarget = 8;
+			} else {
+				mDat.windowActionTimer++;
+			}
+			
+			if (mDat.windowActionTimer % 8 == 0) {
+				mDat.hideMenuCursor = !mDat.hideMenuCursor;
+				mDat.updateUITileDraw = true;
+			}
 			break;
 		case MMWS_READY:
 			menuPage = &menuPages[mDat.currMenuPage];
@@ -751,96 +780,112 @@ void updateMainMenu(){
 			break;
 		case MMWS_INITIAL_ZIPPING:
 		case MMWS_ZIPPING:
-			// Continue loading the VRAM graphics, if applicable
-			loadMenuGraphics(menuPage);
+		case MMWS_ZIPPING_OUT:
+			if (mDat.windowState != MMWS_ZIPPING_OUT) {
+				// Continue loading the VRAM graphics, if applicable
+				loadMenuGraphics(menuPage);
+			}
 
 			//mDat.winSliceWidth = 1;
 			mDat.windowCurrTileXPos-= mDat.zipSpeed;
 			
-			if (mDat.windowCurrTileXPos < 0){
-				if (!mDat.wrappedAround){
-					mDat.windowCurrTileXPos = 29;
-					mDat.wrappedAround = true;
-
-					
-					// If this is a Page Transfer, load the new menu page now
-					MenuElementData* dat;
-					FunctionPtr datFunctPtr;
-					int datIntVal = 0;
-					int* datIntArr;
-
-					switch(mDat.windowConfirmDirection){
-						default:
-						case MWCD_NEUTRAL:
-						case MWCD_FORWARD:
-							dat = &menuPage->items[mDat.menuCursorPos].data;
-							switch(menuPage->items[mDat.menuCursorPos].dataType){
-								default:
-								case MPIDT_FUNC_PTR:
-									datFunctPtr = dat->functionPtr;
-									break;
-								case MPIDT_INT:
-									datIntVal = dat->intVal;
-									break;
-								case MPIDT_INT_ARRAY:
-									datIntArr = dat->intArray;
-									break;
-								case MPIDT_BOOL:
-									datIntArr = dat->intArray;
-									break;
-							}
-
-							switch(menuPage->items[mDat.menuCursorPos].menuElement){
-								default:
-									break;
-								case ME_SCRIPT_RUNNER:
-									break;
-								case ME_PAGE_TRANSFER:
-									performPageTransfer(datIntVal);
-									break;
-								case ME_SLIDER:
-									break;
-								case ME_SHIFT:
-									break;
-								case ME_TOGGLE:
-									break;
-								case ME_SOUND_TESTER:
-									break;
-								case ME_CREDITS_DISPLAY:
-									break;
-							}
-							break;
-						case MWCD_BACKWARD:
-							// nvm, maybe if there's extra time i'll implement this
-							//mDat.windowState = MMWS_OPENING;
-							//mDat.zipSpeed = 0;
-							//mDat.windowActionTimer = 0;
-
-							// Always perform a Page Transfer for backing out of a menu
-							datIntVal = menuPage->backPage;
-							performPageTransfer(datIntVal);
-							break;
-					}
-					
-					mDat.windowTargetTileX = menuPage->tileX;
-					mDat.windowTargetTileY = menuPage->tileY;
-					mDat.windowTargetWidth = menuPage->tileWidth;
-					mDat.windowTargetHeight = menuPage->tileHeight;
-
-					// Hide the Pade UI Text Sprite
-					hideSprite(MENU_PAGE_TEXT_SPRITE);
-				} 
-			}else{
-				if (mDat.wrappedAround){
-					if (mDat.windowCurrTileXPos < mDat.windowTargetTileX){
-						mDat.windowCurrTileXPos = mDat.windowTargetTileX;
-						// Set the xPos Offset
-						mDat.menuBG.xPos = menuPage->pxOffX;
-
-						mDat.winSliceWidth = mDat.windowTargetWidth;
+			if (mDat.windowState != MMWS_ZIPPING_OUT) {
+				if (mDat.windowCurrTileXPos < 0){
+					if (!mDat.wrappedAround){
+						mDat.windowCurrTileXPos = 29;
 						mDat.wrappedAround = true;
-						mDat.windowState = MMWS_OPENING;
+
+						
+						// If this is a Page Transfer, load the new menu page now
+						MenuElementData* dat;
+						FunctionPtr datFunctPtr;
+						int datIntVal = 0;
+						int* datIntArr;
+
+						switch(mDat.windowConfirmDirection){
+							default:
+							case MWCD_NEUTRAL:
+							case MWCD_FORWARD:
+								dat = &menuPage->items[mDat.menuCursorPos].data;
+								switch(menuPage->items[mDat.menuCursorPos].dataType){
+									default:
+									case MPIDT_FUNC_PTR:
+										datFunctPtr = dat->functionPtr;
+										break;
+									case MPIDT_INT:
+										datIntVal = dat->intVal;
+										break;
+									case MPIDT_INT_ARRAY:
+										datIntArr = dat->intArray;
+										break;
+									case MPIDT_BOOL:
+										datIntArr = dat->intArray;
+										break;
+								}
+
+								switch(menuPage->items[mDat.menuCursorPos].menuElement){
+									default:
+										break;
+									case ME_SCRIPT_RUNNER:
+										break;
+									case ME_PAGE_TRANSFER:
+										performPageTransfer(datIntVal);
+										break;
+									case ME_SLIDER:
+										break;
+									case ME_SHIFT:
+										break;
+									case ME_TOGGLE:
+										break;
+									case ME_SOUND_TESTER:
+										break;
+									case ME_CREDITS_DISPLAY:
+										break;
+								}
+								break;
+							case MWCD_BACKWARD:
+								// nvm, maybe if there's extra time i'll implement this
+								//mDat.windowState = MMWS_OPENING;
+								//mDat.zipSpeed = 0;
+								//mDat.windowActionTimer = 0;
+
+								// Always perform a Page Transfer for backing out of a menu
+								datIntVal = menuPage->backPage;
+								performPageTransfer(datIntVal);
+								break;
+						}
+						
+						mDat.windowTargetTileX = menuPage->tileX;
+						mDat.windowTargetTileY = menuPage->tileY;
+						mDat.windowTargetWidth = menuPage->tileWidth;
+						mDat.windowTargetHeight = menuPage->tileHeight;
+
+						// Hide the Pade UI Text Sprite
+						hideSprite(MENU_PAGE_TEXT_SPRITE);
+					} 
+				}else{
+					if (mDat.wrappedAround){
+						if (mDat.windowCurrTileXPos < mDat.windowTargetTileX){
+							mDat.windowCurrTileXPos = mDat.windowTargetTileX;
+							// Set the xPos Offset
+							mDat.menuBG.xPos = menuPage->pxOffX;
+
+							mDat.winSliceWidth = mDat.windowTargetWidth;
+							mDat.wrappedAround = true;
+							mDat.windowState = MMWS_OPENING;
+						}
 					}
+				}
+			} else {
+				if (mDat.windowCurrTileXPos < -mDat.winSliceWidth - 1){					
+					mDat.state = MAIN_MENU_FLY_OUT;
+					mDat.windowState = MMWS_DONE;
+					mDat.actionTimer = 0;
+					mDat.actionTarget = 240;
+					mDat.starryBG.scrollStartPos = mDat.starryBG.xPos;
+					mDat.starryBG.scrollTargetPos = 4000;
+					mDat.starryBG.scrollTimerCurrent = 0;
+					mDat.starryBG.scrollTimerTarget = 200;
 				}
 			}
 
@@ -868,11 +913,13 @@ void updateMainMenu(){
 			break;
 	}
 
-	// Update the main menu sprite blending every frame
-	mDat.eva = interpolateValues(mDat.windowActionTimer, mDat.windowActionTarget, mDat.evaLerpStart, mDat.evaLerpEnd);
-	mDat.evb = interpolateValues(mDat.windowActionTimer, mDat.windowActionTarget, mDat.evbLerpStart, mDat.evbLerpEnd);
-	
-	mainMenuUpdateBlend(mDat.eva, mDat.evb);
+	// Update the main menu sprite blending every frame, unless we're leaving the Main Menu
+	if (mDat.windowState != MMWS_FINALIZING) {
+		mDat.eva = interpolateValues(mDat.windowActionTimer, mDat.windowActionTarget, mDat.evaLerpStart, mDat.evaLerpEnd);
+		mDat.evb = interpolateValues(mDat.windowActionTimer, mDat.windowActionTarget, mDat.evbLerpStart, mDat.evbLerpEnd);
+		
+		mainMenuUpdateBlend(mDat.eva, mDat.evb);
+	}
 
 	// Ensure the timer is always moving, if it's not at its target yet
 	if (mDat.windowActionTimer < mDat.windowActionTarget){
@@ -919,19 +966,27 @@ void loadMenuGraphics(MenuPage *menuPage){
 void drawMainMenu(){
 	switch(mDat.windowState){
 		default:
+		case MMWS_DONE:
+			break;
 		case MMWS_OPENING:
 		case MMWS_CLOSING:
 		case MMWS_ZIPPING:
 		case MMWS_INITIAL_ZIPPING:
+		case MMWS_ZIPPING_OUT:
 			//Clear the menu tilemap every frame
 			memset32(tilemapBuffer1, 0, 512);
 			memset32(tilemapBuffer2, 0, 512);
 
 			// Draw the Menu Page Window
-			if (mDat.showPageWindowBG)
-				drawSecondaryNineSliceWindowStyle(10, mDat.secondaryNineSliceYOff, 10, 2, 2);
+			if (mDat.showPageWindowBG) {
+				if (mDat.windowFinalizing) {
+					if (mDat.eva != mDat.evaLerpEnd)
+						drawSecondaryNineSliceWindowStyle(10, mDat.secondaryNineSliceYOff, 10, 2, 2);
+				} else
+					drawSecondaryNineSliceWindowStyle(10, mDat.secondaryNineSliceYOff, 10, 2, 2);
+			}
 
-			if (mDat.windowState != MMWS_INITIAL_ZIPPING){
+			if (mDat.windowState != MMWS_INITIAL_ZIPPING && mDat.windowState != MMWS_ZIPPING_OUT){
 				drawNineSliceWindow(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos, mDat.winSliceWidth, mDat.winSliceHeight, 1);
 			}else
 				drawLaserRow(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos, mDat.winSliceWidth, 1, false);
@@ -946,10 +1001,14 @@ void drawMainMenu(){
 			tilemapData[2].buffer = (void *)tilemapBuffer2;
 			tilemapData[2].size = 512;
 			
-			drawMenuButtons(true);
+			if (!mDat.windowFinalizing)
+				drawMenuButtonPrompts(true);
+			else
+				hideSpriteRange(MENU_BUTTON_PROMPT_SPRITE_FIRST, MENU_BUTTON_PROMPT_SPRITE_LAST);
 			break;
 		case MMWS_READY:
 		case MMWS_TWEAKING_DATA:
+		case MMWS_FINALIZING:
 			if (!mDat.showPageWindowBG)
 				mDat.showPageWindowBG = true;
 			
@@ -981,7 +1040,7 @@ void drawMainMenu(){
 				u8 numDrawnPercentSigns = 0;
 				for(int i = 0; i < menuPage->itemCount; ++i){
 					MenuPageItem* thisMenuItem = &menuPage->items[i];
-					bool cursorOnElement = (mDat.menuCursorPos == i && (menuPage != &menuPages[MPI_CREDITS]));
+					bool cursorOnElement = (mDat.menuCursorPos == i && menuPage != &menuPages[MPI_CREDITS] && !mDat.hideMenuCursor);
 					bool isTweakingData = (mDat.windowState == MMWS_TWEAKING_DATA);
 					switch(thisMenuItem->menuElement) {
 						default:
@@ -1017,36 +1076,50 @@ void drawMainMenu(){
 							break;
 					}
 
-					// Draw the tiles that draw all of the text on the left half of the main menu, if we're allowed to update them on this frame
-					if (mDat.updateUITileDraw)
-						drawMenuTextSegment(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos + 2 + (2 * i), i, 2, cursorOnElement && !isTweakingData, mDat.menuElementsWidth[mDat.currMenuPage]);
 				}
 				
-				mDat.updateUITileDraw = false;
-
 				if (mDat.windowState == MMWS_TWEAKING_DATA){
 					drawSliderPrompt(123, 48 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE1, false);
 					drawSliderPrompt(170, 48 + (mDat.menuCursorPos * 16), MENU_SLIDER_PROMPT_SPRITE2, true);
 				}
 
-				// Queue the tilemap with our drawing functions, using tilemapBuffer1
-				tilemapData[1].position = se_mem[MENU_WINDOW_TILEMAP];
-				tilemapData[1].buffer = (void *)tilemapBuffer1;
-				tilemapData[1].size = 512;
-
-				// Queue the tilemap with our drawing functions, using tilemapBuffer2
-				tilemapData[2].position = se_mem[MENU_PAGE_TILEMAP];
-				tilemapData[2].buffer = (void *)tilemapBuffer2;
-				tilemapData[2].size = 512;
 				mDat.updateSpriteDraw = false;
 			}
-			drawMenuButtons(false);
 			
+			// Draw the tiles that draw all of the text on the left half of the main menu, if we're allowed to update them on this frame
+			if (mDat.updateUITileDraw) {
+				for(int i = 0; i < menuPage->itemCount; ++i){
+					MenuPageItem* thisMenuItem = &menuPage->items[i];
+					bool cursorOnElement = (mDat.menuCursorPos == i && menuPage != &menuPages[MPI_CREDITS] && !mDat.hideMenuCursor);
+					bool isTweakingData = (mDat.windowState == MMWS_TWEAKING_DATA);
+					drawMenuTextSegment(mDat.windowCurrTileXPos, mDat.windowCurrTileYPos + 2 + (2 * i), i, 2, cursorOnElement && !isTweakingData, mDat.menuElementsWidth[mDat.currMenuPage]);
+				}
+			}
+			mDat.updateUITileDraw = false;
+
+			// Queue the tilemap with our drawing functions, using tilemapBuffer1
+			tilemapData[1].position = se_mem[MENU_WINDOW_TILEMAP];
+			tilemapData[1].buffer = (void *)tilemapBuffer1;
+			tilemapData[1].size = 512;
+
+			// Queue the tilemap with our drawing functions, using tilemapBuffer2
+			tilemapData[2].position = se_mem[MENU_PAGE_TILEMAP];
+			tilemapData[2].buffer = (void *)tilemapBuffer2;
+			tilemapData[2].size = 512;
+
+			drawMenuButtonPrompts(false);
 			break;
 	}
 	
-	// Draw the Menu Page UI Text now
-	drawMenuPageUIText();
+	// Draw the Menu Page UI Text now, if applicable
+	if (mDat.windowState == MMWS_CLOSING && mDat.windowFinalizing) {
+		if (mDat.eva > mDat.evaLerpEnd)
+			drawMenuPageUIText();
+		else
+			hideSprite(MENU_PAGE_TEXT_SPRITE);
+		updateObjBuffer();
+	} else
+		drawMenuPageUIText();
 }
 
 void mainMenuEnd(){
@@ -1063,22 +1136,25 @@ void scrollStarryBG(int addedX, int addedY){
 	}
 }
 
-void interpolateStarryBG(){
+void interpolateStarryBG(bool scrollYAxis){
 	// Calculate the interpolation factor t, with proper scaling
-	int actionTimerScaled = mDat.starryBG.yScrollTimerCurrent * FIXED_POINT_SCALE;
-	int actionTargetScaled = mDat.starryBG.yScrollTimerTarget * FIXED_POINT_SCALE;
+	int actionTimerScaled = mDat.starryBG.scrollTimerCurrent * FIXED_POINT_SCALE;
+	int actionTargetScaled = mDat.starryBG.scrollTimerTarget * FIXED_POINT_SCALE;
 	int t = (actionTimerScaled * FIXED_POINT_SCALE) / actionTargetScaled;
 
 	// Apply ease-in-out function
 	int easedT = easeInOut(t, 4);
 
-	// Calculate the interpolated position and update yPos
-	mDat.starryBG.yPos = lerp(mDat.starryBG.yScrollStartPos * FIXED_POINT_SCALE, mDat.starryBG.yScrollTargetPos * FIXED_POINT_SCALE, easedT) / FIXED_POINT_SCALE;
-	
-	if (mDat.starryBG.yScrollTimerCurrent < mDat.starryBG.yScrollTimerTarget)
-		mDat.starryBG.yScrollTimerCurrent++;
+	// Calculate the interpolated position and update yPos (or xPos)
+	if (scrollYAxis)
+		mDat.starryBG.yPos = lerp(mDat.starryBG.scrollStartPos * FIXED_POINT_SCALE, mDat.starryBG.scrollTargetPos * FIXED_POINT_SCALE, easedT) / FIXED_POINT_SCALE;
 	else
-		mDat.starryBG.yScrollTimerCurrent = mDat.starryBG.yScrollTimerTarget;
+		mDat.starryBG.xPos = lerp(mDat.starryBG.scrollStartPos * FIXED_POINT_SCALE, mDat.starryBG.scrollTargetPos * FIXED_POINT_SCALE, easedT) / FIXED_POINT_SCALE;
+	
+	if (mDat.starryBG.scrollTimerCurrent < mDat.starryBG.scrollTimerTarget)
+		mDat.starryBG.scrollTimerCurrent++;
+	else
+		mDat.starryBG.scrollTimerCurrent = mDat.starryBG.scrollTimerTarget;
 }
 
 void setTile(int x, int y, int drawingTileIndex, bool flipHorizontal, bool flipVertical, int palette, int layer){
@@ -1310,6 +1386,14 @@ void menuInputConfirmEnabled(){
 					default:
 						break;
 					case ME_SCRIPT_RUNNER:
+						// Execute the function at this menuElement, but only if it's actually valid.
+						switch(thisMenuItem->dataType){
+							default:
+								break;
+							case MPIDT_FUNC_PTR:
+								thisMenuItem->data.functionPtr();
+								break;
+						}
 						break;
 					case ME_PAGE_TRANSFER:
 						currentSFXIndex = playNewSound(_sfxMenuConfirmA);
@@ -1461,9 +1545,26 @@ void menuInputCancelEnabled(){
 }
 
 int menuExecNewGame(){
-	mDat.state = MAIN_MENU_FLY_OUT;
-	mDat.actionTimer = 0;
-	mDat.actionTarget = 40; // Specifies the length of the actionTimer
+	endAllSound();
+	currentSFXIndex = 0xFF;
+	currentShipMoveSFX = 0xFF;
+	currentBGMIndex[0] = 0xFF;
+	currentBGMIndex[1] = 0xFF;
+	
+	currentSFXIndex = playNewSound(_sfxMenuConfirmC);
+	
+	mDat.windowState = MMWS_FINALIZING;
+	mDat.windowConfirmDirection = MWCD_FORWARD;
+	mDat.updateSpriteDraw = true;
+	
+	// Once it's relevant (during MMWS_CLOSING state), lerp toward making the text completely visible
+	mDat.evaLerpStart = 16;
+	mDat.evaLerpEnd = 0;
+	mDat.evbLerpStart = 0;
+	mDat.evbLerpEnd = 16;
+
+	mDat.windowActionTimer = 0;
+	mDat.windowActionTarget = 100;
 	return 0;
 }
 
@@ -1606,7 +1707,7 @@ void drawStarBlocker(int yPos){
 	objectBuffer[STAR_BLOCKER_SPRITE].attr2 = ATTR2_ID(STAR_BLOCKER_GFX_START) | ATTR2_PRIO(3) | ATTR2_PALBANK(1);
 }
 
-void drawMenuButtons(bool hideAll){
+void drawMenuButtonPrompts(bool hideAll){
 	if (menuPage->showConfirmPrompt && !hideAll){
 		objectBuffer[MENU_BUTTON_PROMPT_SPRITE_FIRST].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(18*8);
 		objectBuffer[MENU_BUTTON_PROMPT_SPRITE_FIRST].attr1 = ATTR1_SIZE_32 | ATTR1_X(26*8);
@@ -1625,7 +1726,7 @@ void drawMenuButtons(bool hideAll){
 	// R Prompt
 	if (menuPage->showSoundTestPrompts && !hideAll){
 		objectBuffer[MENU_BUTTON_PROMPT_SPRITE_FIRST + 2].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(18*8);
-		objectBuffer[MENU_BUTTON_PROMPT_SPRITE_FIRST + 2].attr1 = ATTR1_SIZE_32 | ATTR1_X(20*7) - 4;
+		objectBuffer[MENU_BUTTON_PROMPT_SPRITE_FIRST + 2].attr1 = ATTR1_SIZE_32 | (ATTR1_X(20*7) - 4);
 		objectBuffer[MENU_BUTTON_PROMPT_SPRITE_FIRST + 2].attr2 = ATTR2_ID(512 + MENU_BUTTON_PROMPT_GFX_START + 16) | ATTR2_PRIO(0) | ATTR2_PALBANK(MENU_BUTTON_PROMPT_PAL);
 	}else
 		objectBuffer[MENU_BUTTON_PROMPT_SPRITE_FIRST + 2].attr0 = ATTR0_HIDE;
@@ -1961,4 +2062,12 @@ void initMenuPages(MenuPage menuPages[]) {
         .showConfirmPrompt = true,
         .showBackPrompt = true
     };
+}
+
+void matchBegin(){
+	currentScene.scenePointer = sceneList[GAMEPLAY];
+	currentScene.state = INITIALIZE;
+
+	// End the current BGM
+	endCurrentBGM();
 }
