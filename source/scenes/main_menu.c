@@ -924,7 +924,8 @@ void updateMainMenu(){
 					}
 				}
 			} else {
-				if (mDat.windowCurrTileXPos < -mDat.winSliceWidth - 1){					
+				if (mDat.windowCurrTileXPos < -mDat.winSliceWidth - 1){
+					currentSFXIndex = playNewSound(_sfxScreenPan);		
 					mDat.state = MAIN_MENU_FLY_OUT;
 					mDat.windowState = MMWS_DONE;
 					mDat.actionTimer = 0;

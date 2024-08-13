@@ -20,14 +20,15 @@ enum AudioAssetName{
 	_sfxMenuConfirmB, 			// 14
 	_sfxMenuConfirmC, 			// 15
 	_sfxMenuMove, 			// 16
-	_sfxShipDmgL, 			// 17
-	_sfxShipDmgM, 			// 18
-	_sfxShipDmgS, 			// 19
-	_sfxShipExplodeL, 			// 20
-	_sfxShipExplodeM, 			// 21
-	_sfxShipExplodeS, 			// 22
-	_sfxShipIdle, 			// 23
-	_sfxShipMove, 			// 24
+	_sfxScreenPan, 			// 17
+	_sfxShipDmgL, 			// 18
+	_sfxShipDmgM, 			// 19
+	_sfxShipDmgS, 			// 20
+	_sfxShipExplodeL, 			// 21
+	_sfxShipExplodeM, 			// 22
+	_sfxShipExplodeS, 			// 23
+	_sfxShipIdle, 			// 24
+	_sfxShipMove, 			// 25
 	
 };
 

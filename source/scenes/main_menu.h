@@ -155,7 +155,7 @@ const int bgmGroups[][2] = {
 };
 
 #define SOUND_TEST_BGM_COUNT (int)(sizeof(bgmGroups) / sizeof(bgmGroups[0]))
-#define SOUND_TEST_SFX_COUNT 14
+#define SOUND_TEST_SFX_COUNT 15
 #define SFX_START 11
 
 //enums

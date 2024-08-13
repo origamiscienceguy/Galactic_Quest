@@ -439,6 +439,18 @@ AudioSample _sfxMenuCancel_smp = {
 	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
+extern cu8 _sfxShipMvEg_smp_data[];
+AudioSample _sfxShipMvEg_smp = {
+	.sampleStart = _sfxShipMvEg_smp_data, .sampleLength = 8047, .loopEnd = 8047, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 32768,
+	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
+extern cu8 _sfxShipMvNs_smp_data[];
+AudioSample _sfxShipMvNs_smp = {
+	.sampleStart = _sfxShipMvNs_smp_data, .sampleLength = 61302, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 32768,
+	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
+};
+
 extern cu8 _sfxShipDmgL_smp_data[];
 AudioSample _sfxShipDmgL_smp = {
 	.sampleStart = _sfxShipDmgL_smp_data, .sampleLength = 28399, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 32768,
@@ -475,20 +487,8 @@ AudioSample _sfxShipExplodeS_smp = {
 	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
 };
 
-extern cu8 _sfxShipMvEg_smp_data[];
-AudioSample _sfxShipMvEg_smp = {
-	.sampleStart = _sfxShipMvEg_smp_data, .sampleLength = 8047, .loopEnd = 8047, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 32768,
-	.sampleType = 1, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
-};
-
-extern cu8 _sfxShipMvNs_smp_data[];
-AudioSample _sfxShipMvNs_smp = {
-	.sampleStart = _sfxShipMvNs_smp_data, .sampleLength = 61302, .loopEnd = 0, .loopStart = 0, .sustainLoopEnd = 0, .sustainLoopStart = 0, .middleCPitch = 32768,
-	.sampleType = 0, .globalVolume = 64, .defaultVolume = 64, .defaultPan = 32, .vibratoSpeed = 0, .vibratoDepth = 0, .vibratoWave = 0, .vibratoSweep = 0
-};
-
 AudioSample *sampleList[] = {
-	&_12_5pulse_smp, &_25pulse_smp, &_50pulse_smp, &_tri_lo_smp, &_tri_hi_smp, &_vsaw0_smp, &_edmkick_smp, &_edmsnare_smp, &_SnareAcoustic3_smp, &_hihat_smp, &_cym_crash_orch_smp, &_fm_bass_smp, &_FM_Bass2_smp, &_FM_Bell1_smp, &_FM_EPianoBell_smp, &_FM_Wavetable2_smp, &_horn_smp, &_piano_hi_smp, &_rave_lead_smp, &_string_ens_gm_smp, &_FM_Wavetable1_smp, &_string_ensemble2_smp, &_pipe_organ_smp, &_FM_SlapBass2_smp, &_power_snare_smp, &_KickRockVerb_smp, &_FM_BassSlap_smp, &_psg_wt_trbass_smp, &_whitenoisehi_smp, &_acdBassEnv1_smp, &_acdBassEnv2_smp, &_acdBassEnv3_smp, &_acdBassEnv4_smp, &_acdBassEnv5_smp, &_acdBassEnv6_smp, &_acdBassEnv7_smp, &_acdBassEnv8_smp, &_acdBassEnv9_smp, &_acdBassEnv10_smp, &_acdBassEnv11_smp, &_acdBassEnv12_smp, &_acdBassEnv13_smp, &_acdBassEnv14_smp, &_acdBassEnv15_smp, &_acdBassEnv16_smp, &_acdBassEnv17_smp, &_alto_sax_smp, &_beat_loop_smp, &_flute_smp, &_glacierSynth_smp, &_gpiano_c3_smp, &_gpiano_c5_smp, &_HipHopKick_smp, &_layeredLead1_smp, &_ns_sweep_smp, &_perc_tri_smp, &_piano_bass_smp, &_sampl_smp, &_psy_bass_smp, &_rave_lead_2_smp, &_recordscratch1_smp, &_sine_hi_smp, &_SnareHiphop_smp, &_spacePad_smp, &_strEns3_smp, &_Syn_Bass_2_smp, &_Tambourine_smp, &_thATransition_smp, &_timpani_smp, &_trance_snare_smp, &_wavetable_bass_smp, &_woodblock_smp, &_sfxMenuCancel_smp, &_sfxShipDmgL_smp, &_sfxShipDmgM_smp, &_sfxShipDmgS_smp, &_sfxShipExplodeL_smp, &_sfxShipExplodeM_smp, &_sfxShipExplodeS_smp, &_sfxShipMvEg_smp, &_sfxShipMvNs_smp
+	&_12_5pulse_smp, &_25pulse_smp, &_50pulse_smp, &_tri_lo_smp, &_tri_hi_smp, &_vsaw0_smp, &_edmkick_smp, &_edmsnare_smp, &_SnareAcoustic3_smp, &_hihat_smp, &_cym_crash_orch_smp, &_fm_bass_smp, &_FM_Bass2_smp, &_FM_Bell1_smp, &_FM_EPianoBell_smp, &_FM_Wavetable2_smp, &_horn_smp, &_piano_hi_smp, &_rave_lead_smp, &_string_ens_gm_smp, &_FM_Wavetable1_smp, &_string_ensemble2_smp, &_pipe_organ_smp, &_FM_SlapBass2_smp, &_power_snare_smp, &_KickRockVerb_smp, &_FM_BassSlap_smp, &_psg_wt_trbass_smp, &_whitenoisehi_smp, &_acdBassEnv1_smp, &_acdBassEnv2_smp, &_acdBassEnv3_smp, &_acdBassEnv4_smp, &_acdBassEnv5_smp, &_acdBassEnv6_smp, &_acdBassEnv7_smp, &_acdBassEnv8_smp, &_acdBassEnv9_smp, &_acdBassEnv10_smp, &_acdBassEnv11_smp, &_acdBassEnv12_smp, &_acdBassEnv13_smp, &_acdBassEnv14_smp, &_acdBassEnv15_smp, &_acdBassEnv16_smp, &_acdBassEnv17_smp, &_alto_sax_smp, &_beat_loop_smp, &_flute_smp, &_glacierSynth_smp, &_gpiano_c3_smp, &_gpiano_c5_smp, &_HipHopKick_smp, &_layeredLead1_smp, &_ns_sweep_smp, &_perc_tri_smp, &_piano_bass_smp, &_sampl_smp, &_psy_bass_smp, &_rave_lead_2_smp, &_recordscratch1_smp, &_sine_hi_smp, &_SnareHiphop_smp, &_spacePad_smp, &_strEns3_smp, &_Syn_Bass_2_smp, &_Tambourine_smp, &_thATransition_smp, &_timpani_smp, &_trance_snare_smp, &_wavetable_bass_smp, &_woodblock_smp, &_sfxMenuCancel_smp, &_sfxShipMvEg_smp, &_sfxShipMvNs_smp, &_sfxShipDmgL_smp, &_sfxShipDmgM_smp, &_sfxShipDmgS_smp, &_sfxShipExplodeL_smp, &_sfxShipExplodeM_smp, &_sfxShipExplodeS_smp
 };
 
 cu16 numSamples = 81;
@@ -510,6 +510,7 @@ extern AssetData _sfxMenuConfirmAAsset;
 extern AssetData _sfxMenuConfirmBAsset;
 extern AssetData _sfxMenuConfirmCAsset;
 extern AssetData _sfxMenuMoveAsset;
+extern AssetData _sfxScreenPanAsset;
 extern AssetData _sfxShipDmgLAsset;
 extern AssetData _sfxShipDmgMAsset;
 extern AssetData _sfxShipDmgSAsset;
@@ -520,8 +521,8 @@ extern AssetData _sfxShipIdleAsset;
 extern AssetData _sfxShipMoveAsset;
 
 AssetData *soundList[] = {
-	&_musMainMenuAsset, &_musOpeningAsset, &_musThemeA_BattleAsset, &_musThemeA_PeaceAsset, &_musThemeBAsset, &_musThemeB_BattleAsset, &_musThemeC_BattleAsset, &_musThemeC_PeaceAsset, &_musThemeD_BattleAsset, &_musThemeD_PeaceAsset, &_musTitleAsset, &_sfxCursorMoveAsset, &_sfxMenuCancelAsset, &_sfxMenuConfirmAAsset, &_sfxMenuConfirmBAsset, &_sfxMenuConfirmCAsset, &_sfxMenuMoveAsset, &_sfxShipDmgLAsset, &_sfxShipDmgMAsset, &_sfxShipDmgSAsset, &_sfxShipExplodeLAsset, &_sfxShipExplodeMAsset, &_sfxShipExplodeSAsset, &_sfxShipIdleAsset, &_sfxShipMoveAsset
+	&_musMainMenuAsset, &_musOpeningAsset, &_musThemeA_BattleAsset, &_musThemeA_PeaceAsset, &_musThemeBAsset, &_musThemeB_BattleAsset, &_musThemeC_BattleAsset, &_musThemeC_PeaceAsset, &_musThemeD_BattleAsset, &_musThemeD_PeaceAsset, &_musTitleAsset, &_sfxCursorMoveAsset, &_sfxMenuCancelAsset, &_sfxMenuConfirmAAsset, &_sfxMenuConfirmBAsset, &_sfxMenuConfirmCAsset, &_sfxMenuMoveAsset, &_sfxScreenPanAsset, &_sfxShipDmgLAsset, &_sfxShipDmgMAsset, &_sfxShipDmgSAsset, &_sfxShipExplodeLAsset, &_sfxShipExplodeMAsset, &_sfxShipExplodeSAsset, &_sfxShipIdleAsset, &_sfxShipMoveAsset
 };
 
-cu16 numSounds = 25;
+cu16 numSounds = 26;
 
