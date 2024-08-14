@@ -430,37 +430,50 @@ void mainMenuNormal(){
 		} else {
 			mDat.actionTimer++;
 		}
-		
-
+				
 		/// Perform the fadeout wipe transition
-
 		static int lastQuadrantWrittenTo = -1;
-		// Check the actionTimer
-		if (mDat.actionTimer == 103) {
-			// Snap to the next quadrant
-			int currentQuadrant = (mDat.starryBG.xPos / TILEMAP_QUADRANT_SIZE) % 2;
-			int nextQuadrant = (currentQuadrant + 1) % 2;
+		const int BASE_ACTION_TIMER = 103;
 
-			// Snap the starry BG's x position to the next quadrant, regardless of where it is
-			mDat.starryBG.xPos = nextQuadrant * TILEMAP_QUADRANT_SIZE;
-			mDat.starryBG.scrollStartPos = nextQuadrant * TILEMAP_QUADRANT_SIZE;
-			mDat.starryBG.snappedThisFrame = true;
+		switch (mDat.actionTimer) {
+			case BASE_ACTION_TIMER: {
+				// Snap to the next quadrant
+				int currentQuadrant = (mDat.starryBG.xPos / TILEMAP_QUADRANT_SIZE) % 2;
+				int nextQuadrant = (currentQuadrant + 1) % 2;
 
-			// Clear the entire quadrant
-			tilemapData[0].position = se_mem[STARRY_IMAGE_TILEMAP + currentQuadrant];
-			tilemapData[0].buffer = (void *)tilemapBuffer0;
-			tilemapData[0].size = 512;
+				// Snap the starry BG's x position to the next quadrant
+				mDat.starryBG.xPos = nextQuadrant * TILEMAP_QUADRANT_SIZE;
+				mDat.starryBG.scrollStartPos = nextQuadrant * TILEMAP_QUADRANT_SIZE;
+				mDat.starryBG.snappedThisFrame = true;
 
-			// Update the last quadrant written to
-			lastQuadrantWrittenTo = currentQuadrant;
-		} else if (mDat.actionTimer == 103 + 12) {
-			// Determine the opposite quadrant
-			int oppositeQuadrant = (lastQuadrantWrittenTo + 1) % 2;
+				// Clear the entire current quadrant
+				tilemapData[0].position = se_mem[STARRY_IMAGE_TILEMAP + currentQuadrant];
+				tilemapData[0].buffer = (void *)tilemapBuffer0;
+				tilemapData[0].size = 512;
 
-			// Clear the entire opposite quadrant
-			tilemapData[0].position = se_mem[STARRY_IMAGE_TILEMAP + oppositeQuadrant];
-			tilemapData[0].buffer = (void *)tilemapBuffer0;
-			tilemapData[0].size = 512;
+				// Update the last quadrant written to
+				lastQuadrantWrittenTo = currentQuadrant;
+				break;
+			}
+			case BASE_ACTION_TIMER + 12: {
+				// Clear the opposite quadrant
+				int oppositeQuadrant = (lastQuadrantWrittenTo + 1) % 2;
+				tilemapData[0].position = se_mem[STARRY_IMAGE_TILEMAP + oppositeQuadrant];
+				tilemapData[0].buffer = (void *)tilemapBuffer0;
+				tilemapData[0].size = 512;
+				break;
+			}
+			case BASE_ACTION_TIMER + 13:
+			case BASE_ACTION_TIMER + 14: {
+				// Clear quadrants 3 and 4 sequentially
+				int quadrantToClear = mDat.actionTimer - (BASE_ACTION_TIMER + 11);
+				tilemapData[0].position = se_mem[STARRY_IMAGE_TILEMAP + quadrantToClear];
+				tilemapData[0].buffer = (void *)tilemapBuffer0;
+				tilemapData[0].size = 512;
+				break;
+			}
+			default:
+				break;
 		}
 
 		// Make the starry background scroll up-left
