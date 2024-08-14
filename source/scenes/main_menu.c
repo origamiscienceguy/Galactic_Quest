@@ -2139,9 +2139,10 @@ int menuExecOptionsApplyChanges(){
 
 // Finalizes whatever options are currently set in the Options Menu
 void updateOptions(){	
-	MenuPageItem* mp_items = &menuPages[MPI_OPTIONS].items;
+	MenuPageItem *mp_items = menuPages[MPI_OPTIONS].items;
 	options.gridOn = mp_items[OPTID_GRID_ENABLED].data.boolVal;
 }
+
 void matchBegin(){
 	// Change the scene
 	currentScene.scenePointer = sceneList[GAMEPLAY];
