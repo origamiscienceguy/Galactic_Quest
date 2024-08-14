@@ -12,7 +12,7 @@
                 "cwd": "${workspaceFolder}/scripts/"
             },
             "group": {
-                "kind": "build",
+                "kind": "build"
             },
             "problemMatcher": []
         },
@@ -46,6 +46,7 @@
             "problemMatcher": [],
             "group": {
                 "kind": "build",
+                "isDefault": true
             }
         },
         {
@@ -61,7 +62,7 @@
             "isBackground": false,
             "problemMatcher": [],
             "group": {
-                "kind": "build",
+                "kind": "build"
             }
         }
     ]
