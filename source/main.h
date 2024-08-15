@@ -9,6 +9,13 @@
 
 
 //constants
+//options menu constants
+#define MAX_VOLUME 10        // Maximum volume level (0-10)
+#define VOLUME_SCALE 256     // Scale to represent 100% (fixed-point 8.8 format)
+#define DEFAULT_MASTER_VOLUME 10 // Default SFX volume as a percentage (100% of 10)
+#define DEFAULT_BGM_VOLUME 8 // Default BGM volume as a percentage (80% of 10)
+#define DEFAULT_SFX_VOLUME 10 // Default SFX volume as a percentage (100% of 10)
+#define DEFAULT_GRID_FLAG true
 
 //enums
 enum GameLoopState{WORKING, WAITING_FOR_VBLANK};
@@ -25,8 +32,11 @@ typedef struct Options{
 	u8 gridOn;
 	u8 masterVolume;
 	u8 bgmVolume;
-	u8 sfVolume;
+	u8 sfxVolume;
 }Options;
+
+// Precomputed fixed-point volume multipliers for each volume level (0-10)
+extern const int volumeTable[MAX_VOLUME + 1];
 
 //globals
 extern u32 globalCounter;

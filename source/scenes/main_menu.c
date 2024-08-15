@@ -109,6 +109,9 @@ void mainMenuInitialize(){
 	mDat.starryBG.scrollTimerTarget = 32+16+2+53;
 	mDat.starryBG.scrollStartPos = TITLE_CAM_PAN_BOTTOM; // Start position (scaled)
 	mDat.starryBG.scrollTargetPos = TITLE_CAM_PAN_TOP; // Target position (scaled)
+
+	// Set whatever current values are to the real options struct
+	MenuPageItem* optionsMenuItems = menuPages[MPI_OPTIONS].items;
 }
 
 void mainMenuNormal(){
@@ -965,8 +968,9 @@ void updateMainMenu(){
 					default:
 						break;
 					case ME_SLIDER:
-						thisMenuItem->data.intVal = clamp(thisMenuItem->data.intVal + moveX, 0, 11);
-						currentSFXIndex = playNewSound(_sfxMenuMove);
+						if (!(thisMenuItem->data.intVal == 0 && moveX < 0) && !(thisMenuItem->data.intVal == MAX_VOLUME && moveX > 0))
+							currentSFXIndex = playNewSound(_sfxMenuMove);
+						thisMenuItem->data.intVal = clamp(thisMenuItem->data.intVal + moveX, 0, MAX_VOLUME + 1);
 						mDat.updateSpriteDraw = true;
 						break;
 				}
@@ -1598,7 +1602,15 @@ void menuInputCancelEnabled(){
 				mDat.windowActionTarget = 8;
 
 				mDat.updateSpriteDraw = true;
-			
+
+				if (mDat.currMenuPage == MPI_OPTIONS) {
+					// We just backed out of the Options menu: Reset all current options values to the real options struct's values
+					MenuPageItem* optionsMenuItems = menuPages[MPI_OPTIONS].items;
+					optionsMenuItems[OPTID_MASTER_VOL].data.intVal = (int)options.masterVolume;
+					optionsMenuItems[OPTID_BGM_VOL].data.intVal = (int)options.bgmVolume;
+					optionsMenuItems[OPTID_SFX_VOL].data.intVal = (int)options.sfxVolume;
+					optionsMenuItems[OPTID_GRID_ENABLED].data.boolVal = (int)options.gridOn;
+				}
 				break;
 			case MMWS_TWEAKING_DATA:
 				currentSFXIndex = playNewSound(_sfxMenuMove);
@@ -2076,10 +2088,10 @@ void initMenuPages(MenuPage menuPages[]) {
 
     menuPages[5] = (MenuPage) {
         .items = {
-            {"Master Volume", ME_SLIDER, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 14, .data.intVal = 10},
-            {"BGM", ME_SLIDER, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 16, .data.intVal = 8},
-            {"SFX", ME_SLIDER, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 18, .data.intVal = 10},
-            {"Grid Enabled", ME_TOGGLE, .dataType = MPIDT_BOOL, .textGFXIndex = 20, .data.boolVal = true},
+            {"Master Volume", ME_SLIDER, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 14, .data.intVal = DEFAULT_MASTER_VOLUME, .id = MID_OPT_MAST_VOL},
+            {"BGM", ME_SLIDER, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 16, .data.intVal = DEFAULT_BGM_VOLUME, .id = MID_OPT_BGM_VOL},
+            {"SFX", ME_SLIDER, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 18, .data.intVal = DEFAULT_SFX_VOLUME, .id = MID_OPT_SFX_VOL},
+            {"Grid Enabled", ME_TOGGLE, .dataType = MPIDT_BOOL, .textGFXIndex = 20, .data.boolVal = DEFAULT_GRID_FLAG, .id = MID_OPT_GRID_ENABLED},
             {"Apply Changes", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecOptionsApplyChanges, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 22},
         },
         .itemCount = 5,
@@ -2134,6 +2146,16 @@ int menuExecOptionsApplyChanges(){
 	mDat.windowState = MMWS_APPLIED_OPTIONS;
 	mDat.windowActionTimer = 0;
 	mDat.windowActionTarget = 50;
+
+	// Set whatever current values are to the real options struct
+	MenuPageItem* optionsMenuItems = &menuPages[MPI_OPTIONS].items;
+	options.masterVolume = (u8)optionsMenuItems[OPTID_MASTER_VOL].data.intVal;
+	options.bgmVolume = (u8)optionsMenuItems[OPTID_BGM_VOL].data.intVal;
+	options.sfxVolume = (u8)optionsMenuItems[OPTID_SFX_VOL].data.intVal;
+	options.gridOn = (u8)optionsMenuItems[OPTID_GRID_ENABLED].data.boolVal;
+
+	// Now update all the asset volumes
+	updateAllSoundAssetVolumes();
 	return 0;
 }
 
@@ -2150,4 +2172,49 @@ void matchBegin(){
 
 	// End the current BGM
 	endCurrentBGM();
+}
+
+int calculateEffectiveVolume(int soundAssetVol, int userVol) {
+    // assetVolume: Volume defined in the asset (0-256 for 0-100%)
+    // userVolume: User-defined volume (0-10)
+    
+    // Get the fixed-point multiplier for the user volume setting
+    int userVolMultiplier = volumeTable[userVol];
+    
+    // Calculate the effective volume using fixed-point multiplication
+    return (soundAssetVol * userVolMultiplier) >> 8;
+}
+
+int calculateFinalVolume(int assetVolume, int userVolume, int masterVolume) {
+    // Get the fixed-point multipliers for the user volume and master volume
+    int userVolMultiplier = volumeTable[userVolume];
+    int masterVolMultiplier = volumeTable[masterVolume];
+    
+    // First apply the user volume, then apply the master volume
+    int effectiveVolume = (assetVolume * userVolMultiplier) >> 8;
+    return (effectiveVolume * masterVolMultiplier) >> 8;
+}
+
+void updateAllSoundAssetVolumes(){
+	int finalBgmVol = 256, finalSfxVol = 256;
+
+	for(int i = 0; i < TOTAL_SOUND_COUNT; i++){
+		
+		// Asset volumes are predefined (e.g., 256 for 100% volume)
+		// This is temporarily here for demonstration purposes
+		int soundAssetVolume[TOTAL_SOUND_COUNT] = {
+				256, 256, 256, 256, 256, 256, 
+				256, 256, 256, 256, 256, 256, 256, 256, 256, 256,
+				256, 256, 256, 256, 256, 256, 256, 256, 256, 256,
+			}; // 100% volume in every asset by default
+
+
+		if (i <= BGM_COUNT) {
+			finalBgmVol = calculateFinalVolume(soundAssetVolume[i], options.bgmVolume, options.masterVolume);
+			//AssetSetVolume(soundAssetVolume[i], finalBgmVol);
+		} else {
+			finalSfxVol = calculateFinalVolume(soundAssetVolume[BGM_COUNT + i], options.sfxVolume, options.masterVolume);
+			//AssetSetVolume(soundAssetVolume[BGM_COUNT + i], finalBgmVol);
+		}
+	}
 }

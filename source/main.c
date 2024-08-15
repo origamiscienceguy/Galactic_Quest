@@ -34,6 +34,11 @@ u16 IOBuffer5[0x200] EWRAM_DATA;
 u16 IOBuffer6[0x200] EWRAM_DATA;
 u16 IOBuffer7[0x200] EWRAM_DATA;
 
+// Definition of the volumeTable array
+const int volumeTable[MAX_VOLUME + 1] = {
+    0, 26, 51, 77, 102, 128, 154, 179, 204, 230, 256
+};
+
 int main(){
 	globalInitialize();
 	//start of the game loop in main.s
