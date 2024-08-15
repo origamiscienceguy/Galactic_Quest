@@ -259,6 +259,7 @@ extern u8 audioProgress;
 extern AudioSample *sampleList[];
 extern AssetData *soundList[];
 extern AssetData *sfxList[];
+extern cu16 *_sndAssetDefaultVol[];
 extern cu16 numSamples;
 extern cu16 numSounds;
 extern cu16 pitchTable[];

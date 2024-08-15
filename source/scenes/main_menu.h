@@ -155,6 +155,18 @@ const int bgmGroups[][2] = {
     {_musThemeD_Battle, _musThemeD_Peace}		// Dual Group
 };
 
+enum BGMList{
+	BGM_OPENING,
+	BGM_TITLE,
+	BGM_MAINMENU,
+	BGM_THEMEA,
+	BGM_THEMEB,
+	BGM_THEMEB_BATTLE,
+	BGM_THEMEC,
+	BGM_THEMED,
+	BGM_MAX
+};
+
 #define SOUND_TEST_BGM_COUNT (int)(sizeof(bgmGroups) / sizeof(bgmGroups[0]))
 #define SOUND_TEST_SFX_COUNT 15
 #define TOTAL_SOUND_COUNT 26 //rip numSounds
@@ -363,7 +375,6 @@ void menuInputConfirmEnabled();
 void menuInputCancelEnabled();
 void performPageTransfer(int datIntVal);
 void endCurrentBGM();
-void updateAllSoundAssetVolumes();
 
 // Menu Functions
 int menuExecNewGame();
@@ -405,6 +416,12 @@ void loadMenuGraphics(MenuPage *menuPage);
 bool sfxIsPlaying(int sfxIndex);
 int calculateEffectiveVolume(int soundAssetVol, int userVol);
 u8 calculateFinalVolume(u8 assetVolume, int userVolume, int masterVolume);
+void playBGM(u8 bgmIndex);
+void playSFX(u8 assetIndex, int sfxSlot);
+void stopAllSoundExcept(const u8* exception);
+void stopAllSound();
+void stopSFX(u8 soundIndex);
+void updateSoundVolumes(bool leavingOptionsMenu);
 
 //external functions
 #endif
