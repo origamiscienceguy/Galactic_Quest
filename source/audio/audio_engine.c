@@ -250,6 +250,10 @@ void setAssetVolume(u8 soundIndex, u8 volume){
 	activeSounds[soundIndex].mixVolume = volume;
 }
 
+u8 getAssetVolume(u8 soundIndex){
+	return activeSounds[soundIndex].mixVolume;
+}
+
 void volumeSlideAsset(u8 assetIndex, u8 volumePerTick, u8 finalVolume){
 	activeSounds[assetIndex].volumeSlideAmount = volumePerTick;
 	activeSounds[assetIndex].finalVolume = finalVolume;

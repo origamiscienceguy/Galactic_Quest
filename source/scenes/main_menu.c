@@ -2185,7 +2185,7 @@ int calculateEffectiveVolume(int soundAssetVol, int userVol) {
     return (soundAssetVol * userVolMultiplier) >> 8;
 }
 
-int calculateFinalVolume(int assetVolume, int userVolume, int masterVolume) {
+u8 calculateFinalVolume(u8 assetVolume, int userVolume, int masterVolume) {
     // Get the fixed-point multipliers for the user volume and master volume
     int userVolMultiplier = volumeTable[userVolume];
     int masterVolMultiplier = volumeTable[masterVolume];
@@ -2195,26 +2195,20 @@ int calculateFinalVolume(int assetVolume, int userVolume, int masterVolume) {
     return (effectiveVolume * masterVolMultiplier) >> 8;
 }
 
-void updateAllSoundAssetVolumes(){
-	int finalBgmVol = 256, finalSfxVol = 256;
-
-	for(int i = 0; i < TOTAL_SOUND_COUNT; i++){
-		
-		// Asset volumes are predefined (e.g., 256 for 100% volume)
-		// This is temporarily here for demonstration purposes
-		int soundAssetVolume[TOTAL_SOUND_COUNT] = {
-				256, 256, 256, 256, 256, 256, 
-				256, 256, 256, 256, 256, 256, 256, 256, 256, 256,
-				256, 256, 256, 256, 256, 256, 256, 256, 256, 256,
-			}; // 100% volume in every asset by default
-
-
-		if (i <= BGM_COUNT) {
-			finalBgmVol = calculateFinalVolume(soundAssetVolume[i], options.bgmVolume, options.masterVolume);
-			//AssetSetVolume(soundAssetVolume[i], finalBgmVol);
-		} else {
-			finalSfxVol = calculateFinalVolume(soundAssetVolume[BGM_COUNT + i], options.sfxVolume, options.masterVolume);
-			//AssetSetVolume(soundAssetVolume[BGM_COUNT + i], finalBgmVol);
-		}
-	}
+void updateAllSoundAssetVolumes() {
+    for (int i = 0; i < TOTAL_SOUND_COUNT; i++) {
+        u8 finalVolume;
+        u8 assetVolume = getAssetVolume(i);
+        
+        if (i < BGM_COUNT) {
+            // Update BGM volume
+            finalVolume = calculateFinalVolume(assetVolume, options.bgmVolume, options.masterVolume);
+        } else {
+            // Update SFX volume
+            int sfxID = i - BGM_COUNT;
+            finalVolume = calculateFinalVolume(assetVolume, options.sfxVolume, options.masterVolume);
+        }
+        
+        setAssetVolume(i, finalVolume);
+    }
 }

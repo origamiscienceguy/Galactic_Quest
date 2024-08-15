@@ -404,7 +404,7 @@ bool tileYInBounds(int y);
 void loadMenuGraphics(MenuPage *menuPage);
 bool sfxIsPlaying(int sfxIndex);
 int calculateEffectiveVolume(int soundAssetVol, int userVol);
-int calculateFinalVolume(int assetVolume, int userVolume, int masterVolume);
+u8 calculateFinalVolume(u8 assetVolume, int userVolume, int masterVolume);
 
 //external functions
 #endif

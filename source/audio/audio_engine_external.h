@@ -36,6 +36,9 @@ extern void volumeSlideAsset(u8 assetIndex, u8 volumePerTick, u8 finalVolume);
 //sets the mixing volume of an asset 0-255
 extern void setAssetVolume(u8 assetIndex, u8 volume);
 
+//gets the mixing volume of an asset 0-255
+extern u8 getAssetVolume(u8 soundIndex);
+
 //skips asset1 to the same order, row, and tick of asset 2
 extern void syncAsset(u8 assetIndex1, u8 assetIndex2);
 
