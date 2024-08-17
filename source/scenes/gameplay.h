@@ -67,10 +67,18 @@
 #define OBJ_CURSOR_GFX_SIZE 32
 
 #define OBJ_SELECT_A_SHIP_SPRITES_START 11
-#define OBJ_SELECT_A_SHIP_SPRITES_NUM 30
+#define OBJ_SELECT_A_SHIP_SPRITES_NUM 10
 #define OBJ_SELECT_A_SHIP_GFX (OBJ_CURSOR_GFX + OBJ_CURSOR_GFX_SIZE + 2)
-#define OBJ_SELECT_A_SHIP_GFX_SIZE 192
+#define OBJ_SELECT_A_SHIP_GFX_SIZE 346
+#define SELECT_A_SHIP_MOVE_FRAMES 5
+#define SELECT_A_SHIP_MAX_DISPLAYED_SHIPS 8
+#define SELECT_A_SHIP_WIDTH 88
 
+#define OBJ_ACTION_MENU_SPRITES_START (OBJ_SELECT_A_SHIP_SPRITES_START + OBJ_SELECT_A_SHIP_SPRITES_NUM)
+#define OBJ_ACTION_MENU_SPRITES_NUM 12
+#define OBJ_ACTION_MENU_GFX_START (OBJ_SELECT_A_SHIP_GFX + OBJ_SELECT_A_SHIP_GFX_SIZE)
+#define ACTION_MENU_MOVE_FRAMES 4
+#define ACTION_MENU_WIDTH 64
 
 
 #define CYCLE_PAN_SPEED 20
@@ -84,10 +92,6 @@
 #define MINIMAP_MOVE_FRAMES 4
 #define MINIMAP_YPOS 48
 #define MINIMAP_WIDTH 64
-
-#define SELECT_A_SHIP_MOVE_FRAMES 5
-#define SELECT_A_SHIP_MAX_DISPLAYED_SHIPS 8
-#define SELECT_A_SHIP_WIDTH 88
 
 //enums
 enum ShipType{
@@ -138,6 +142,14 @@ enum GridState{
 
 enum SelectAShipMenuState{
 	NO_SELECT_A_SHIP_MENU, WAITING_SELECT_A_SHIP_MENU, SELECTING_SELECT_A_SHIP_MENU 
+};
+
+enum ActionMenuState{
+	NO_ACTION_MENU, WAITING_ACTION_MENU, SELECTING_ACTION_MENU
+};
+
+enum ActionMenuOptions{
+	MOVE_OPTION, SHOOT_OPTION, END_TURN_OPTION, SEE_RANGE_OPTION, BACK_OPTION
 };
 
 //structs
@@ -222,6 +234,18 @@ typedef struct SelectAShipMenu{
 	u8 upHeldCounter;
 }SelectAShipMenu;
 
+typedef struct ActionMenu{
+	enum ActionMenuState state;
+	enum WidgetState widgetState;
+	u8 actionTarget;
+	u8 actionTimer;
+	u8 currentSelection;
+	u8 moveOption;
+	u8 checkRangeOption;
+	u8 shootOption;
+	u8 endTurnOption;
+}ActionMenu;
+
 typedef struct MapData{
 	enum MapState state; //what is the stage of the game are we in
 	enum Team teamTurn; //who's turn is it
@@ -238,7 +262,8 @@ typedef struct MapData{
 	CursorData cursor; //the struct containing data about the cursor
 	HighlightData highlight; //the data about the highlight layer
 	MinimapData minimap; //the data about the minimap layer
-	SelectAShipMenu selectAShip;
+	SelectAShipMenu selectAShip; //the data about the select-a-ship menu
+	ActionMenu actionMenu; //the data about the action meny
 }MapData;
 
 //globals
@@ -247,8 +272,8 @@ extern const u16 inverseTime[];
 extern const s16 sinTable[];
 extern const u8 arctanTable1[];
 extern const u8 arctanTable2[];
-extern const unsigned short ships_selectedTiles[];
-extern const unsigned short ships_selectedMap[];
+extern const unsigned short ships_selectedTiles[880];
+extern const unsigned short ships_selectedMap[448];
 extern const unsigned short ships_selectedPal[64];
 extern const unsigned short cursorTiles[512];
 extern const unsigned short minimap_cursorTiles[16];
@@ -280,9 +305,12 @@ extern const unsigned short list_ships_rightTiles[128];
 extern const unsigned short list_ships_focused_rightTiles[128];
 extern const unsigned short carretTiles[32];
 extern const unsigned short list_numbers_32x16Tiles[12928];
+extern const unsigned short action_focusedTiles[1792];
+extern const unsigned short actionTiles[1792];
 
 extern const u8 selectAShipYPos[];
 extern const u8 selectAShipXPos[];
+extern const u8 actionMenuXPos[];
 
 extern const u8 minimapPositions[];
 
@@ -297,6 +325,7 @@ void shipListInit();
 void createShipTilemap(u16 *);
 void createGridTilemap(u16 *);
 void drawSelectedShip(OBJ_ATTR *, u8 *);
+void drawActionMenu(OBJ_ATTR *);
 void drawCursor(OBJ_ATTR *);
 void drawHighlight(u8 *);
 void drawMinimap(OBJ_ATTR *, u8 *);
@@ -332,6 +361,7 @@ u8 countSameTeam(u8, u8, u8 *);
 void drawSelectAShipMenu(OBJ_ATTR *);
 void moveWidget(cu8 *, u8, u8 *, s16 *, s16 *, enum WidgetState *, u8 *, u8);
 void updateSelectAShip(u8 *);
+void updateActionMenu();
 
 //temp function
 void initMap();

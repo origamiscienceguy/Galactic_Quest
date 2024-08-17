@@ -110,3 +110,8 @@ const u8 selectAShipYPos[] = {
 const u8 selectAShipXPos[] = {
 	28, 52, 70, 82, 88
 };
+
+//the x position of the action menu
+const u8 actionMenuXPos[] = {
+	28, 46, 58, 64
+};

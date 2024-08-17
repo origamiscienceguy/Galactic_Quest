@@ -321,6 +321,7 @@ IWRAM_CODE void createGridTilemap(u16 *tilemapBuffer){
 	}
 }
 void drawSelectedShip(OBJ_ATTR *spriteBuffer, u8 *characterBuffer){
+	u8 shipIndex = mapData.selectedShip.index;
 	if(mapData.ships[mapData.selectedShip.index].state != SELECTED){
 		spriteBuffer[OBJ_SELECTED_SHIP_SPRITE].attr0 = ATTR0_HIDE;
 		//clear the selected ships graphics from vram
@@ -357,15 +358,46 @@ void drawSelectedShip(OBJ_ATTR *spriteBuffer, u8 *characterBuffer){
 	spriteBuffer[OBJ_SELECTED_SHIP_AFFINE_MAT * 4 + 2].fill = -(sinTable[angle % 256]) * 2;
 	spriteBuffer[OBJ_SELECTED_SHIP_AFFINE_MAT * 4 + 3].fill = (sinTable[(angle + 0x40) % 256]) * 2;
 	
+	u32 firstTile = (mapData.ships[shipIndex].type * 64) + (((currentScene.sceneCounter % 8) >> 1) * 16);
+	
 	//load the graphics of the selected ship
 	for(u32 tile = 0; tile < 16; tile++){
-		cu16 *gfxPtr = &ships_selectedTiles[ships_selectedMap[tile] * 16];
+		cu16 *gfxPtr = &ships_selectedTiles[ships_selectedMap[firstTile + tile] * 16];
 		u16 *VRAMPtr = &((u16 *)characterBuffer)[tile * 16];
 		//load the tile graphics
 		for(u32 i = 0; i < 16; i++){
 			VRAMPtr[i] = gfxPtr[i];
 		}
 	}
+}
+
+void drawActionMenu(OBJ_ATTR *spriteBuffer){
+
+	s16 xPos1;
+	s16 xPos2;
+	s16 yPos;
+	s16 bodyYPos;
+	u8 palette = mapData.teamTurn;
+	u8 useMenu2 = 0;
+	u8 numDisplayed = 0;
+	u8 state = mapData.actionMenu.widgetState;
+	
+	//if this menu is hidden, don't draw it
+	if((state == WIDGET_HIDDEN_LEFT) || (state == WIDGET_HIDDEN_RIGHT)){
+		for(u32 spriteSlot = OBJ_ACTION_MENU_SPRITES_START; spriteSlot < OBJ_ACTION_MENU_SPRITES_START + OBJ_ACTION_MENU_SPRITES_NUM; spriteSlot++){
+			spriteBuffer[spriteSlot].attr0 = ATTR0_HIDE;
+		}
+	}
+	
+	//otherwise, move it according to the widget code
+	moveWidget(actionMenuXPos, ACTION_MENU_MOVE_FRAMES, &mapData.actionMenu.actionTimer, &xPos1, &xPos2,
+	&mapData.actionMenu.widgetState, &useMenu2, ACTION_MENU_WIDTH);
+	
+	
+	//setup the body sprites
+	spriteBuffer[OBJ_ACTION_MENU_SPRITES_START].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(35);
+	spriteBuffer[OBJ_ACTION_MENU_SPRITES_START].attr1 = ATTR1_SIZE_64 | ATTR1_X((xPos1) & 0x1ff);
+	spriteBuffer[OBJ_ACTION_MENU_SPRITES_START].attr2 = ATTR2_ID(OBJ_ACTION_MENU_GFX_START) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
 }
 
 void drawCursor(OBJ_ATTR *spriteBuffer){
@@ -678,10 +710,10 @@ void drawSelectAShipMenu(OBJ_ATTR *spriteBuffer){
 	//setup the body sprites
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 4].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_TALL | ATTR0_Y(bodyYPos + 35);
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 4].attr1 = ATTR1_SIZE_64 | ATTR1_X((xPos1 + 43) & 0x1ff);
-	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 4].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 280) | ATTR2_PRIO(0) | ATTR2_PALBANK(0);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 4].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 280) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 5].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_TALL | ATTR0_Y(bodyYPos + 99);
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 5].attr1 = ATTR1_SIZE_64 | ATTR1_X((xPos1 + 43) & 0x1ff);
-	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 5].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 312) | ATTR2_PRIO(0) | ATTR2_PALBANK(0);
+	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 5].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 312) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 6].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(bodyYPos + 32);
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 6].attr1 = ATTR1_SIZE_64 | ATTR1_X(xPos1 & 0x1ff);
 	spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START + 6].attr2 = ATTR2_ID(OBJ_SELECT_A_SHIP_GFX + 88) | ATTR2_PRIO(0) | ATTR2_PALBANK(palette);
@@ -897,29 +929,47 @@ void selectAShipState(){
 	checkCycleButtons();
 	
 	updateSelectAShip(shipsInTile);
+	//queue the character data for menus
+	characterData[1].buffer = characterBuffer1;
+	characterData[1].size = 2048;
+	characterData[1].position = &tile_mem_obj[0][OBJ_SELECT_A_SHIP_GFX + 88];
 	
 	//handle any changes to the camera that occured this frame
 	processCamera();
 }
 
 void shipSelectedState(){
-
-	//calculate the ship's intented next position
-	u8 shipIndex = mapData.selectedShip.index;
-	s16 xTarget = mapData.ships[shipIndex].xPos + mapData.ships[shipIndex].xVel;
-	s16 yTarget = mapData.ships[shipIndex].yPos + mapData.ships[shipIndex].yVel;
 	
-	//set the cursor to this ship's current trajectory
-	mapData.cursor.state = CUR_STILL;
-	mapData.cursor.xPos = (xTarget << 4) - 8;
-	mapData.cursor.yPos = (yTarget << 4) - 8;
-	mapData.cursor.selectXPos = xTarget;
-	mapData.cursor.selectYPos = yTarget;
-
-	//pan to that location
-	cameraPanInit((xTarget << 4) - 112, (yTarget << 4) - 72, CYCLE_PAN_SPEED);
+	if(inputs.pressed & KEY_A){
+		//calculate the ship's intented next position
+		u8 shipIndex = mapData.selectedShip.index;
+		s16 xTarget = mapData.ships[shipIndex].xPos + mapData.ships[shipIndex].xVel;
+		s16 yTarget = mapData.ships[shipIndex].yPos + mapData.ships[shipIndex].yVel;
+		
+		//set the cursor to this ship's current trajectory
+		mapData.cursor.state = CUR_STILL;
+		mapData.cursor.xPos = (xTarget << 4) - 8;
+		mapData.cursor.yPos = (yTarget << 4) - 8;
+		mapData.cursor.selectXPos = xTarget;
+		mapData.cursor.selectYPos = yTarget;
+		
+		//pan to that location
+		cameraPanInit((xTarget << 4) - 112, (yTarget << 4) - 72, CYCLE_PAN_SPEED);
+		
+		mapData.state = SHIP_MOVEMENT_SELECT;
+	}	
 	
-	mapData.state = SHIP_MOVEMENT_SELECT;
+	mapData.actionMenu.moveOption = 1;
+	mapData.actionMenu.shootOption = 1;
+	
+	updateActionMenu();
+	//queue the character data for menus
+	characterData[1].buffer = characterBuffer1;
+	characterData[1].size = 512;
+	characterData[1].position = &tile_mem_obj[0][OBJ_ACTION_MENU_GFX_START];
+	
+	//update the camera
+	processCamera();
 }
 
 void shipMovementSelectState(){
@@ -1284,6 +1334,9 @@ void processCamera(){
 	//draw the select-a-ship menu
 	drawSelectAShipMenu(objectBuffer);
 	
+	//draw the action menu
+	drawActionMenu(objectBuffer);
+	
 	//queue the tilemap for layer 1 to be sent
 	tilemapData[0].size = 512;
 	tilemapData[0].buffer = tilemapBuffer0;
@@ -1303,11 +1356,6 @@ void processCamera(){
 	characterData[0].buffer = characterBuffer0;
 	characterData[0].size = 640;
 	characterData[0].position = &tile_mem_obj[0];
-	
-	//queue the character data for menus
-	characterData[1].buffer = characterBuffer1;
-	characterData[1].size = 2048;
-	characterData[1].position = &tile_mem_obj[0][OBJ_SELECT_A_SHIP_GFX + 88];
 	
 	//queue the OAM data for all of the sprites
 	OAMData.position = (void *)oam_mem;
@@ -1810,6 +1858,8 @@ void selectShip(u8 shipIndex){
 		mapData.selectedShip.index = shipIndex;
 		mapData.ships[shipIndex].state = SELECTED;
 		mapData.state = SHIP_SELECTED;
+		mapData.actionMenu.state = WAITING_ACTION_MENU;
+		revealWidget(&mapData.actionMenu.widgetState, &mapData.actionMenu.actionTimer, &mapData.actionMenu.actionTarget, ACTION_MENU_MOVE_FRAMES);
 		
 		//make sure all ships sharing this tile are hidden
 		u8 currentIndex = mapData.ships[shipIndex].sameTileLink;
@@ -2201,6 +2251,100 @@ void updateSelectAShip(u8 *shipList){
 	}
 }
 
+void updateActionMenu(){
+	u8 drawMove = 0;
+	u8 drawShoot = 0;
+	u8 drawCheckRange = 0;
+	u8 drawEndTurn = 0;
+	u8 drawBack = 1;
+	u8 numOptions = 1;
+	u8 currentOption = 0;
+	u8 *bufferPointer = characterBuffer1;
+	cu16 *graphicsPointer;
+	
+	//clear the buffer
+	memset32(bufferPointer, 0, 512);
+	
+	//count the number of options
+	if(mapData.actionMenu.moveOption){
+		drawMove = 1;
+		numOptions++;
+	}
+	if(mapData.actionMenu.shootOption){
+		drawShoot = 1;
+		numOptions++;
+	}
+	if(mapData.actionMenu.checkRangeOption){
+		drawCheckRange = 1;
+		numOptions++;
+	}
+	if(mapData.actionMenu.endTurnOption){
+		drawEndTurn = 1;
+		numOptions++;
+	}
+	
+	if(numOptions == 1){
+		return;
+	}
+	if(numOptions > 3){
+		return;
+	}
+	
+	if(drawMove){
+		if(currentOption == mapData.actionMenu.currentSelection){
+			graphicsPointer = &action_focusedTiles[MOVE_OPTION * 256];
+		}
+		else{
+			graphicsPointer = &actionTiles[MOVE_OPTION * 256];
+		}
+		memcpy32(bufferPointer, graphicsPointer, 128);
+		bufferPointer += 512;
+		currentOption++;
+	}
+	if(drawShoot){
+		if(currentOption == mapData.actionMenu.currentSelection){
+			graphicsPointer = &action_focusedTiles[SHOOT_OPTION * 256];
+		}
+		else{
+			graphicsPointer = &actionTiles[SHOOT_OPTION * 256];
+		}
+		memcpy32(bufferPointer, graphicsPointer, 128);
+		bufferPointer += 512;
+		currentOption++;
+	}
+	if(drawCheckRange){
+		if(currentOption == mapData.actionMenu.currentSelection){
+			graphicsPointer = &action_focusedTiles[SEE_RANGE_OPTION * 256];
+		}
+		else{
+			graphicsPointer = &actionTiles[SEE_RANGE_OPTION * 256];
+		}
+		memcpy32(bufferPointer, graphicsPointer, 128);
+		bufferPointer += 512;
+		currentOption;
+	}
+	if(drawEndTurn){
+		if(currentOption == mapData.actionMenu.currentSelection){
+			graphicsPointer = &action_focusedTiles[END_TURN_OPTION * 256];
+		}
+		else{
+			graphicsPointer = &actionTiles[END_TURN_OPTION * 256];
+		}
+		memcpy32(bufferPointer, graphicsPointer, 128);
+		bufferPointer += 512;
+		currentOption++;
+	}
+	if(drawBack){
+		if(currentOption == mapData.actionMenu.currentSelection){
+			graphicsPointer = &action_focusedTiles[BACK_OPTION * 256];
+		}
+		else{
+			graphicsPointer = &actionTiles[BACK_OPTION * 256];
+		}
+		memcpy32(bufferPointer, graphicsPointer, 192);
+		bufferPointer += 512;
+	}
+}
 //a temprary function to initialize a test map.
 void initMap(){
 	u8 index = 0;
