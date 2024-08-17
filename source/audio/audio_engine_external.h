@@ -20,10 +20,6 @@ extern u8 endSound(u8 assetIndex);
 //returns the number of assets still playing after this one is removed (always 0)
 extern u8 endAllSound();
 
-//will remove all assets from the queue except for the provided sound index. Can be called at any time by the programmer, or called automatically after an asset reaches the end.
-//returns the number of assets still playing after the rest are removed
-extern u8 endAllSoundExcept(u8 soundIndex);
-
 //will temporarilly stop playing a song in the queue. It will still maintain it's position in the queue.
 extern void pauseAsset(u8 assetIndex);
 
@@ -35,6 +31,12 @@ extern void volumeSlideAsset(u8 assetIndex, u8 volumePerTick, u8 finalVolume);
 
 //sets the mixing volume of an asset 0-255
 extern void setAssetVolume(u8 assetIndex, u8 volume);
+
+//gets the default volume of an asset 0-255
+extern cu8 getAssetDefaultVolume(u8 soundIndex);
+
+//gets the mix volume of an asset 0-255
+extern cu8 getAssetMixVolume(u8 soundIndex);
 
 //skips asset1 to the same order, row, and tick of asset 2
 extern void syncAsset(u8 assetIndex1, u8 assetIndex2);

@@ -38,6 +38,14 @@ void introInitialize(){
 	currentScene.state = NORMAL;
 	
 	currentBGM = playNewSound(_musOpening);
+
+	//set default options
+	options.gridOn = DEFAULT_GRID_FLAG;
+	options.masterVolume = DEFAULT_MASTER_VOLUME;
+	options.bgmVolume = DEFAULT_BGM_VOLUME;
+	options.sfxVolume = DEFAULT_SFX_VOLUME;
+
+	updateSoundVolumes();
 }
 
 void introNormal(){

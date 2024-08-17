@@ -140,6 +140,7 @@
 
 #define MENU_TEXT_LAYER_ID 1
 
+//define constants for Sound Test
 #define BGM_SINGLE 999 // Marker for single track
 
 // Define the grouped BGM assets
@@ -154,8 +155,22 @@ const int bgmGroups[][2] = {
     {_musThemeD_Battle, _musThemeD_Peace}		// Dual Group
 };
 
+enum BGMList{
+	BGM_OPENING,
+	BGM_TITLE,
+	BGM_MAINMENU,
+	BGM_THEMEA,
+	BGM_THEMEB,
+	BGM_THEMEB_BATTLE,
+	BGM_THEMEC,
+	BGM_THEMED,
+	BGM_MAX
+};
+
 #define SOUND_TEST_BGM_COUNT (int)(sizeof(bgmGroups) / sizeof(bgmGroups[0]))
 #define SOUND_TEST_SFX_COUNT 15
+#define TOTAL_SOUND_COUNT 26 //rip numSounds
+#define BGM_COUNT (TOTAL_SOUND_COUNT - SOUND_TEST_SFX_COUNT) // Technically not correct if SFX also has groups, but it works :p
 #define SFX_START 11
 
 //enums
@@ -188,8 +203,8 @@ enum MenuWindowConfirmDirection {
 
 enum OPTION_IDS{
 	OPTID_MASTER_VOL,
-	OPTID_BGM,
-	OPTID_SFX,
+	OPTID_BGM_VOL,
+	OPTID_SFX_VOL,
 	OPTID_GRID_ENABLED
 };
 
@@ -206,7 +221,11 @@ typedef enum{
 typedef enum{
 	MID_SOUND_TEST_BGM,
 	MID_SOUND_TEST_SFX,
-	MID_SOUND_TEST_CANCEL
+	MID_SOUND_TEST_CANCEL,
+	MID_OPT_MAST_VOL,
+	MID_OPT_BGM_VOL,
+	MID_OPT_SFX_VOL,
+	MID_OPT_GRID_ENABLED
 }MenuItemID;
 
 //structs
@@ -395,6 +414,14 @@ int wrapTileX(int x);
 bool tileYInBounds(int y);
 void loadMenuGraphics(MenuPage *menuPage);
 bool sfxIsPlaying(int sfxIndex);
+int calculateEffectiveVolume(int soundAssetVol, int userVol);
+u8 calculateFinalVolume(u8 assetVolume, int userVolume, int masterVolume);
+void playBGM(u8 bgmIndex);
+void playSFX(u8 assetIndex, int sfxSlot);
+void stopAllSoundExcept(const u8* exception);
+void stopAllSound();
+void stopSFX(u8 soundIndex);
+void updateSoundVolumes(bool leavingOptionsMenu);
 
 //external functions
 #endif
