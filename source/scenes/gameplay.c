@@ -818,7 +818,7 @@ void openMapState(){
 		u8 numShipsInTile = 0;
 		u8 xPos = mapData.cursor.selectXPos;
 		u8 yPos = mapData.cursor.selectYPos;
-		numShipsInTile = countSameTeam(xPos, yPos, shipsInTile);
+		numShipsInTile = countShips(xPos, yPos, shipsInTile);
 		
 		//if there is only one ship, select it
 		if(numShipsInTile == 1){
@@ -876,7 +876,7 @@ void selectAShipState(){
 	u8 numShipsInTile = 0;
 	u8 xPos = mapData.cursor.selectXPos;
 	u8 yPos = mapData.cursor.selectYPos;
-	numShipsInTile = countSameTeam(xPos, yPos, shipsInTile);
+	numShipsInTile = countShips(xPos, yPos, shipsInTile);
 	mapData.selectAShip.shipCount = numShipsInTile;
 	
 	if(inputs.pressed & KEY_B){
@@ -967,7 +967,7 @@ void shipSelectedState(){
 		}
 		//if the shoot option is selected
 		else if((mapData.actionMenu.currentSelection == 1) && (mapData.actionMenu.shootOption)){
-			mapData.state = OPEN_MAP;
+			mapData.state = AFTER_BATTLE_BEFORE_MOVE;
 		}
 		//if the back option is selected
 		else{
@@ -2146,13 +2146,13 @@ void cursorBoundsCheck(){
 		mapData.camera.yPos = mapData.cursor.yPos - 104;
 	}
 }
-u8 countSameTeam(u8 xPos, u8 yPos, u8 *shipsInTile){
+u8 countShips(u8 xPos, u8 yPos, u8 *shipsInTile){
 	u8 numShipsFound = 0;
 	//clear the ship in tile list
 	memset32(shipsInTile, 0, sizeof(shipsInTile) >> 2);
 	//check every ship and make a list of ships ready to move on this team which ones are in this tile
 	for(u32 shipIndex = 0; shipIndex < MAX_SHIPS; shipIndex++){
-		if((mapData.ships[shipIndex].state != READY_VISIBLE) && (mapData.ships[shipIndex].state != READY_HIDDEN)){
+		if((mapData.ships[shipIndex].state == DESTROYED) || (mapData.ships[shipIndex].state == NOT_PARTICIPATING)){
 			continue;
 		}
 		if((mapData.ships[shipIndex].xPos == xPos) && (mapData.ships[shipIndex].yPos == yPos)){

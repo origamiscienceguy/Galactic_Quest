@@ -361,7 +361,7 @@ void checkCycleButtons();
 void revealWidget(u8 *, u8 *, u8 *, u8);
 void hideWidget(u8 *, u8 *, u8 *, u8);
 void cursorBoundsCheck();
-u8 countSameTeam(u8, u8, u8 *);
+u8 countShips(u8, u8, u8 *);
 void drawSelectAShipMenu(OBJ_ATTR *);
 void moveWidget(cu8 *, u8, u8 *, s16 *, s16 *, enum WidgetState *, u8 *, u8);
 void updateSelectAShip(u8 *);
