@@ -103,7 +103,8 @@ enum ShipState{
 };
 
 enum MapState{
-	TURN_START, OPEN_MAP, SELECT_A_SHIP, SHIP_SELECTED, SHIP_MOVEMENT_SELECT, SHIP_MOVING, BATTLE, TURN_END, TURN_END_MOVEMENT, TURN_REPLAY
+	TURN_START, OPEN_MAP, SELECT_A_SHIP, SHIP_SELECTED, SHIP_MOVEMENT_SELECT, SHIP_MOVING, BATTLE, TURN_END, TURN_END_MOVEMENT, TURN_REPLAY, OPEN_TILE_SELECTED,
+	BATTLE_SELECT_A_SHIP, AFTER_BATTLE_BEFORE_MOVE, INACTIVE_SHIP_SELECTED, 
 };
 
 enum TeamState{
@@ -244,6 +245,7 @@ typedef struct ActionMenu{
 	u8 checkRangeOption;
 	u8 shootOption;
 	u8 endTurnOption;
+	u8 numOptions;
 }ActionMenu;
 
 typedef struct MapData{
@@ -311,6 +313,7 @@ extern const unsigned short actionTiles[1792];
 extern const u8 selectAShipYPos[];
 extern const u8 selectAShipXPos[];
 extern const u8 actionMenuXPos[];
+extern const u8 actionMenuYPos[];
 
 extern const u8 minimapPositions[];
 
@@ -336,6 +339,7 @@ void turnStartState();
 void openMapState();
 void selectAShipState();
 void shipSelectedState();
+void openTileSelectedState();
 void shipMovementSelectState();
 void shipMovingState();
 void turnEndState();
@@ -362,6 +366,7 @@ void drawSelectAShipMenu(OBJ_ATTR *);
 void moveWidget(cu8 *, u8, u8 *, s16 *, s16 *, enum WidgetState *, u8 *, u8);
 void updateSelectAShip(u8 *);
 void updateActionMenu();
+void determineActionMenu();
 
 //temp function
 void initMap();

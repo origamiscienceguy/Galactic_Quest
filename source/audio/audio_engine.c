@@ -241,11 +241,11 @@ void setAssetVolume(u8 soundIndex, u8 volume){
 	activeSounds[soundIndex].mixVolume = volume;
 }
 
-cu8 getAssetDefaultVolume(u8 soundIndex){
+u8 getAssetDefaultVolume(u8 soundIndex){
 	return *_sndAssetDefaultVol[soundIndex];
 }
 
-cu8 getAssetMixVolume(u8 soundIndex){
+u8 getAssetMixVolume(u8 soundIndex){
 	return activeSounds[soundIndex].mixVolume;
 }
 
