@@ -24,7 +24,7 @@
 #define BG_STARRY_IMAGE_TILEMAP 26
 #define BG_HEALTH_SQUARES_TILEMAP 25
 #define BG_PLAYER_PROMPT_TILEMAP 23
-#define BG_PLAYER_PROMPT_CHARDATA 2
+#define BG_PLAYER_PROMPT_CHARDATA 1
 
 #define BG_SHIPS_PAL_START 0
 #define BG_SHIPS_PAL_SIZE 8
@@ -365,24 +365,24 @@ extern const unsigned short left_battle_dispaly_rightTiles[512];
 extern const unsigned short right_battle_dispaly_leftTiles[512];
 extern const unsigned short right_battle_dispaly_rightTiles[512];
 extern const unsigned short health_barTiles[96];
-extern const unsigned short blue_teamTiles[9600];
-extern const unsigned short red_teamTiles[9600];
-extern const unsigned short yellow_teamTiles[9600];
-extern const unsigned short green_teamTiles[9600];
-extern const unsigned short blue_teamPal[16];
-extern const unsigned short red_teamPal[16];
-extern const unsigned short yellow_teamPal[16];
-extern const unsigned short green_teamPal[16];
+extern const unsigned short blue_teamTiles[720];
+extern const unsigned short blue_teamMap[1024];
+extern const unsigned short red_teamTiles[864];
+extern const unsigned short red_teamMap[1024];
+extern const unsigned short yellow_teamTiles[848];
+extern const unsigned short yellow_teamMap[1024];
+extern const unsigned short green_teamTiles[1152];
+extern const unsigned short green_teamMap[1024];
 
 extern SoundChannel currentBGMIndex[2];
 extern SoundChannel currentSFXIndex[5];
 
-enum AUDGROUP_IDS{
+/*enum AUDGROUP_IDS{
     AUDGROUP_MENUSFX,
     AUDGROUP_SOUNDT_SFX,
     AUDGROUP_SOUNDT_BGM,
 	AUDGROUP_MAX
-};
+};*/
 
 extern const u8 selectAShipYPos[];
 extern const u8 selectAShipXPos[];

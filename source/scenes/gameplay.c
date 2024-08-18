@@ -153,7 +153,7 @@ void gameplayNormal(){
 		break;
 	case PROMPT_NEXT_PLAYER:
 		nextPlayer();
-		processCamera();
+		//processCamera();
 		break;
 	case TURN_END_MOVEMENT:
 		turnEndMovementState();
@@ -1689,16 +1689,17 @@ void turnEndState(){
 				REG_DISPCNT = DCNT_MODE0 | DCNT_BG0; // Enable only BG0
 
 				// Configure BG0 as needed
-				REG_BG0CNT = BG_4BPP | BG_SBB(BG_PLAYER_PROMPT_TILEMAP) | BG_CBB(BG_PLAYER_PROMPT_CHARDATA) | BG_PRIO(3) | BG_REG_64x64;
-
-				// Disable other backgrounds
-				REG_BG1CNT = 0;
-				REG_BG2CNT = 0;
-				REG_BG3CNT = 0;
-
-				// Disable blending effects
-				REG_BLDCNT = 0;
-				REG_BLDY = 0;
+				REG_BG0CNT = BG_4BPP | BG_SBB(BG_PLAYER_PROMPT_TILEMAP) | BG_CBB(BG_PLAYER_PROMPT_CHARDATA) | BG_PRIO(3) | BG_REG_32x32;
+				REG_BG0HOFS = 0;
+				REG_BG0VOFS = 0;
+				
+				characterData[0].size = sizeof(red_teamTiles) >> 2;
+                characterData[0].buffer = (void *)red_teamTiles;
+                characterData[0].position = tile_mem[BG_PLAYER_PROMPT_CHARDATA];
+                
+                tilemapData[0].buffer = (void *)red_teamMap;
+                tilemapData[0].size = sizeof(red_teamMap) >> 2;
+                tilemapData[0].position = &se_mem[BG_PLAYER_PROMPT_TILEMAP];
 
 				// fukkit
 				setAssetVolume(currentBGMIndex[0].assetIndex, 0);
@@ -1706,7 +1707,7 @@ void turnEndState(){
 				mapData.state = PROMPT_NEXT_PLAYER;
 				sceneActionTimer = 0;
 				sceneActionTarget = 0;
-				processCamera();
+				//processCamera();
 				return;
 			}
 			shipIndex = mapData.ships[shipIndex].teamLink;
@@ -2010,7 +2011,7 @@ void processCamera(){
 	drawBattleMenus(objectBuffer, characterBuffer2, characterBuffer3);
 	
 	//draw the player turn end screen
-	drawPlayerTurnPrompt(tilemapBuffer0);
+	//drawPlayerTurnPrompt(tilemapBuffer0);
 
 	//queue the tilemap for layer 1 to be sent
 	tilemapData[0].size = 512;
