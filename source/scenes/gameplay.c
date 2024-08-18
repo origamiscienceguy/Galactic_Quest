@@ -59,9 +59,17 @@ void gameplayInitialize(){
 	memcpy32(&characterBuffer2[(OBJ_MINIMAP_GFX + 96) << 5], minimap_border_top_rightTiles, sizeof(minimap_border_top_rightTiles) >> 2);
 	memcpy32(&characterBuffer2[(OBJ_MINIMAP_GFX + 128) << 5], minimap_border_bottom_leftTiles, sizeof(minimap_border_bottom_leftTiles) >> 2);
 	memcpy32(&characterBuffer2[(OBJ_MINIMAP_GFX + 160) << 5], minimap_border_bottom_rightTiles, sizeof(minimap_border_bottom_rightTiles) >> 2);
+	memcpy32(&characterBuffer3[(OBJ_BATTLE_DISPLAY1_GFX_START - 512) << 5], left_battle_dispaly_leftTiles, sizeof(left_battle_dispaly_leftTiles) >> 2);
+	memcpy32(&characterBuffer3[(OBJ_BATTLE_DISPLAY1_GFX_START + 32 - 512) << 5], left_battle_dispaly_rightTiles, sizeof(left_battle_dispaly_rightTiles) >> 2);
+	memcpy32(&characterBuffer3[(OBJ_BATTLE_DISPLAY2_GFX_START - 512) << 5], right_battle_dispaly_leftTiles, sizeof(right_battle_dispaly_leftTiles) >> 2);
+	memcpy32(&characterBuffer3[(OBJ_BATTLE_DISPLAY2_GFX_START + 32 - 512) << 5], right_battle_dispaly_rightTiles, sizeof(right_battle_dispaly_rightTiles) >> 2);
 	characterData[2].size = sizeof(characterBuffer2) >> 2;
 	characterData[2].buffer = (void *)characterBuffer2;
 	characterData[2].position = &tile_mem_obj[OBJ_SPRITE_CHARDATA];
+	characterData[3].size = sizeof(characterBuffer3) >> 2;
+	characterData[3].buffer = (void *)characterBuffer3;
+	characterData[3].position = &tile_mem_obj[OBJ_SPRITE_CHARDATA + 1];
+	
 	
 	//clear the 3 tilemaps
 	memset32(tilemapBuffer0, 0, sizeof(tilemapBuffer0) >> 2);
@@ -93,6 +101,8 @@ void gameplayInitialize(){
 	mapData.cursor.state = CUR_STILL;
 	mapData.cursor.direction = CUR_NO_DIRECTION;
 	mapData.cursor.counter = 0;
+	mapData.leftBattle.state = BATTLE_OFF;
+	mapData.rightBattle.state = BATTLE_OFF;
 	
 	
 	//temporary function call to set up some ships like a saved scenareo would
@@ -865,7 +875,12 @@ void drawBattleMenus(OBJ_ATTR *spriteBuffer){
 	}
 	//draw the left menu
 	else{
-		
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(0);
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START].attr1 = ATTR1_SIZE_64 | ATTR1_X(0);
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START].attr2 = ATTR2_ID(OBJ_BATTLE_DISPLAY1_GFX_START) | ATTR2_PRIO(0) | ATTR2_PALBANK(leftPalette);
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START + 1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(0);
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START + 1].attr1 = ATTR1_SIZE_64 | ATTR1_X(64);
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START + 1].attr2 = ATTR2_ID(OBJ_BATTLE_DISPLAY1_GFX_START + 32) | ATTR2_PRIO(0) | ATTR2_PALBANK(leftPalette);
 	}
 	//if the right menu is hidden, don't draw it
 	if(rightState == BATTLE_OFF){
@@ -1118,6 +1133,7 @@ void shipSelectedState(){
 			mapData.cursor.yPos = (mapData.ships[mapData.selectedShip.index].yPos << 4) - 8; 
 			hideWidget(&mapData.actionMenu.widgetState, &mapData.actionMenu.actionTimer, &mapData.actionMenu.actionTarget, ACTION_MENU_MOVE_FRAMES);
 			mapData.actionMenu.state = NO_ACTION_MENU;
+			mapData.leftBattle.state = BATTLE_OFF;
 		}
 	}	
 	
@@ -1139,6 +1155,7 @@ void shipSelectedState(){
 		mapData.cursor.yPos = (mapData.ships[mapData.selectedShip.index].yPos << 4) - 8; 
 		hideWidget(&mapData.actionMenu.widgetState, &mapData.actionMenu.actionTimer, &mapData.actionMenu.actionTarget, ACTION_MENU_MOVE_FRAMES);
 		mapData.actionMenu.state = NO_ACTION_MENU;
+		mapData.leftBattle.state = BATTLE_OFF;
 	}
 	
 	updateActionMenu();
@@ -1224,6 +1241,7 @@ void shipMovementSelectState(){
 		mapData.cursor.xPos = (mapData.ships[mapData.selectedShip.index].xPos << 4) - 8;
 		mapData.cursor.yPos = (mapData.ships[mapData.selectedShip.index].yPos << 4) - 8;
 		checkForOverlap(shipIndex);
+		mapData.leftBattle.state = BATTLE_OFF;
 	}
 	
 	//arrows will move the cursor within the movement range
@@ -1606,6 +1624,9 @@ void processCamera(){
 	
 	//draw the action menu
 	drawActionMenu(objectBuffer);
+	
+	//draw the battle displays
+	drawBattleMenus(objectBuffer);
 	
 	//queue the tilemap for layer 1 to be sent
 	tilemapData[0].size = 512;
@@ -2184,6 +2205,8 @@ void selectShip(u8 shipIndex){
 			mapData.actionMenu.checkRangeOption = 1;
 			mapData.actionMenu.currentSelection = 0;
 		}
+		mapData.leftBattle.shipIndex = shipIndex;
+		mapData.leftBattle.state = BATTLE_ON;
 }
 
 u8 arctan2(s16 deltaX, s16 deltaY){

@@ -89,7 +89,7 @@
 #define OBJ_BATTLE_DISPLAY1_GFX_START (OBJ_ACTION_MENU_GFX_START + OBJ_ACTION_MENU_GFX_SIZE)
 #define OBJ_BATTLE_DISPLAY2_SPRITES_START (OBJ_BATTLE_DISPLAY1_SPRITES_START + OBJ_BATTLE_DISPLAY_SPRITES_NUM)
 #define OBJ_BATTLE_DISPLAY2_GFX_START (OBJ_BATTLE_DISPLAY1_GFX_START + OBJ_BATTLE_DISPLAY_GFX_SIZE)
-#define OBJ_BATTLE_DISPLAY_GFX_SIZE
+#define OBJ_BATTLE_DISPLAY_GFX_SIZE 96
 #define OBJ_BATTLE_DISPLAY_SPRITES_NUM 12
 #define BATTLE_DISPLAY_MOVE_FRAMES 3
 #define BATTLE_DISPLAY_HEIGHT 32
@@ -348,6 +348,10 @@ extern const unsigned short minimap_border_top_rightTiles[512];
 extern const unsigned short minimap_border_top_leftTiles[512];
 extern const unsigned short minimap_border_bottom_rightTiles[512];
 extern const unsigned short minimap_border_bottom_leftTiles[512];
+extern const unsigned short left_battle_dispaly_leftTiles[512];
+extern const unsigned short left_battle_dispaly_rightTiles[512];
+extern const unsigned short right_battle_dispaly_leftTiles[512];
+extern const unsigned short right_battle_dispaly_rightTiles[512];
 
 extern const u8 selectAShipYPos[];
 extern const u8 selectAShipXPos[];
