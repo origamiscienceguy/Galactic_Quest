@@ -2,6 +2,10 @@
 
 MapData mapData;
 
+bool playerPromptFlag = false;
+u16 sceneActionTimer = 0;
+u16 sceneActionTarget = 0;
+
 Scene gameplayScene = {
 	.initialize = &gameplayInitialize,
 	.intro = 0,
@@ -115,6 +119,10 @@ void gameplayInitialize(){
 	createShipTilemap(tilemapBuffer1);
 	
 	currentScene.state = NORMAL;
+
+	playerPromptFlag = false;
+	sceneActionTimer = 0;
+	sceneActionTarget = 0;
 }
 
 void gameplayNormal(){
@@ -142,6 +150,10 @@ void gameplayNormal(){
 		break;
 	case TURN_END:
 		turnEndState();
+		break;
+	case PROMPT_NEXT_PLAYER:
+		nextPlayer();
+		processCamera();
 		break;
 	case TURN_END_MOVEMENT:
 		turnEndMovementState();
@@ -1666,7 +1678,34 @@ void turnEndState(){
 		while((mapData.ships[shipIndex].state != READY_VISIBLE) && (mapData.ships[shipIndex].state != READY_HIDDEN)){
 			//if we have looped around to the original ship, all ships have finished movement.
 			if(mapData.ships[shipIndex].teamLink == mapData.teams[mapData.teamTurn].firstShip){
-				nextPlayer();
+				/*
+				REG_DISPCNT = DCNT_MODE0; //black screen
+				REG_BG0CNT = BG_4BPP | BG_SBB(STARRY_IMAGE_TILEMAP) | BG_CBB(STARRY_IMAGE_CHARDATA) | BG_PRIO(3) | BG_REG_64x64; //starry background layer
+				REG_BG1CNT = BG_4BPP | BG_SBB(TITLE_CARD_TILEMAP) | BG_CBB(TITLE_CARD_CHARDATA) | BG_PRIO(2) | BG_REG_32x32; //title screen layer
+				REG_BG2CNT = BG_4BPP | BG_SBB(MENU_WINDOW_TILEMAP) | BG_CBB(MENU_CHARDATA) | BG_PRIO(1) | BG_REG_32x32; //menu page ui layer
+				REG_BLDCNT = BLD_TOP(BLD_BG2 | BLD_BACKDROP | BLD_OBJ) | BLD_WHITE;
+				REG_BLDY = BLDY(0);*/
+				// Turn off all layers and effects except for BG0
+				REG_DISPCNT = DCNT_MODE0 | DCNT_BG0; // Enable only BG0
+
+				// Configure BG0 as needed
+				REG_BG0CNT = BG_4BPP | BG_SBB(BG_PLAYER_PROMPT_TILEMAP) | BG_CBB(BG_PLAYER_PROMPT_CHARDATA) | BG_PRIO(3) | BG_REG_64x64;
+
+				// Disable other backgrounds
+				REG_BG1CNT = 0;
+				REG_BG2CNT = 0;
+				REG_BG3CNT = 0;
+
+				// Disable blending effects
+				REG_BLDCNT = 0;
+				REG_BLDY = 0;
+
+				// fukkit
+				setAssetVolume(currentBGMIndex[0].assetIndex, 0);
+				setAssetVolume(currentBGMIndex[1].assetIndex, 0);
+				mapData.state = PROMPT_NEXT_PLAYER;
+				sceneActionTimer = 0;
+				sceneActionTarget = 0;
 				processCamera();
 				return;
 			}
@@ -1859,38 +1898,66 @@ void shipListInit(){
 }
 
 void nextPlayer(){
-	u32 team = mapData.teamTurn;
-	//set all ships on this team as wrong_team
-	u32 shipIndex = mapData.teams[team].firstShip;
-	while(mapData.ships[shipIndex].teamLink != mapData.teams[team].firstShip){
-		if(mapData.ships[shipIndex].state == FINISHED_VISIBLE){
-			mapData.ships[shipIndex].state = WRONG_TEAM_VISIBLE;
+	if (!playerPromptFlag) {
+		if (inputs.pressed & KEY_A) {
+			playerPromptFlag = true;
+			sceneActionTimer = 0;
+			sceneActionTarget = 40;
+			playSFX(_sfxMenuConfirmC, AUDGROUP_MENUSFX);
 		}
-		else if(mapData.ships[shipIndex].state == FINISHED_HIDDEN){
-			mapData.ships[shipIndex].state = WRONG_TEAM_HIDDEN;
+	} else {
+		if (sceneActionTimer == sceneActionTarget) {
+			playerPromptFlag = false;
+			REG_DISPCNT = DCNT_MODE0 | DCNT_BG0 | DCNT_BG1 | DCNT_BG3 | DCNT_OBJ | DCNT_OBJ_1D;
+			REG_BG0CNT = BG_4BPP | BG_SBB(BG_GRID_HIGHLIGHT_TILEMAP) | BG_CBB(BG_GRID_HIGHLIGHT_CHARDATA) | BG_PRIO(1); //ships layer
+			REG_BG1CNT = BG_4BPP | BG_SBB(BG_SHIPS_TILEMAP) | BG_CBB(BG_SHIPS_CHARDATA) | BG_PRIO(2); //grid/highlight layer	
+			//REG_BG2CNT = BG_4BPP | BG_SBB(BG__TILEMAP) | BG_CBB(BG_2_CHARDATA) | BG_PRIO(0); //health box layer
+			REG_BG3CNT = BG_4BPP | BG_SBB(BG_STARRY_IMAGE_TILEMAP) | BG_CBB(BG_STARRY_IMAGE_CHARDATA) | BG_PRIO(3) | BG_REG_64x64; //starry background layer
+			REG_BLDCNT = BLD_TOP(BLD_BG1) | BLD_BOT(BLD_BG3 | BLD_BACKDROP) | BLD_STD;
+			REG_BLDALPHA = BLD_EVA(8) | BLD_EVB(8);
+
+			
+			//fill the starry background tilemap
+			tilemapData[3].size = sizeof(QuickStarMapMetaTiles) >> 2;
+			tilemapData[3].buffer = (void *)QuickStarMapMetaTiles;
+			tilemapData[3].position = &se_mem[BG_STARRY_IMAGE_TILEMAP];
+
+			u32 team = mapData.teamTurn;
+			//set all ships on this team as wrong_team
+			u32 shipIndex = mapData.teams[team].firstShip;
+			while(mapData.ships[shipIndex].teamLink != mapData.teams[team].firstShip){
+				if(mapData.ships[shipIndex].state == FINISHED_VISIBLE){
+					mapData.ships[shipIndex].state = WRONG_TEAM_VISIBLE;
+				}
+				else if(mapData.ships[shipIndex].state == FINISHED_HIDDEN){
+					mapData.ships[shipIndex].state = WRONG_TEAM_HIDDEN;
+				}
+				shipIndex = mapData.ships[shipIndex].teamLink;
+			}
+			if(mapData.ships[shipIndex].state == FINISHED_VISIBLE){
+				mapData.ships[shipIndex].state = WRONG_TEAM_VISIBLE;
+			}
+			else if(mapData.ships[shipIndex].state == FINISHED_HIDDEN){
+				mapData.ships[shipIndex].state = WRONG_TEAM_HIDDEN;
+			}
+			mapData.state = TURN_START;
+			//find the next team
+			do{
+				team++;
+				//if all teams have gone, go to next turn
+				if(team >= NUM_TEAMS){
+					team = 0;
+					nextTurn();
+				}
+			}while(mapData.teams[team].state != TEAM_ACTIVE);
+			
+			mapData.teamTurn = team;
+			
+			mapData.state = TURN_START;
+		} else {
+			sceneActionTimer++;
 		}
-		shipIndex = mapData.ships[shipIndex].teamLink;
 	}
-	if(mapData.ships[shipIndex].state == FINISHED_VISIBLE){
-		mapData.ships[shipIndex].state = WRONG_TEAM_VISIBLE;
-	}
-	else if(mapData.ships[shipIndex].state == FINISHED_HIDDEN){
-		mapData.ships[shipIndex].state = WRONG_TEAM_HIDDEN;
-	}
-	mapData.state = TURN_START;
-	//find the next team
-	do{
-		team++;
-		//if all teams have gone, go to next turn
-		if(team >= NUM_TEAMS){
-			team = 0;
-			nextTurn();
-		}
-	}while(mapData.teams[team].state != TEAM_ACTIVE);
-	
-	mapData.teamTurn = team;
-	
-	mapData.state = TURN_START;
 }
 
 void nextTurn(){
@@ -1942,6 +2009,9 @@ void processCamera(){
 	//draw the battle displays
 	drawBattleMenus(objectBuffer, characterBuffer2, characterBuffer3);
 	
+	//draw the player turn end screen
+	drawPlayerTurnPrompt(tilemapBuffer0);
+
 	//queue the tilemap for layer 1 to be sent
 	tilemapData[0].size = 512;
 	tilemapData[0].buffer = tilemapBuffer0;
@@ -3208,4 +3278,9 @@ u8 getHealthSlices(u8 health){
 		healthSlices = 10;
 	}
 	return healthSlices;
+}
+
+void drawPlayerTurnPrompt(u16 *tilemapBuffer){
+	//IWRAM_CODE void createShipTilemap(u16 *tilemapBuffer)
+	
 }

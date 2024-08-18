@@ -23,6 +23,8 @@
 #define BG_GRID_HIGHLIGHT_TILEMAP 30
 #define BG_STARRY_IMAGE_TILEMAP 26
 #define BG_HEALTH_SQUARES_TILEMAP 25
+#define BG_PLAYER_PROMPT_TILEMAP 23
+#define BG_PLAYER_PROMPT_CHARDATA 2
 
 #define BG_SHIPS_PAL_START 0
 #define BG_SHIPS_PAL_SIZE 8
@@ -120,7 +122,7 @@ enum ShipState{
 
 enum MapState{
 	TURN_START, OPEN_MAP, SELECT_A_SHIP, SHIP_SELECTED, SHIP_MOVEMENT_SELECT, SHIP_MOVING, BATTLE_PRE_MOVE, BATTLE_POST_MOVE, 
-	TURN_END, TURN_END_MOVEMENT, TURN_REPLAY, OPEN_TILE_SELECTED, BATTLE_POST_SELECT_A_SHIP,
+	TURN_END, PROMPT_NEXT_PLAYER, TURN_END_MOVEMENT, TURN_REPLAY, OPEN_TILE_SELECTED, BATTLE_POST_SELECT_A_SHIP,
 	BATTLE_PRE_SELECT_A_SHIP, AFTER_BATTLE_BEFORE_MOVE, INACTIVE_SHIP_SELECTED, RANGE_CHECK
 };
 
@@ -363,6 +365,24 @@ extern const unsigned short left_battle_dispaly_rightTiles[512];
 extern const unsigned short right_battle_dispaly_leftTiles[512];
 extern const unsigned short right_battle_dispaly_rightTiles[512];
 extern const unsigned short health_barTiles[96];
+extern const unsigned short blue_teamTiles[9600];
+extern const unsigned short red_teamTiles[9600];
+extern const unsigned short yellow_teamTiles[9600];
+extern const unsigned short green_teamTiles[9600];
+extern const unsigned short blue_teamPal[16];
+extern const unsigned short red_teamPal[16];
+extern const unsigned short yellow_teamPal[16];
+extern const unsigned short green_teamPal[16];
+
+extern SoundChannel currentBGMIndex[2];
+extern SoundChannel currentSFXIndex[5];
+
+enum AUDGROUP_IDS{
+    AUDGROUP_MENUSFX,
+    AUDGROUP_SOUNDT_SFX,
+    AUDGROUP_SOUNDT_BGM,
+	AUDGROUP_MAX
+};
 
 extern const u8 selectAShipYPos[];
 extern const u8 selectAShipXPos[];
