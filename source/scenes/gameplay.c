@@ -89,7 +89,7 @@ void gameplayInitialize(){
 	mapData.cursor.state = CUR_STILL;
 	mapData.cursor.direction = CUR_NO_DIRECTION;
 	mapData.cursor.counter = 0;
-	
+	mapData.selectedShip.index = 0;
 	
 	//temporary function call to set up some ships like a saved scenareo would
 	initMap();
@@ -253,7 +253,7 @@ IWRAM_CODE void createShipTilemap(u16 *tilemapBuffer){
 	
 	//if we are in certain states, always draw the selectedShip on top
 	if((mapData.state == SELECT_A_SHIP) || (mapData.state == SHIP_SELECTED) || (mapData.state == RANGE_CHECK) || 
-	(mapData.state == AFTER_BATTLE_BEFORE_MOVE) || (mapData.state = INACTIVE_SHIP_SELECTED)){
+	(mapData.state == AFTER_BATTLE_BEFORE_MOVE) || (mapData.state == INACTIVE_SHIP_SELECTED)){
 		u8 shipIndex = mapData.selectedShip.index;
 		u8 shipDirection; //0: right, 1: up, 2: left, 3: down
 		u32 palette = mapData.ships[shipIndex].team;
@@ -279,7 +279,7 @@ IWRAM_CODE void createShipTilemap(u16 *tilemapBuffer){
 			}
 		}
 		
-		if(mapData.ships[shipIndex].state == FINISHED_VISIBLE){
+		if((mapData.ships[shipIndex].state == FINISHED_VISIBLE) || (mapData.ships[shipIndex].state == FINISHED_HIDDEN)){
 			palette += 4;
 		}
 		
@@ -1029,7 +1029,7 @@ void shipSelectedState(){
 		//if the back option is selected
 		else{
 			mapData.state = OPEN_MAP;
-			mapData.ships[mapData.selectedShip.index].state = READY_VISIBLE; 
+			makeShipVisible(mapData.selectedShip.index);
 			mapData.highlight.state = NO_HIGHLIGHT;
 			mapData.cursor.selectXPos = mapData.ships[mapData.selectedShip.index].xPos;
 			mapData.cursor.selectYPos = mapData.ships[mapData.selectedShip.index].yPos;
@@ -1049,7 +1049,7 @@ void shipSelectedState(){
 	
 	if(inputs.pressed & KEY_B){
 		mapData.state = OPEN_MAP;
-		mapData.ships[mapData.selectedShip.index].state = READY_VISIBLE; 
+		makeShipVisible(mapData.selectedShip.index);
 		mapData.highlight.state = NO_HIGHLIGHT;
 		mapData.cursor.selectXPos = mapData.ships[mapData.selectedShip.index].xPos;
 		mapData.cursor.selectYPos = mapData.ships[mapData.selectedShip.index].yPos;
@@ -1200,6 +1200,12 @@ void rangeCheckState(){
 	if(inputs.pressed & KEY_B){
 		mapData.state = OPEN_MAP;
 		mapData.highlight.state = NO_HIGHLIGHT;
+		if(mapData.ships[mapData.selectedShip.index].team == mapData.teamTurn){
+			mapData.ships[mapData.selectedShip.index].state = FINISHED_VISIBLE;
+		}
+		else{
+			mapData.ships[mapData.selectedShip.index].state = WRONG_TEAM_VISIBLE;
+		}
 		mapData.cursor.selectXPos = mapData.ships[mapData.selectedShip.index].xPos;
 		mapData.cursor.selectYPos = mapData.ships[mapData.selectedShip.index].yPos;
 		mapData.cursor.xPos = (mapData.ships[mapData.selectedShip.index].xPos << 4) - 8;
@@ -2580,7 +2586,7 @@ void initMap(){
 				mapData.ships[index].type = (j % 7);
 				mapData.ships[index].state = READY_VISIBLE;
 				mapData.ships[index].team = team;
-				mapData.ships[index].health = index;
+				mapData.ships[index].health = index % 101;
 				mapData.ships[index].xPos = xPos + i;
 				mapData.ships[index].yPos = yPos;
 				mapData.ships[index].xVel = 1;
