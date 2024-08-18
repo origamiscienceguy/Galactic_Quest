@@ -1107,9 +1107,33 @@ void turnStartState(){
 		numAliveShips++;
 	}
 	
+	
 	teamPointer->numAliveShips = numAliveShips;
 	
 	mapData.state = OPEN_MAP;
+	
+	//pan the camera to the first ship
+	mapData.selectedShip.index = mapData.teams[mapData.teamTurn].firstShip;
+	s16 xTarget = (mapData.ships[mapData.selectedShip.index].xPos << 4) - 112;
+	s16 yTarget = (mapData.ships[mapData.selectedShip.index].yPos << 4) - 72;
+	cameraPanInit(xTarget, yTarget, CYCLE_PAN_SPEED);
+	
+	//setup the cursor
+	mapData.cursor.xPos = xTarget + 104;
+	mapData.cursor.yPos = yTarget + 64;
+	mapData.cursor.selectXPos = (mapData.cursor.xPos >> 4) + 1;
+	mapData.cursor.selectYPos = (mapData.cursor.yPos >> 4) + 1;
+	
+	//set no highlight
+	mapData.highlight.state = NO_HIGHLIGHT;
+	
+	//enable the minimap
+	mapData.minimap.widgetState = WIDGET_HIDDEN_LEFT;
+	mapData.minimap.updateRequest = 1;
+	
+	//hide menus
+	mapData.selectAShip.state = NO_SELECT_A_SHIP_MENU;
+	mapData.selectAShip.widgetState = WIDGET_HIDDEN_LEFT;
 }
 
 void openMapState(){
@@ -1142,6 +1166,7 @@ void openMapState(){
 			mapData.selectAShip.currentTopOption = 0;
 			hideWidget(&mapData.minimap.widgetState, &mapData.minimap.actionTimer, &mapData.minimap.actionTarget, MINIMAP_MOVE_FRAMES);
 			revealWidget(&mapData.selectAShip.widgetState, &mapData.selectAShip.actionTimer, &mapData.selectAShip.actionTarget, SELECT_A_SHIP_MOVE_FRAMES);
+			playSFX(_sfxMenuConfirmA, AUDGROUP_MENUSFX);
 		}
 		//if there are zero ships, open the empty tile action menu
 		else{
@@ -1154,6 +1179,7 @@ void openMapState(){
 			mapData.actionMenu.endTurnOption = 1;
 			hideWidget(&mapData.minimap.widgetState, &mapData.minimap.actionTimer, &mapData.minimap.actionTarget, MINIMAP_MOVE_FRAMES);
 			revealWidget(&mapData.actionMenu.widgetState, &mapData.actionMenu.actionTimer, &mapData.actionMenu.actionTarget, ACTION_MENU_MOVE_FRAMES);
+			playSFX(_sfxMenuConfirmA, AUDGROUP_MENUSFX);
 		}
 	}
 	
@@ -1191,12 +1217,14 @@ void selectAShipState(){
 		//b canceles the select menu
 		mapData.state = OPEN_MAP;
 		hideWidget(&mapData.selectAShip.widgetState, &mapData.selectAShip.actionTimer, &mapData.selectAShip.actionTarget, SELECT_A_SHIP_MOVE_FRAMES);
+		playSFX(_sfxMenuCancel, AUDGROUP_MENUSFX);
 	}
 	
 	if(inputs.pressed & KEY_A){
 		mapData.selectAShip.state = SELECTING_SELECT_A_SHIP_MENU;
 		selectShip(shipsInTile[mapData.selectAShip.currentSelection]);
 		hideWidget(&mapData.selectAShip.widgetState, &mapData.selectAShip.actionTimer, &mapData.selectAShip.actionTarget, SELECT_A_SHIP_MOVE_FRAMES);
+		playSFX(_sfxMenuConfirmB, AUDGROUP_MENUSFX);
 	}
 	
 	if((inputs.current & KEY_DOWN) && (mapData.selectAShip.state == WAITING_SELECT_A_SHIP_MENU)){
@@ -1211,6 +1239,7 @@ void selectAShipState(){
 			if(mapData.selectAShip.downHeldCounter != 0){
 				mapData.selectAShip.downHeldCounter = 20;
 			}
+			playSFX(_sfxMenuMove, AUDGROUP_MENUSFX);
 		}
 		mapData.selectAShip.downHeldCounter++;
 	}
@@ -1232,6 +1261,7 @@ void selectAShipState(){
 			if(mapData.selectAShip.upHeldCounter != 0){
 				mapData.selectAShip.upHeldCounter = 20;
 			}
+			playSFX(_sfxMenuMove, AUDGROUP_MENUSFX);
 		}
 		mapData.selectAShip.upHeldCounter++;
 	}
@@ -1280,16 +1310,32 @@ void shipSelectedState(){
 			if(mapData.actionMenu.moveOption){
 				mapData.ships[shipIndex].state = SELECTED;
 				mapData.state = SHIP_MOVEMENT_SELECT;
+				playSFX(_sfxMenuConfirmB, AUDGROUP_MENUSFX);
+				playSFX(_sfxShipIdle, AUDGROUP_SOUNDT_SFX);
+				
 			}
 			else{
 				mapData.state = RANGE_CHECK;
+				playSFX(_sfxMenuConfirmB, AUDGROUP_MENUSFX);
 			}
 			hideWidget(&mapData.actionMenu.widgetState, &mapData.actionMenu.actionTimer, &mapData.actionMenu.actionTarget, ACTION_MENU_MOVE_FRAMES);
 			mapData.actionMenu.state = NO_ACTION_MENU;
 		}
 		//if the shoot option is selected
 		else if((mapData.actionMenu.currentSelection == 1) && (mapData.actionMenu.shootOption)){
-			u8 shipsInTile[256];
+			mapData.state = OPEN_MAP;
+			//mapData.ships[mapData.selectedShip.index].state = READY_VISIBLE; 
+			mapData.highlight.state = NO_HIGHLIGHT;
+			makeShipVisible(mapData.selectedShip.index);
+			mapData.cursor.selectXPos = mapData.ships[mapData.selectedShip.index].xPos;
+			mapData.cursor.selectYPos = mapData.ships[mapData.selectedShip.index].yPos;
+			mapData.cursor.xPos = (mapData.ships[mapData.selectedShip.index].xPos << 4) - 8;
+			mapData.cursor.yPos = (mapData.ships[mapData.selectedShip.index].yPos << 4) - 8; 
+			hideWidget(&mapData.actionMenu.widgetState, &mapData.actionMenu.actionTimer, &mapData.actionMenu.actionTarget, ACTION_MENU_MOVE_FRAMES);
+			mapData.actionMenu.state = NO_ACTION_MENU;
+			mapData.leftBattle.state = BATTLE_OFF;
+			toggleBGMBattleLayer();
+			/*u8 shipsInTile[256];
 			u8 numShipsInTile = 0;
 			u8 xPos = mapData.cursor.selectXPos;
 			u8 yPos = mapData.cursor.selectYPos;
@@ -1302,7 +1348,7 @@ void shipSelectedState(){
 			mapData.selectAShip.currentSelection = 0;
 			mapData.selectAShip.currentTopOption = 0;
 			hideWidget(&mapData.actionMenu.widgetState, &mapData.actionMenu.actionTimer, &mapData.actionMenu.actionTarget, ACTION_MENU_MOVE_FRAMES);
-			revealWidget(&mapData.selectAShip.widgetState, &mapData.selectAShip.actionTimer, &mapData.selectAShip.actionTarget, SELECT_A_SHIP_MOVE_FRAMES);
+			revealWidget(&mapData.selectAShip.widgetState, &mapData.selectAShip.actionTimer, &mapData.selectAShip.actionTarget, SELECT_A_SHIP_MOVE_FRAMES);*/
 		}
 		//if the back option is selected
 		else{
@@ -1317,14 +1363,18 @@ void shipSelectedState(){
 			hideWidget(&mapData.actionMenu.widgetState, &mapData.actionMenu.actionTimer, &mapData.actionMenu.actionTarget, ACTION_MENU_MOVE_FRAMES);
 			mapData.actionMenu.state = NO_ACTION_MENU;
 			mapData.leftBattle.state = BATTLE_OFF;
+			toggleBGMBattleLayer();
+			playSFX(_sfxMenuCancel, AUDGROUP_MENUSFX);
 		}
 	}	
 	
 	if((inputs.pressed & KEY_DOWN) && !(inputs.pressed & KEY_UP)){
 		mapData.actionMenu.currentSelection++;
+		playSFX(_sfxMenuConfirmB, AUDGROUP_MENUSFX);
 	}
 	else if(!(inputs.pressed & KEY_DOWN) && (inputs.pressed & KEY_UP)){
 		mapData.actionMenu.currentSelection--;
+		playSFX(_sfxMenuConfirmB, AUDGROUP_MENUSFX);
 	}
 	
 	if(inputs.pressed & KEY_B){
@@ -1339,6 +1389,8 @@ void shipSelectedState(){
 		hideWidget(&mapData.actionMenu.widgetState, &mapData.actionMenu.actionTimer, &mapData.actionMenu.actionTarget, ACTION_MENU_MOVE_FRAMES);
 		mapData.actionMenu.state = NO_ACTION_MENU;
 		mapData.leftBattle.state = BATTLE_OFF;
+		toggleBGMBattleLayer();
+		playSFX(_sfxMenuCancel, AUDGROUP_MENUSFX);
 	}
 	
 	updateActionMenu();
@@ -1499,6 +1551,7 @@ void shipMovementSelectState(){
 		mapData.cursor.yPos = (mapData.ships[mapData.selectedShip.index].yPos << 4) - 8;
 		checkForOverlap(shipIndex);
 		mapData.leftBattle.state = BATTLE_OFF;
+		playSFX(_sfxMenuCancel, AUDGROUP_MENUSFX);
 	}
 	
 	//arrows will move the cursor within the movement range
@@ -1533,6 +1586,7 @@ void shipMovementSelectState(){
 		mapData.state = SHIP_MOVING;
 		mapData.actionTimer = 0;
 		shipMoveInit(xTarget, yTarget, SHIP_MOVE_SPEED);
+		playSFX(_sfxShipMove, AUDGROUP_SOUNDT_SFX);
 	}
 	
 	//handle any changes to the camera that occured this frame
@@ -1597,6 +1651,8 @@ void shipMovingState(){
 		mapData.state = OPEN_MAP;
 		mapData.actionTimer = 0;
 		mapData.minimap.updateRequest = 1;
+		toggleBGMBattleLayer();
+		mapData.leftBattle.state = BATTLE_OFF;
 	}
 
 	//handle any changes to the camera that occured this frame
@@ -1632,6 +1688,7 @@ void turnEndState(){
 		mapData.ships[mapData.selectedShip.index].state = SELECTED;
 		mapData.state = TURN_END_MOVEMENT;
 		shipMoveInit(xTarget, yTarget, SHIP_MOVE_SPEED);
+		playSFX(_sfxShipMove, AUDGROUP_SOUNDT_SFX);
 	}
 	
 	//handle any changes to the camera that occured this frame
@@ -2260,6 +2317,7 @@ void moveCursor(){
 	else if(mapData.cursor.counter == 0){
 		mapData.cursor.state = CUR_MOVE_ONCE_1;
 		squaresMoved = 1;
+		playSFX(_sfxCursorMove, AUDGROUP_MENUSFX);
 	}
 	//if direction is held and first movement completes
 	else if(mapData.cursor.state == CUR_MOVE_ONCE_3){
@@ -2417,6 +2475,8 @@ void selectShip(u8 shipIndex){
 		mapData.actionMenu.state = WAITING_ACTION_MENU;
 		revealWidget(&mapData.actionMenu.widgetState, &mapData.actionMenu.actionTimer, &mapData.actionMenu.actionTarget, ACTION_MENU_MOVE_FRAMES);
 		u8 otherTeamInTile = 0;
+		toggleBGMBattleLayer();
+		playSFX(_sfxMenuConfirmB, AUDGROUP_MENUSFX);
 		
 		//make sure all ships sharing this tile are hidden
 		u8 currentIndex = mapData.ships[shipIndex].sameTileLink;
@@ -3051,16 +3111,7 @@ void initMap(){
 				index++;
 			}
 		}
-	}			
-				//JUST FOR TESTING
-				mapData.ships[0].type = 1;
-				mapData.ships[0].state = READY_VISIBLE;
-				mapData.ships[0].team = 0;
-				mapData.ships[0].health = 100;
-				mapData.ships[0].xPos = 192;
-				mapData.ships[0].yPos = 128;
-				mapData.ships[0].xVel = 2;
-				mapData.ships[0].yVel = 0;
+	}
 }
 
 static InitialShipFormationData GetSubGridData(Team team) {

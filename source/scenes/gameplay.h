@@ -174,6 +174,13 @@ enum BattleMenuState{
 	BATTLE_ON, BATTLE_OFF
 };
 
+enum AUDGROUP_IDS{
+    AUDGROUP_MENUSFX,
+    AUDGROUP_SOUNDT_SFX,
+    AUDGROUP_SOUNDT_BGM,
+	AUDGROUP_MAX
+};
+
 //structs
 typedef struct ShipData{
 	enum ShipType type; //the type of ship this one is
@@ -450,6 +457,7 @@ void rotateMatrix(const ShipType matrix[TEAM_MATRIX_SIZE][TEAM_MATRIX_SIZE], Shi
 static InitialShipFormationData GetSubGridData(Team team);
 
 //external functions
+extern void toggleBGMBattleLayer();
 
 #endif
 
