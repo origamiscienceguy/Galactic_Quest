@@ -2490,7 +2490,7 @@ u8 readSRAMByte(u32 address) {
 
 // also checks if it was the first time ever booting up the game before actually doing so
 void clearEntireSRAM(Options *options) {
-	int srmSize = sizeof(MapData) + sizeof(&options);
+	int srmSize = 3 * sizeof(MapData) + sizeof(Options);
     if (options->firstTimeBoot) {
         // Clear the entire SRAM
         for (size_t i = 0; i < srmSize; ++i) {
@@ -2499,7 +2499,6 @@ void clearEntireSRAM(Options *options) {
 
         // Mark first-time boot as completed
         options->firstTimeBoot = true;
-
 
 		initMapData(&mapData);
 		initMap();
