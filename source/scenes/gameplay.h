@@ -58,7 +58,7 @@
 #define OBJ_MINIMAP1_SPRITE 6
 #define OBJ_MINIMAP2_SPRITE 7
 #define OBJ_MINIMAP_GFX (OBJ_SELECTED_SHIP_GFX + OBJ_SELECTED_SHIP_GFX_SIZE)
-#define OBJ_MINIMAP_GFX_SIZE 64
+#define OBJ_MINIMAP_GFX_SIZE 192
 
 #define OBJ_MINIMAP_CURSOR_SPRITE 2
 #define OBJ_MINIMAP_CURSOR_GFX (OBJ_MINIMAP_GFX + OBJ_MINIMAP_GFX_SIZE)
@@ -70,7 +70,7 @@
 #define OBJ_CURSOR_GFX (OBJ_MINIMAP_CURSOR_GFX + OBJ_MINIMAP_CURSOR_GFX_SIZE)
 #define OBJ_CURSOR_GFX_SIZE 32
 
-#define OBJ_SELECT_A_SHIP_SPRITES_START 11
+#define OBJ_SELECT_A_SHIP_SPRITES_START 19
 #define OBJ_SELECT_A_SHIP_SPRITES_NUM 10
 #define OBJ_SELECT_A_SHIP_GFX (OBJ_CURSOR_GFX + OBJ_CURSOR_GFX_SIZE + 2)
 #define OBJ_SELECT_A_SHIP_GFX_SIZE 346
@@ -321,6 +321,10 @@ extern const unsigned short carretTiles[32];
 extern const unsigned short list_numbers_32x16Tiles[12928];
 extern const unsigned short action_focusedTiles[1792];
 extern const unsigned short actionTiles[1792];
+extern const unsigned short minimap_border_top_rightTiles[512];
+extern const unsigned short minimap_border_top_leftTiles[512];
+extern const unsigned short minimap_border_bottom_rightTiles[512];
+extern const unsigned short minimap_border_bottom_leftTiles[512];
 
 extern const u8 selectAShipYPos[];
 extern const u8 selectAShipXPos[];

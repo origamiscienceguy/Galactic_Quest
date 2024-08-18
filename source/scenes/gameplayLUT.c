@@ -98,7 +98,7 @@ const u8 arctanTable2[256] = {
 };
 
 const u8 minimapPositions[] = {
-	28, 46, 58, 64
+	31, 49, 61, 67
 };
 
 //the y position of the select-a-ship menu based on how many entries there are

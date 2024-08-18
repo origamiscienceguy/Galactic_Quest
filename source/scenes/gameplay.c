@@ -55,6 +55,10 @@ void gameplayInitialize(){
 	memcpy32(&characterBuffer2[(OBJ_SELECT_A_SHIP_GFX + 48) << 5], list_footer_leftTiles, sizeof(list_footer_leftTiles) >> 2);
 	memcpy32(&characterBuffer2[(OBJ_SELECT_A_SHIP_GFX + 80) << 5], list_footer_rightTiles, sizeof(list_footer_rightTiles) >> 2);
 	memcpy32(&characterBuffer2[(OBJ_SELECT_A_SHIP_GFX - 2) << 5], carretTiles, sizeof(carretTiles) >> 2);
+	memcpy32(&characterBuffer2[(OBJ_MINIMAP_GFX + 64) << 5], minimap_border_top_leftTiles, sizeof(minimap_border_top_leftTiles) >> 2);
+	memcpy32(&characterBuffer2[(OBJ_MINIMAP_GFX + 96) << 5], minimap_border_top_rightTiles, sizeof(minimap_border_top_rightTiles) >> 2);
+	memcpy32(&characterBuffer2[(OBJ_MINIMAP_GFX + 128) << 5], minimap_border_bottom_leftTiles, sizeof(minimap_border_bottom_leftTiles) >> 2);
+	memcpy32(&characterBuffer2[(OBJ_MINIMAP_GFX + 160) << 5], minimap_border_bottom_rightTiles, sizeof(minimap_border_bottom_rightTiles) >> 2);
 	characterData[2].size = sizeof(characterBuffer2) >> 2;
 	characterData[2].buffer = (void *)characterBuffer2;
 	characterData[2].position = &tile_mem_obj[OBJ_SPRITE_CHARDATA];
@@ -486,6 +490,7 @@ void drawMinimap(OBJ_ATTR *spriteBuffer, u8 *characterBuffer){
 	s16 minimap2XPos = 0;
 	u8 useMinimap2 = 0;
 	u8 state = mapData.minimap.widgetState;
+	u8 currentTeam = mapData.teamTurn;
 	
 	//if the minimap is hidden, don't bother updating it
 	if((state == WIDGET_HIDDEN_LEFT) || (state == WIDGET_HIDDEN_RIGHT)){
@@ -509,6 +514,20 @@ void drawMinimap(OBJ_ATTR *spriteBuffer, u8 *characterBuffer){
 	spriteBuffer[OBJ_MINIMAP1_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE |  ATTR0_Y(minimap1YPos);
 	spriteBuffer[OBJ_MINIMAP1_SPRITE].attr1 = ATTR1_SIZE_64 | ATTR1_X(minimap1XPos);
 	spriteBuffer[OBJ_MINIMAP1_SPRITE].attr2 = ATTR2_ID(OBJ_MINIMAP_GFX) | ATTR2_PRIO(0) | ATTR2_PALBANK(4);
+	
+	//draw the border sprites
+	spriteBuffer[OBJ_MINIMAP1_SPRITE + 2].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE |  ATTR0_Y(minimap1YPos - 16);
+	spriteBuffer[OBJ_MINIMAP1_SPRITE + 2].attr1 = ATTR1_SIZE_64 | ATTR1_X((minimap1XPos - 8) & 0x1ff);
+	spriteBuffer[OBJ_MINIMAP1_SPRITE + 2].attr2 = ATTR2_ID(OBJ_MINIMAP_GFX + 64) | ATTR2_PRIO(0) | ATTR2_PALBANK(currentTeam);
+	spriteBuffer[OBJ_MINIMAP1_SPRITE + 3].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_TALL |  ATTR0_Y(minimap1YPos - 15);
+	spriteBuffer[OBJ_MINIMAP1_SPRITE + 3].attr1 = ATTR1_SIZE_64 | ATTR1_X((minimap1XPos + 56) & 0x1ff);
+	spriteBuffer[OBJ_MINIMAP1_SPRITE + 3].attr2 = ATTR2_ID(OBJ_MINIMAP_GFX + 96) | ATTR2_PRIO(0) | ATTR2_PALBANK(currentTeam);
+	spriteBuffer[OBJ_MINIMAP1_SPRITE + 4].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_TALL |  ATTR0_Y(minimap1YPos + 16);
+	spriteBuffer[OBJ_MINIMAP1_SPRITE + 4].attr1 = ATTR1_SIZE_64 | ATTR1_X((minimap1XPos - 8) & 0x1ff);
+	spriteBuffer[OBJ_MINIMAP1_SPRITE + 4].attr2 = ATTR2_ID(OBJ_MINIMAP_GFX + 128) | ATTR2_PRIO(0) | ATTR2_PALBANK(currentTeam);
+	spriteBuffer[OBJ_MINIMAP1_SPRITE + 5].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE |  ATTR0_Y(minimap1YPos + 48);
+	spriteBuffer[OBJ_MINIMAP1_SPRITE + 5].attr1 = ATTR1_SIZE_64 | ATTR1_X((minimap1XPos + 24) & 0x1ff);
+	spriteBuffer[OBJ_MINIMAP1_SPRITE + 5].attr2 = ATTR2_ID(OBJ_MINIMAP_GFX + 160) | ATTR2_PRIO(0) | ATTR2_PALBANK(currentTeam);
 	
 	if(useMinimap2){
 		spriteBuffer[OBJ_MINIMAP2_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE |  ATTR0_Y(minimap2YPos);
