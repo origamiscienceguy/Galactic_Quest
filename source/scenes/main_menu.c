@@ -2320,7 +2320,7 @@ void stopAllSoundExcept(const u8* exception) {
 
 void stopAllSound() {
 	endAllSound();
-	for (u8 i = 0; i < sizeof(currentSFXIndex); i++){
+	for (u8 i = 0; i < 5; i++){
 		currentSFXIndex[i].assetIndex = 0xFF;
 	}
 	currentBGMIndex[0].assetIndex = 0xFF;

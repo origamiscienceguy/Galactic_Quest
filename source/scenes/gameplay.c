@@ -1059,13 +1059,13 @@ void turnStartState(){
 		playBGM(BGM_THEMEA);
 		break;
 	case BLUE_TEAM:
-		playBGM(BGM_TMEMEB);
+		playBGM(BGM_THEMEB);
 		break;
 	case GREEN_TEAM:
 		playBGM(BGM_THEMEC);
 		break;
 	case YELLOW_TEAM:
-		playBGM(BGM_TMEMED);
+		playBGM(BGM_THEMED);
 		break;
 	}
 	
