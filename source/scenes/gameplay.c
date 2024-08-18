@@ -250,6 +250,50 @@ IWRAM_CODE void createShipTilemap(u16 *tilemapBuffer){
 			*tilemapPointer2 = ((u32 *)bg_shipsMap)[tilemapBase + 1] | SE_PALBANK(palette);
 		}
 	}
+	
+	//if we are in certain states, always draw the selectedShip on top
+	if((mapData.state == SELECT_A_SHIP) || (mapData.state == SHIP_SELECTED) || (mapData.state == RANGE_CHECK) || 
+	(mapData.state == RANGE_CHECK) || (INACTIVE_SHIP_SELECTED)){
+		u8 shipIndex = mapData.selectedShip.index;
+		u8 shipDirection; //0: right, 1: up, 2: left, 3: down
+		u32 palette = mapData.ships[shipIndex].team;
+		u8 shipXPos = mapData.ships[shipIndex].xPos;
+		u8 shipYPos = mapData.ships[shipIndex].yPos;
+		s8 shipXVel = mapData.ships[shipIndex].xVel;
+		s8 shipYVel = mapData.ships[shipIndex].yVel;
+		
+		if(ABS(shipXVel) > ABS(shipYVel)){
+			if(shipXVel > 0){
+				shipDirection = 0;
+			}
+			else{
+				shipDirection = 2;
+			}
+		}
+		else{
+			if(shipYVel > 0){
+				shipDirection = 3;
+			}
+			else{
+				shipDirection = 1;
+			}
+		}
+		
+		if(mapData.ships[shipIndex].state == FINISHED_VISIBLE){
+			palette += 4;
+		}
+		
+		palette = palette | palette << 16;
+		u32 *tilemapPointer1 = (u32 *)tilemapBuffer;
+		u32 *tilemapPointer2 = (u32 *)(tilemapBuffer + 32);
+		if((shipXPos >= mapXPos) && (shipXPos < mapXPos + 16) && (shipYPos >= mapYPos) && (shipYPos < mapYPos + 16)){
+			tilemapPointer1 = (u32 *)tilemapBuffer + (shipXPos % 16) + (shipYPos % 16) * 32;
+			tilemapPointer2 = (u32 *)tilemapBuffer + (shipXPos % 16) + (shipYPos % 16) * 32 + 16;
+			u16 tilemapBase = (globalIdleCounter * (BG_SHIPS_ANIMATION_OFFSET / 2)) + (shipDirection * (BG_SHIPS_ROTATION_OFFSET / 2)) + mapData.ships[shipIndex].type * 2;
+			*tilemapPointer1 = ((u32 *)bg_shipsMap)[tilemapBase] | SE_PALBANK(palette);
+			*tilemapPointer2 = ((u32 *)bg_shipsMap)[tilemapBase + 1] | SE_PALBANK(palette);
+		}
+	}
 }
 
 IWRAM_CODE void createGridTilemap(u16 *tilemapBuffer){
@@ -933,6 +977,8 @@ void selectAShipState(){
 	else{
 		mapData.selectAShip.upHeldCounter = 0;
 	}
+	
+	mapData.selectedShip.index = shipsInTile[mapData.selectAShip.currentSelection];
 	
 	//L and R cycle backwards or forwards through the active ships for this team, and center the camera on the next ship in the cycle
 	checkCycleButtons();
