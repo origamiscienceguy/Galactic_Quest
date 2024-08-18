@@ -45,7 +45,7 @@ void introInitialize(){
 	options.bgmVolume = DEFAULT_BGM_VOLUME;
 	options.sfxVolume = DEFAULT_SFX_VOLUME;
 
-	updateSoundVolumes();
+	updateSoundVolumes(false);
 }
 
 void introNormal(){

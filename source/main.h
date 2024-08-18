@@ -56,6 +56,12 @@ void sceneManager();
 void updateGraphics();
 
 //external functions
+extern void updateSoundVolumes(bool leavingOptionsMenu);
+extern void playBGM(u8 bgmIndex);
+extern void playSFX(u8 assetIndex, int sfxSlot);
+extern void stopAllSoundExcept(const u8* exception);
+extern void stopAllSound();
+extern void stopSFX(u8 soundIndex);
 
 #endif
 

@@ -143,6 +143,12 @@
 //define constants for Sound Test
 #define BGM_SINGLE 999 // Marker for single track
 
+#define SOUND_TEST_BGM_COUNT (int)(sizeof(bgmGroups) / sizeof(bgmGroups[0]))
+#define SOUND_TEST_SFX_COUNT 15
+#define TOTAL_SOUND_COUNT 26 //rip numSounds
+#define BGM_COUNT (TOTAL_SOUND_COUNT - SOUND_TEST_SFX_COUNT) // Technically not correct if SFX also has groups, but it works :p
+#define SFX_START 11
+
 // Define the grouped BGM assets
 const int bgmGroups[][2] = {
     {_musOpening, BGM_SINGLE}, 					// Singular Group
@@ -166,12 +172,6 @@ enum BGMList{
 	BGM_THEMED,
 	BGM_MAX
 };
-
-#define SOUND_TEST_BGM_COUNT (int)(sizeof(bgmGroups) / sizeof(bgmGroups[0]))
-#define SOUND_TEST_SFX_COUNT 15
-#define TOTAL_SOUND_COUNT 26 //rip numSounds
-#define BGM_COUNT (TOTAL_SOUND_COUNT - SOUND_TEST_SFX_COUNT) // Technically not correct if SFX also has groups, but it works :p
-#define SFX_START 11
 
 //enums
 enum TitleSceneState{
@@ -201,14 +201,14 @@ enum MenuWindowConfirmDirection {
 	MWCD_BACKWARD,
 };
 
-enum OPTION_IDS{
+enum OptionIDs{
 	OPTID_MASTER_VOL,
 	OPTID_BGM_VOL,
 	OPTID_SFX_VOL,
 	OPTID_GRID_ENABLED
 };
 
-typedef enum{
+typedef enum MenuElement{
     ME_SCRIPT_RUNNER,
     ME_PAGE_TRANSFER,
     ME_SLIDER,
@@ -216,9 +216,9 @@ typedef enum{
 	ME_TOGGLE,
 	ME_SOUND_TESTER,
 	ME_CREDITS_DISPLAY,
-}MenuElement;
+} MenuElement;
 
-typedef enum{
+typedef enum MenuItemID{
 	MID_SOUND_TEST_BGM,
 	MID_SOUND_TEST_SFX,
 	MID_SOUND_TEST_CANCEL,
@@ -226,7 +226,14 @@ typedef enum{
 	MID_OPT_BGM_VOL,
 	MID_OPT_SFX_VOL,
 	MID_OPT_GRID_ENABLED
-}MenuItemID;
+} MenuItemID;
+
+enum AUDGROUP_IDS{
+    AUDGROUP_MENUSFX,
+    AUDGROUP_SOUNDT_SFX,
+    AUDGROUP_SOUNDT_BGM,
+	AUDGROUP_MAX
+};
 
 //structs
 typedef struct BGData{
@@ -272,9 +279,9 @@ typedef struct MainMenuData{
 	u8 windowActionTarget;
 	u8 zipSpeed;
 	int menuElementsWidth[MPI_MAX];
-	u32 blendMode, eva, evb, ey;
+	int blendMode, eva, evb, ey;
 	int evaLerpStart, evaLerpEnd, evbLerpStart, evbLerpEnd;
-}MainMenuData;
+} MainMenuData;
 
 typedef int (*FunctionPtr)(void);
 
@@ -351,6 +358,25 @@ extern const unsigned short menu_slider_bars_8x16Pal[16];
 
 int starryBGYPosInit, starryBGYPosTarget, titleCardYStart, titleCardYTarget, titleRevealFadeDirection;
 
+// Define the individual audio groups with variable sizes
+static const int menuSFXGroup[] = { _sfxMenuCancel, _sfxMenuConfirmA, _sfxMenuConfirmB, _sfxMenuConfirmC, _sfxMenuMove };
+static const int soundtestSFXGroup[] = { _sfxCursorMove, _sfxMenuCancel, _sfxMenuConfirmA, _sfxMenuConfirmB, _sfxMenuConfirmC, _sfxMenuMove, _sfxScreenPan, _sfxShipDmgL, _sfxShipDmgM, _sfxShipDmgS, _sfxShipExplodeL, _sfxShipExplodeM, _sfxShipExplodeS, _sfxShipIdle, _sfxShipMove };
+static const int soundtestBGMGroup[] = { _musMainMenu, _musOpening };
+
+// Array of pointers to these groups
+static const int* audioGroups[AUDGROUP_MAX] = {
+    [AUDGROUP_MENUSFX] = menuSFXGroup,
+    [AUDGROUP_SOUNDT_SFX] = soundtestSFXGroup,
+    [AUDGROUP_SOUNDT_BGM] = soundtestBGMGroup
+};
+
+// Array to store the size of each group
+static const int audioGroupSizes[AUDGROUP_MAX] = {
+    [AUDGROUP_MENUSFX] = sizeof(menuSFXGroup) / sizeof(menuSFXGroup[0]),
+    [AUDGROUP_SOUNDT_SFX] = sizeof(soundtestSFXGroup) / sizeof(soundtestSFXGroup[0]),
+    [AUDGROUP_SOUNDT_BGM] = sizeof(soundtestBGMGroup) / sizeof(soundtestBGMGroup[0])
+};
+
 // Local Functions
 void mainMenuInitialize();
 void mainMenuNormal();
@@ -360,6 +386,7 @@ void mainMenuEnd();
 void initMainMenu();
 void initMenuPages(MenuPage menuPages[]);
 void mainMenuInitBlend();
+void resetMainMenuWindowVariables();
 
 // Update Functions
 void scrollStarryBG(int addedX, int addedY);
@@ -416,12 +443,7 @@ void loadMenuGraphics(MenuPage *menuPage);
 bool sfxIsPlaying(int sfxIndex);
 int calculateEffectiveVolume(int soundAssetVol, int userVol);
 u8 calculateFinalVolume(u8 assetVolume, int userVolume, int masterVolume);
-void playBGM(u8 bgmIndex);
-void playSFX(u8 assetIndex, int sfxSlot);
-void stopAllSoundExcept(const u8* exception);
-void stopAllSound();
-void stopSFX(u8 soundIndex);
-void updateSoundVolumes(bool leavingOptionsMenu);
+void justLikeUpdateAllVolumesMan();
 
 //external functions
 #endif
