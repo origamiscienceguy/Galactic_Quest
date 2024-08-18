@@ -1149,7 +1149,8 @@ void shipMovementSelectState(){
 		mapData.cursor.selectXPos = mapData.ships[mapData.selectedShip.index].xPos;
 		mapData.cursor.selectYPos = mapData.ships[mapData.selectedShip.index].yPos;
 		mapData.cursor.xPos = (mapData.ships[mapData.selectedShip.index].xPos << 4) - 8;
-		mapData.cursor.yPos = (mapData.ships[mapData.selectedShip.index].yPos << 4) - 8; 
+		mapData.cursor.yPos = (mapData.ships[mapData.selectedShip.index].yPos << 4) - 8;
+		checkForOverlap(shipIndex);
 	}
 	
 	//arrows will move the cursor within the movement range
@@ -1316,8 +1317,8 @@ void shipListInit(){
 	//initialize all four teams
 	for(u32 teamIndex = 0; teamIndex < NUM_TEAMS; teamIndex++){
 		TeamData *teamPointer = &mapData.teams[teamIndex];
-		//teamPointer->state = TEAM_ABSENT;
-		//teamPointer->numStartingShips = 0;
+		teamPointer->state = TEAM_ABSENT;
+		teamPointer->numStartingShips = 0;
 	}
 	
 	u32 lastShipIndex[NUM_TEAMS]; //the previous found ship for this particular team
@@ -1703,13 +1704,14 @@ void checkForOverlap(u8 shipIndex){
 			//insert this ship into the same-tile linked list
 			mapData.ships[shipIndex].sameTileLink = mapData.ships[i].sameTileLink;
 			mapData.ships[i].sameTileLink = shipIndex;
+			makeShipVisible(shipIndex);
 			
 			//set whichever ship on this tile is currently visible to hidden
 			u8 checkedIndex = mapData.ships[shipIndex].sameTileLink;
-			while(!isShipVisible(checkedIndex)){
+			while(mapData.ships[checkedIndex].sameTileLink != mapData.ships[shipIndex].sameTileLink){
 				checkedIndex = mapData.ships[checkedIndex].sameTileLink;
+				makeShipHidden(checkedIndex);
 			}
-			makeShipHidden(checkedIndex);
 			return;
 		}
 	}
@@ -2066,6 +2068,7 @@ void selectShip(u8 shipIndex){
 			}
 			currentIndex = mapData.ships[currentIndex].sameTileLink;
 		}
+		makeShipVisible(shipIndex);
 		
 		mapData.selectedShip.xPos = (mapData.ships[shipIndex].xPos << 4);
 		mapData.selectedShip.yPos = (mapData.ships[shipIndex].yPos << 4);
@@ -2155,7 +2158,6 @@ u8 arctan2(s16 deltaX, s16 deltaY){
 }
 
 void checkCycleButtons(){
-	makeShipVisible(mapData.selectedShip.index);
 	if(inputs.pressed & KEY_L){
 		//cycle through the linked list until we end up one before where we started
 		u32 currentIndex = mapData.selectedShip.index;
