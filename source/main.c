@@ -39,6 +39,31 @@ const int volumeTable[MAX_VOLUME + 1] = {
     0, 26, 51, 77, 102, 128, 154, 179, 204, 230, 256
 };
 
+// Definition of sound channels
+SoundChannel currentBGMIndex[2] = {
+	{.assetIndex = 0xFF, .defaultVolume = 255},
+	{.assetIndex = 0xFF, .defaultVolume = 255}
+};
+SoundChannel currentSFXIndex[5] = {
+	{.assetIndex = 0xFF, .defaultVolume = 255},
+	{.assetIndex = 0xFF, .defaultVolume = 255},
+	{.assetIndex = 0xFF, .defaultVolume = 255},
+	{.assetIndex = 0xFF, .defaultVolume = 255},
+	{.assetIndex = 0xFF, .defaultVolume = 255}
+};
+
+// Define the grouped BGM assets
+const int bgmGroups[][2] = {
+    {_musOpening, BGM_SINGLE}, 					// Singular Group
+    {_musTitle, BGM_SINGLE},					// Singular Group
+    {_musMainMenu, BGM_SINGLE},					// Singular Group
+    {_musThemeA_Battle, _musThemeA_Peace},		// Dual Group
+    {_musThemeB, BGM_SINGLE},					// Group with itself
+    {_musThemeB_Battle, BGM_SINGLE},			// Group with itself
+	{_musThemeC_Battle, _musThemeC_Peace},		// Dual Group
+    {_musThemeD_Battle, _musThemeD_Peace}		// Dual Group
+};
+
 int main(){
 	globalInitialize();
 	//start of the game loop in main.s

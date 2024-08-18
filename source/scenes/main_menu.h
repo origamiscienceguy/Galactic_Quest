@@ -147,39 +147,6 @@
 
 #define MENU_TEXT_LAYER_ID 1
 
-//define constants for Sound Test
-#define BGM_SINGLE 999 // Marker for single track
-
-#define SOUND_TEST_BGM_COUNT (int)(sizeof(bgmGroups) / sizeof(bgmGroups[0]))
-#define SOUND_TEST_SFX_COUNT 15
-#define TOTAL_SOUND_COUNT 26 //rip numSounds
-#define BGM_COUNT (TOTAL_SOUND_COUNT - SOUND_TEST_SFX_COUNT) // Technically not correct if SFX also has groups, but it works :p
-#define SFX_START 11
-
-// Define the grouped BGM assets
-const int bgmGroups[][2] = {
-    {_musOpening, BGM_SINGLE}, 					// Singular Group
-    {_musTitle, BGM_SINGLE},					// Singular Group
-    {_musMainMenu, BGM_SINGLE},					// Singular Group
-    {_musThemeA_Battle, _musThemeA_Peace},		// Dual Group
-    {_musThemeB, BGM_SINGLE},					// Group with itself
-    {_musThemeB_Battle, BGM_SINGLE},			// Group with itself
-	{_musThemeC_Battle, _musThemeC_Peace},		// Dual Group
-    {_musThemeD_Battle, _musThemeD_Peace}		// Dual Group
-};
-
-enum BGMList{
-	BGM_OPENING,
-	BGM_TITLE,
-	BGM_MAINMENU,
-	BGM_THEMEA,
-	BGM_THEMEB,
-	BGM_THEMEB_BATTLE,
-	BGM_THEMEC,
-	BGM_THEMED,
-	BGM_MAX
-};
-
 //enums
 enum TitleSceneState{
 	FLASH_WHITE, FADE_TO_TITLE, TITLE_PAN_UP, TITLE_FLASH, TITLE_REVEAL, TITLE_FLYING_COMET_ANIMATION, TITLE_BEFORE_HOLD, TITLE_HOLD, TITLE_AFTER_PRESS_START, TITLE_FLY_OUT, MAIN_MENU_FLY_IN, MAIN_MENU_HOLD, MAIN_MENU_FLY_OUT,
@@ -340,6 +307,9 @@ extern cu8 shootingStarYPos[16];
 extern cu8 starBlockerYPos[31];
 extern cu16 starryBGPanYPos[100];
 extern cu8 titleCardBGPanYPos[9];
+extern SoundChannel currentBGMIndex[2];
+extern SoundChannel currentSFXIndex[5];
+extern const bgmGroups[8][2];
 
 extern const unsigned short starBlockerTiles[256];
 extern const unsigned short starBlockerPal[16];
@@ -400,7 +370,7 @@ void scrollStarryBG(int addedX, int addedY);
 void interpolateStarryBG(bool scrollYAxis);
 void updateBGScrollRegisters(u16 bg0XPos, u16 bg0YPos, u16 bg1XPos, u16 bg1YPos);
 void matchBegin();
-void updateOptions();
+void updateOptionsFromSRAM();
 void skipToMenu();
 void updateObjBuffer();
 void mainMenuUpdateBlend(u32 eva, u32 evb);
@@ -408,7 +378,6 @@ void updateMainMenu();
 void menuInputConfirmEnabled();
 void menuInputCancelEnabled();
 void performPageTransfer(int datIntVal);
-void endCurrentBGM();
 
 // Menu Functions
 int menuExecNewGame();
@@ -450,16 +419,6 @@ void loadMenuGraphics(MenuPage *menuPage);
 bool sfxIsPlaying(int sfxIndex);
 int calculateEffectiveVolume(int soundAssetVol, int userVol);
 u8 calculateFinalVolume(u8 assetVolume, int userVolume, int masterVolume);
-void justLikeUpdateAllVolumesMan();
-
-
-
-
-
-
-
-
-
 
 
 
@@ -644,7 +603,7 @@ typedef struct MapData{
 
 //external functions
 extern MapData mapData;
-
+extern void initMap();
 
 
 

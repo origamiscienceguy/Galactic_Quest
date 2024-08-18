@@ -2,8 +2,6 @@
 
 IntroData introData;
 
-u32 currentBGM;
-
 Scene introScene = {
 	.initialize = &introInitialize,
 	.intro = 0,
@@ -51,7 +49,7 @@ void introNormal(){
 			introData.actionTarget = GBAJAM_WAIT_FRAMES;
 		} else if (introData.actionTimer == 1){
 			// Seems to be too slow on the same frame as loading SRAM?
-			currentBGM = playNewSound(_musOpening);
+			playBGM(BGM_OPENING);
 			updateSoundVolumes(false);
 			IOBuffer0[0] = 16 - introData.actionTimer;
 			introData.actionTimer++;
@@ -191,5 +189,5 @@ void introNormal(){
 void introEnd(){
 	currentScene.scenePointer = sceneList[MAIN_MENU];
 	currentScene.state = INITIALIZE;
-	endSound(currentBGM);
+	endCurrentBGM();
 }
