@@ -1316,8 +1316,8 @@ void shipListInit(){
 	//initialize all four teams
 	for(u32 teamIndex = 0; teamIndex < NUM_TEAMS; teamIndex++){
 		TeamData *teamPointer = &mapData.teams[teamIndex];
-		teamPointer->state = TEAM_ABSENT;
-		teamPointer->numStartingShips = 0;
+		//teamPointer->state = TEAM_ABSENT;
+		//teamPointer->numStartingShips = 0;
 	}
 	
 	u32 lastShipIndex[NUM_TEAMS]; //the previous found ship for this particular team
@@ -1362,7 +1362,7 @@ void shipListInit(){
 			}
 		}
 	}
-	mapData.numShips = 112;
+	mapData.numShips = numShips;
 	
 	//complete the linked list loop for each team that has at least one ship
 	for(u32 teamIndex = 0; teamIndex < NUM_TEAMS; teamIndex++){
