@@ -102,7 +102,7 @@ void criticalUpdates(){
 	inputs.held = inputs.current & lastInputs;
 	inputs.released = ~inputs.current & lastInputs;
 	
-	if(inputs.pressed & KEY_SELECT){
+	/*if(inputs.pressed & KEY_SELECT){
 		static u8 currentAssetIndex = 0;
 		static u8 currentAsset = 0;
 		extern u16 numSounds;
@@ -115,7 +115,7 @@ void criticalUpdates(){
 			currentAsset++;
 			currentAssetIndex = playNewSound(currentAsset);
 		}
-	}
+	}*/
 	
 	/*if(inputs.pressed & KEY_SELECT){
 		static u8 peaceAssetIndex = 0;

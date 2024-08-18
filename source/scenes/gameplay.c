@@ -279,7 +279,7 @@ IWRAM_CODE void createShipTilemap(u16 *tilemapBuffer){
 			}
 		}
 		
-		if(mapData.ships[shipIndex].state == FINISHED_VISIBLE){
+		if((mapData.ships[shipIndex].state == FINISHED_VISIBLE) || (mapData.ships[shipIndex].state == FINISHED_HIDDEN)){
 			palette += 4;
 		}
 		
@@ -616,6 +616,9 @@ void updateMinimap(u8 *characterBuffer){
 		}
 		else if(existingColor == (1 + mapData.teamTurn)){
 			color = (1 + mapData.teamTurn);
+		}
+		else if(existingColor == (1 + mapData.ships[shipIndex].team)){
+			color = 1 + mapData.ships[shipIndex].team;
 		}
 		else if(existingColor != (1 + mapData.ships[shipIndex].team)){
 			color = 10;
@@ -994,6 +997,10 @@ void selectAShipState(){
 }
 
 void shipSelectedState(){
+
+	//L and R cycle backwards or forwards through the active ships for this team, and center the camera on the next ship in the cycle
+	checkCycleButtons();
+	
 	if(inputs.pressed & KEY_A){
 		//if a move action is selected
 		if(mapData.actionMenu.currentSelection == 0){
@@ -1029,8 +1036,9 @@ void shipSelectedState(){
 		//if the back option is selected
 		else{
 			mapData.state = OPEN_MAP;
-			mapData.ships[mapData.selectedShip.index].state = READY_VISIBLE; 
+			//mapData.ships[mapData.selectedShip.index].state = READY_VISIBLE; 
 			mapData.highlight.state = NO_HIGHLIGHT;
+			makeShipVisible(mapData.selectedShip.index);
 			mapData.cursor.selectXPos = mapData.ships[mapData.selectedShip.index].xPos;
 			mapData.cursor.selectYPos = mapData.ships[mapData.selectedShip.index].yPos;
 			mapData.cursor.xPos = (mapData.ships[mapData.selectedShip.index].xPos << 4) - 8;
@@ -1049,8 +1057,9 @@ void shipSelectedState(){
 	
 	if(inputs.pressed & KEY_B){
 		mapData.state = OPEN_MAP;
-		mapData.ships[mapData.selectedShip.index].state = READY_VISIBLE; 
+		//mapData.ships[mapData.selectedShip.index].state = READY_VISIBLE; 
 		mapData.highlight.state = NO_HIGHLIGHT;
+		makeShipVisible(mapData.selectedShip.index);
 		mapData.cursor.selectXPos = mapData.ships[mapData.selectedShip.index].xPos;
 		mapData.cursor.selectYPos = mapData.ships[mapData.selectedShip.index].yPos;
 		mapData.cursor.xPos = (mapData.ships[mapData.selectedShip.index].xPos << 4) - 8;
@@ -1307,8 +1316,8 @@ void shipListInit(){
 	//initialize all four teams
 	for(u32 teamIndex = 0; teamIndex < NUM_TEAMS; teamIndex++){
 		TeamData *teamPointer = &mapData.teams[teamIndex];
-		teamPointer->state = TEAM_ABSENT;
-		teamPointer->numStartingShips = 0;
+		//teamPointer->state = TEAM_ABSENT;
+		//teamPointer->numStartingShips = 0;
 	}
 	
 	u32 lastShipIndex[NUM_TEAMS]; //the previous found ship for this particular team
@@ -1353,7 +1362,7 @@ void shipListInit(){
 			}
 		}
 	}
-	mapData.numShips = 112;
+	mapData.numShips = numShips;
 	
 	//complete the linked list loop for each team that has at least one ship
 	for(u32 teamIndex = 0; teamIndex < NUM_TEAMS; teamIndex++){
@@ -2068,6 +2077,8 @@ void selectShip(u8 shipIndex){
 		mapData.cursor.state = CUR_STILL;
 		mapData.cursor.selectXPos = mapData.ships[shipIndex].xPos;
 		mapData.cursor.selectYPos = mapData.ships[shipIndex].yPos;
+		mapData.cursor.xPos = (mapData.cursor.selectXPos << 4) - 8;
+		mapData.cursor.yPos = (mapData.cursor.selectYPos << 4) - 8;
 		
 		//pan the camera to this ship
 		mapData.camera.state = CAM_STILL;
@@ -2144,6 +2155,7 @@ u8 arctan2(s16 deltaX, s16 deltaY){
 }
 
 void checkCycleButtons(){
+	makeShipVisible(mapData.selectedShip.index);
 	if(inputs.pressed & KEY_L){
 		//cycle through the linked list until we end up one before where we started
 		u32 currentIndex = mapData.selectedShip.index;

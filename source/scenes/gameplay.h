@@ -270,6 +270,7 @@ typedef struct MapData{
 	MinimapData minimap; //the data about the minimap layer
 	SelectAShipMenu selectAShip; //the data about the select-a-ship menu
 	ActionMenu actionMenu; //the data about the action meny
+	u8 saveSlot;
 }MapData;
 
 typedef struct {
