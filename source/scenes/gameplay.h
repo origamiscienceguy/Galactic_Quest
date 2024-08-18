@@ -176,13 +176,6 @@ enum BattleMenuState{
 	BATTLE_ON, BATTLE_OFF
 };
 
-enum AUDGROUP_IDS{
-    AUDGROUP_MENUSFX,
-    AUDGROUP_SOUNDT_SFX,
-    AUDGROUP_SOUNDT_BGM,
-	AUDGROUP_MAX
-};
-
 //structs
 typedef struct ShipData{
 	enum ShipType type; //the type of ship this one is
@@ -377,12 +370,12 @@ extern const unsigned short green_teamMap[1024];
 extern SoundChannel currentBGMIndex[2];
 extern SoundChannel currentSFXIndex[5];
 
-/*enum AUDGROUP_IDS{
+enum AUDGROUP_IDS{
     AUDGROUP_MENUSFX,
     AUDGROUP_SOUNDT_SFX,
     AUDGROUP_SOUNDT_BGM,
 	AUDGROUP_MAX
-};*/
+};
 
 extern const u8 selectAShipYPos[];
 extern const u8 selectAShipXPos[];
