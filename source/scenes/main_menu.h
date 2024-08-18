@@ -443,7 +443,6 @@ void loadMenuGraphics(MenuPage *menuPage);
 bool sfxIsPlaying(int sfxIndex);
 int calculateEffectiveVolume(int soundAssetVol, int userVol);
 u8 calculateFinalVolume(u8 assetVolume, int userVolume, int masterVolume);
-void justLikeUpdateAllVolumesMan();
 
 //external functions
 #endif

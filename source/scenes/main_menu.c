@@ -116,6 +116,10 @@ void mainMenuInitialize(){
 
 	// Set whatever current values are to the real options struct
 	optionsMenuItems = menuPages[MPI_OPTIONS].items;
+	optionsMenuItems[OPTID_MASTER_VOL].data.intVal = (int)options.masterVolume;
+	optionsMenuItems[OPTID_BGM_VOL].data.intVal = (int)options.bgmVolume;
+	optionsMenuItems[OPTID_SFX_VOL].data.intVal = (int)options.sfxVolume;
+	optionsMenuItems[OPTID_GRID_ENABLED].data.boolVal = (int)options.gridOn;
 }
 
 void mainMenuNormal(){
@@ -1457,7 +1461,6 @@ void menuInputConfirmEnabled(){
 							default:
 								break;
 							case MID_SOUND_TEST_BGM:
-								endCurrentBGM();
 								int index = thisMenuItem->data.intVal;
 								playBGM(index);
 								/*
@@ -2074,11 +2077,12 @@ int menuExecOptionsApplyChanges(){
 	mDat.windowActionTarget = 50;
 
 	// Set whatever current values are to the real options struct
+	
     optionsMenuItems = menuPages[MPI_OPTIONS].items;
-	options.masterVolume = (u8)&menuPages[MPI_OPTIONS].items[OPTID_MASTER_VOL].data.intVal;
-	options.bgmVolume = (u8)&menuPages[MPI_OPTIONS].items[OPTID_BGM_VOL].data.intVal;
-	options.sfxVolume = (u8)&menuPages[MPI_OPTIONS].items[OPTID_SFX_VOL].data.intVal;
-	options.gridOn = (u8)&menuPages[MPI_OPTIONS].items[OPTID_GRID_ENABLED].data.boolVal;
+	options.masterVolume = (u8)menuPages[MPI_OPTIONS].items[OPTID_MASTER_VOL].data.intVal;
+	options.bgmVolume = (u8)menuPages[MPI_OPTIONS].items[OPTID_BGM_VOL].data.intVal;
+	options.sfxVolume = (u8)menuPages[MPI_OPTIONS].items[OPTID_SFX_VOL].data.intVal;
+	options.gridOn = (u8)menuPages[MPI_OPTIONS].items[OPTID_GRID_ENABLED].data.boolVal;
 
 	updateSoundVolumes(false);
 	return 0;
@@ -2181,18 +2185,7 @@ void playSFX(u8 sfxID, int sfxGroupIndex) {
     }
     
 	// hacky af but it works lol
-	justLikeUpdateAllVolumesMan();
-}
-
-void justLikeUpdateAllVolumesMan(){
-	u8 masterVolume = (u8)optionsMenuItems[OPTID_MASTER_VOL].data.intVal;
-	u8 sfxVolume = (u8)optionsMenuItems[OPTID_SFX_VOL].data.intVal;
-
-    // Calculate the final volume and set it for the SFX
-	for (u8 sfxGroupIndex = 0; sfxGroupIndex < AUDGROUP_MAX; sfxGroupIndex++) {
-		u8 finalVolume = calculateFinalVolume(getAssetDefaultVolume(currentSFXIndex[sfxGroupIndex]), sfxVolume, masterVolume);
-		setAssetVolume(currentSFXIndex[sfxGroupIndex], finalVolume);
-	}
+	updateSoundVolumes(false);
 }
 
 void stopAllSoundExcept(const u8* exception) {
