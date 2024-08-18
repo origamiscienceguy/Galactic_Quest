@@ -36,9 +36,6 @@ void mainMenuInitialize(){
 	REG_BLDCNT = BLD_TOP(BLD_BG2 | BLD_BACKDROP | BLD_OBJ) | BLD_WHITE;
 	REG_BLDY = BLDY(0);
 
-	loadOptions(&options);
-	clearEntireSRAM(&options); // also checks if it was the first time ever booting up the game before actually doing so
-
 	updateObjBuffer();
 
 	resetMainMenuWindowVariables();
@@ -2095,17 +2092,10 @@ int menuExecNewGame(){
 	mDat.windowActionTimer = 0;
 	mDat.windowActionTarget = 100;
 
-
-	
 	u8 saveSlot = clamp(mDat.menuCursorPos, 0, 3);
-
 	initMapData(&mapData);
 	initMap();
-	//initOptions(&options);
 	options.lastPlayedSaveSlot = saveSlot;
-
-
-
 	return 0;
 }
 
@@ -2132,22 +2122,11 @@ int menuExecContinue(){
 	
 	u8 saveSlot = clamp(options.lastPlayedSaveSlot, 0, 3);
 	loadGame(&mapData, saveSlot);
-	//loadOptions(&options);
 	options.lastPlayedSaveSlot = saveSlot;
 	return 0;
 }
 
 int menuExecLoadGame(){
-
-	/*
-	
-
-	// To save the game data and options
-	saveGame(&mapData, saveSlot);
-	saveOptions(&options);
-
-
-*/
 	stopAllSound();
 	playSFX(_sfxMenuConfirmC, AUDGROUP_MENUSFX);
 	
@@ -2170,7 +2149,6 @@ int menuExecLoadGame(){
 	
 	u8 saveSlot = clamp(mDat.menuCursorPos, 0, 3);
 	loadGame(&mapData, saveSlot);
-	//loadOptions(&options);
 	options.lastPlayedSaveSlot = saveSlot;
 
 	return 0;
@@ -2476,7 +2454,12 @@ void initMapData(MapData *mapData) {
 
 
 void initOptions(Options *options) {
-    memset(options, 0, sizeof(Options)); // Set all bytes to zero
+	options->gridOn = DEFAULT_GRID_FLAG;
+	options->masterVolume = DEFAULT_MASTER_VOLUME;
+	options->bgmVolume = DEFAULT_BGM_VOLUME;
+	options->sfxVolume = DEFAULT_SFX_VOLUME;
+	options->lastPlayedSaveSlot = 0;
+	options->firstTimeBoot = false;
 }
 
 void writeSRAMByte(u32 address, u8 value) {
@@ -2490,7 +2473,7 @@ u8 readSRAMByte(u32 address) {
 
 // also checks if it was the first time ever booting up the game before actually doing so
 void clearEntireSRAM(Options *options) {
-	int srmSize = sizeof(MapData) + sizeof(&options);
+	int srmSize = 3 * sizeof(MapData) + sizeof(Options);
     if (options->firstTimeBoot) {
         // Clear the entire SRAM
         for (size_t i = 0; i < srmSize; ++i) {
@@ -2498,16 +2481,14 @@ void clearEntireSRAM(Options *options) {
         }
 
         // Mark first-time boot as completed
-        options->firstTimeBoot = true;
-
+        options->firstTimeBoot = false;
 
 		initMapData(&mapData);
 		initMap();
-		options->lastPlayedSaveSlot = 0;
+		initOptions(options);
 		saveGame(&mapData, 0);
 		saveGame(&mapData, 1);
 		saveGame(&mapData, 2);
-		
         saveOptions(options); // Save the updated options to SRAM
     }
 }
