@@ -138,7 +138,7 @@ void gameplayNormal(){
 	case SHIP_MOVING:
 		shipMovingState();
 		break;
-	case BATTLE:
+	case BATTLE_PRE_MOVE:
 		break;
 	case TURN_END:
 		turnEndState();
@@ -153,6 +153,9 @@ void gameplayNormal(){
 		break;
 	case RANGE_CHECK:
 		rangeCheckState();
+		break;
+	case BATTLE_PRE_SELECT_A_SHIP:
+		battlePreSelectAShipState();
 		break;
 	default:
 		break;
@@ -861,11 +864,15 @@ void drawSelectAShipMenu(OBJ_ATTR *spriteBuffer){
 	}
 }
 
-void drawBattleMenus(OBJ_ATTR *spriteBuffer){
+void drawBattleMenus(OBJ_ATTR *spriteBuffer, u8 *characterBufferLeft, u8 *characterBufferRight){
 	u8 leftPalette = mapData.ships[mapData.leftBattle.shipIndex].team;
 	u8 rightPalette = mapData.ships[mapData.rightBattle.shipIndex].team;
 	u8 leftState = mapData.leftBattle.state;
 	u8 rightState = mapData.rightBattle.state;
+	u8 leftShip = mapData.leftBattle.shipIndex;
+	u8 rightShip = mapData.rightBattle.shipIndex;
+	u8 leftHealth = mapData.ships[leftShip].health;
+	u8 rightHealth = mapData.ships[rightShip].health;
 	
 	//if the left menu is hidden, don't draw it
 	if(leftState == BATTLE_OFF){
@@ -875,13 +882,85 @@ void drawBattleMenus(OBJ_ATTR *spriteBuffer){
 	}
 	//draw the left menu
 	else{
-		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(0);
-		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START].attr1 = ATTR1_SIZE_64 | ATTR1_X(0);
-		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START].attr2 = ATTR2_ID(OBJ_BATTLE_DISPLAY1_GFX_START) | ATTR2_PRIO(0) | ATTR2_PALBANK(leftPalette);
-		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START + 1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(0);
-		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START + 1].attr1 = ATTR1_SIZE_64 | ATTR1_X(64);
-		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START + 1].attr2 = ATTR2_ID(OBJ_BATTLE_DISPLAY1_GFX_START + 32) | ATTR2_PRIO(0) | ATTR2_PALBANK(leftPalette);
+		//draw the box
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START + 4].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(0);
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START + 4].attr1 = ATTR1_SIZE_64 | ATTR1_X(0);
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START + 4].attr2 = ATTR2_ID(OBJ_BATTLE_DISPLAY1_GFX_START) | ATTR2_PRIO(0) | ATTR2_PALBANK(leftPalette);
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START + 3].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(0);
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START + 3].attr1 = ATTR1_SIZE_64 | ATTR1_X(64);
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START + 3].attr2 = ATTR2_ID(OBJ_BATTLE_DISPLAY1_GFX_START + 32) | ATTR2_PRIO(0) | ATTR2_PALBANK(leftPalette);
+		
+		//draw the ship itself
+		//handle sprite rotation
+		u32 angle = leftBattleAngle[currentScene.sceneCounter % 32];
+		u8 shipYPos = (leftBattleYPos[currentScene.sceneCounter % 32] - 1) & 0xff;
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_AFF_MAT * 4].fill = (sinTable[(angle + 0x40) % 256]) * 2;
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_AFF_MAT * 4 + 1].fill = (sinTable[angle % 256]) * 2;
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_AFF_MAT * 4 + 2].fill = -(sinTable[angle % 256]) * 2;
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_AFF_MAT * 4 + 3].fill = (sinTable[(angle + 0x40) % 256]) * 2;
+		
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START].attr0 = ATTR0_AFF | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(shipYPos);
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START].attr1 = ATTR1_SIZE_32 | ATTR1_X(510) | ATTR1_AFF_ID(OBJ_BATTLE_DISPLAY1_AFF_MAT);
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START].attr2 = ATTR2_ID(OBJ_BATTLE_DISPLAY1_GFX_START + 64) | ATTR2_PRIO(0) | ATTR2_PALBANK(leftPalette);
+		
+		u32 firstTile = (mapData.ships[leftShip].type * 64) + (((currentScene.sceneCounter % 8) >> 1) * 16);
+		
+		//load the graphics of the selected ship
+		for(u32 tile = 0; tile < 16; tile++){
+			cu16 *gfxPtr = &ships_selectedTiles[ships_selectedMap[firstTile + tile] * 16];
+			u16 *VRAMPtr = &((u16 *)characterBufferLeft)[tile * 16];
+			//load the tile graphics
+			for(u32 i = 0; i < 16; i++){
+				VRAMPtr[i] = gfxPtr[i];
+			}
+		}
+		
+		//draw the health bar of this ship
+		u8 leftHealthSlices = getHealthSlices(leftHealth);
+		u8 iterations = 0;
+		memset32(&characterBufferLeft[512], 0, 256);
+		
+		while(leftHealthSlices > 1){
+			//load the graphics of the health bar
+			cu16 *gfxPtr = health_barTiles;
+			u8 *VRAMPtr = &characterBufferLeft[512 + (iterations * 32)];
+			memcpy32(VRAMPtr, gfxPtr, 8);
+			gfxPtr = &health_barTiles[16];
+			VRAMPtr = &characterBufferLeft[768 + (iterations * 32)];
+			memcpy32(VRAMPtr, gfxPtr, 8);
+			leftHealthSlices -= 2;
+			iterations++;
+		}
+		if(leftHealthSlices == 1){
+			cu16 *gfxPtr = &health_barTiles[32];
+			u8 *VRAMPtr = &characterBufferLeft[512 + (iterations * 32)];
+			memcpy32(VRAMPtr, gfxPtr, 8);
+			gfxPtr = &health_barTiles[48];
+			VRAMPtr = &characterBufferLeft[768 + (iterations * 32)];
+			memcpy32(VRAMPtr, gfxPtr, 8);
+			iterations++;
+		}
+		while(iterations < 5){
+			cu16 *gfxPtr = &health_barTiles[64];
+			u8 *VRAMPtr = &characterBufferLeft[512 + (iterations * 32)];
+			memcpy32(VRAMPtr, gfxPtr, 8);
+			gfxPtr = &health_barTiles[80];
+			VRAMPtr = &characterBufferLeft[768 + (iterations * 32)];
+			memcpy32(VRAMPtr, gfxPtr, 8);
+			iterations++;
+		}
+		
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START + 1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(8);
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START + 1].attr1 = ATTR1_SIZE_64 | ATTR1_X(40);
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START + 1].attr2 = ATTR2_ID(OBJ_BATTLE_DISPLAY1_GFX_START + 80) | ATTR2_PRIO(0) | ATTR2_PALBANK(leftPalette);
+		
+		//draw the health percentage
+		memcpy32(&characterBufferLeft[1536], &list_numbers_32x16Tiles[leftHealth * 128], 64);
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START + 2].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(11);
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START + 2].attr1 = ATTR1_SIZE_32 | ATTR1_X(67);
+		spriteBuffer[OBJ_BATTLE_DISPLAY1_SPRITES_START + 2].attr2 = ATTR2_ID(OBJ_BATTLE_DISPLAY1_GFX_START + 112) | ATTR2_PRIO(0) | ATTR2_PALBANK(leftPalette);
 	}
+	
 	//if the right menu is hidden, don't draw it
 	if(rightState == BATTLE_OFF){
 		for(u32 spriteSlot = OBJ_BATTLE_DISPLAY2_SPRITES_START; spriteSlot < OBJ_BATTLE_DISPLAY2_SPRITES_START + OBJ_BATTLE_DISPLAY_SPRITES_NUM; spriteSlot++){
@@ -890,7 +969,83 @@ void drawBattleMenus(OBJ_ATTR *spriteBuffer){
 	}
 	//draw the right menu
 	else{
-	
+		//draw the box
+		spriteBuffer[OBJ_BATTLE_DISPLAY2_SPRITES_START + 4].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(0);
+		spriteBuffer[OBJ_BATTLE_DISPLAY2_SPRITES_START + 4].attr1 = ATTR1_SIZE_64 | ATTR1_X(120);
+		spriteBuffer[OBJ_BATTLE_DISPLAY2_SPRITES_START + 4].attr2 = ATTR2_ID(OBJ_BATTLE_DISPLAY2_GFX_START) | ATTR2_PRIO(0) | ATTR2_PALBANK(rightPalette);
+		spriteBuffer[OBJ_BATTLE_DISPLAY2_SPRITES_START + 3].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(0);
+		spriteBuffer[OBJ_BATTLE_DISPLAY2_SPRITES_START + 3].attr1 = ATTR1_SIZE_64 | ATTR1_X(184);
+		spriteBuffer[OBJ_BATTLE_DISPLAY2_SPRITES_START + 3].attr2 = ATTR2_ID(OBJ_BATTLE_DISPLAY2_GFX_START + 32) | ATTR2_PRIO(0) | ATTR2_PALBANK(rightPalette);
+		
+		//draw the ship itself
+		//handle sprite rotation
+		u32 angle = leftBattleAngle[currentScene.sceneCounter % 32] + 128;
+		u8 shipYPos = (leftBattleYPos[currentScene.sceneCounter % 32] - 1) & 0xff;
+		spriteBuffer[OBJ_BATTLE_DISPLAY2_AFF_MAT * 4].fill = (sinTable[(angle + 0x40) % 256]) * 2;
+		spriteBuffer[OBJ_BATTLE_DISPLAY2_AFF_MAT * 4 + 1].fill = (sinTable[angle % 256]) * 2;
+		spriteBuffer[OBJ_BATTLE_DISPLAY2_AFF_MAT * 4 + 2].fill = -(sinTable[angle % 256]) * 2;
+		spriteBuffer[OBJ_BATTLE_DISPLAY2_AFF_MAT * 4 + 3].fill = (sinTable[(angle + 0x40) % 256]) * 2;
+		
+		spriteBuffer[OBJ_BATTLE_DISPLAY2_SPRITES_START].attr0 = ATTR0_AFF | ATTR0_4BPP | ATTR0_SQUARE | ATTR0_Y(shipYPos);
+		spriteBuffer[OBJ_BATTLE_DISPLAY2_SPRITES_START].attr1 = ATTR1_SIZE_32 | ATTR1_X(210) | ATTR1_AFF_ID(OBJ_BATTLE_DISPLAY2_AFF_MAT);
+		spriteBuffer[OBJ_BATTLE_DISPLAY2_SPRITES_START].attr2 = ATTR2_ID(OBJ_BATTLE_DISPLAY2_GFX_START + 64) | ATTR2_PRIO(0) | ATTR2_PALBANK(rightPalette);
+		
+		u32 firstTile = (mapData.ships[rightShip].type * 64) + (((currentScene.sceneCounter % 8) >> 1) * 16);
+		
+		//load the graphics of the selected ship
+		for(u32 tile = 0; tile < 16; tile++){
+			cu16 *gfxPtr = &ships_selectedTiles[ships_selectedMap[firstTile + tile] * 16];
+			u16 *VRAMPtr = &((u16 *)characterBufferRight)[tile * 16];
+			//load the tile graphics
+			for(u32 i = 0; i < 16; i++){
+				VRAMPtr[i] = gfxPtr[i];
+			}
+		}
+		
+		//draw the health bar of this ship
+		u8 rightHealthSlices = getHealthSlices(rightHealth);
+		u8 iterations = 0;
+		memset32(&characterBufferRight[512], 0, 256);
+		
+		while(rightHealthSlices > 1){
+			//load the graphics of the health bar
+			cu16 *gfxPtr = health_barTiles;
+			u8 *VRAMPtr = &characterBufferRight[512 + (iterations * 32)];
+			memcpy32(VRAMPtr, gfxPtr, 8);
+			gfxPtr = &health_barTiles[16];
+			VRAMPtr = &characterBufferRight[768 + (iterations * 32)];
+			memcpy32(VRAMPtr, gfxPtr, 8);
+			rightHealthSlices -= 2;
+			iterations++;
+		}
+		if(rightHealthSlices == 1){
+			cu16 *gfxPtr = &health_barTiles[32];
+			u8 *VRAMPtr = &characterBufferRight[512 + (iterations * 32)];
+			memcpy32(VRAMPtr, gfxPtr, 8);
+			gfxPtr = &health_barTiles[48];
+			VRAMPtr = &characterBufferRight[768 + (iterations * 32)];
+			memcpy32(VRAMPtr, gfxPtr, 8);
+			iterations++;
+		}
+		while(iterations < 5){
+			cu16 *gfxPtr = &health_barTiles[64];
+			u8 *VRAMPtr = &characterBufferRight[512 + (iterations * 32)];
+			memcpy32(VRAMPtr, gfxPtr, 8);
+			gfxPtr = &health_barTiles[80];
+			VRAMPtr = &characterBufferRight[768 + (iterations * 32)];
+			memcpy32(VRAMPtr, gfxPtr, 8);
+			iterations++;
+		}
+		
+		spriteBuffer[OBJ_BATTLE_DISPLAY2_SPRITES_START + 1].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(8);
+		spriteBuffer[OBJ_BATTLE_DISPLAY2_SPRITES_START + 1].attr1 = ATTR1_SIZE_64 | ATTR1_HFLIP | ATTR1_X(137);
+		spriteBuffer[OBJ_BATTLE_DISPLAY2_SPRITES_START + 1].attr2 = ATTR2_ID(OBJ_BATTLE_DISPLAY2_GFX_START + 80) | ATTR2_PRIO(0) | ATTR2_PALBANK(rightPalette);
+		
+		//draw the health percentage
+		memcpy32(&characterBufferRight[1536], &list_numbers_32x16Tiles[rightHealth * 128], 64);
+		spriteBuffer[OBJ_BATTLE_DISPLAY2_SPRITES_START + 2].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE | ATTR0_Y(11);
+		spriteBuffer[OBJ_BATTLE_DISPLAY2_SPRITES_START + 2].attr1 = ATTR1_SIZE_32 | ATTR1_X(116);
+		spriteBuffer[OBJ_BATTLE_DISPLAY2_SPRITES_START + 2].attr2 = ATTR2_ID(OBJ_BATTLE_DISPLAY2_GFX_START + 112) | ATTR2_PRIO(0) | ATTR2_PALBANK(rightPalette);
 	}
 	
 }
@@ -898,6 +1053,21 @@ void drawBattleMenus(OBJ_ATTR *spriteBuffer){
 void turnStartState(){
 	TeamData *teamPointer = &mapData.teams[mapData.teamTurn];
 	u32 numAliveShips = 0;
+	
+	switch(mapData.teamTurn){
+	case RED_TEAM:
+		playBGM(BGM_THEMEA);
+		break;
+	case BLUE_TEAM:
+		playBGM(BGM_TMEMEB);
+		break;
+	case GREEN_TEAM:
+		playBGM(BGM_THEMEC);
+		break;
+	case YELLOW_TEAM:
+		playBGM(BGM_TMEMED);
+		break;
+	}
 	
 	//find the first active ship on this team and count how many are alive
 	u32 shipIndex = teamPointer->firstShip;
@@ -1119,7 +1289,20 @@ void shipSelectedState(){
 		}
 		//if the shoot option is selected
 		else if((mapData.actionMenu.currentSelection == 1) && (mapData.actionMenu.shootOption)){
-			mapData.state = AFTER_BATTLE_BEFORE_MOVE;
+			u8 shipsInTile[256];
+			u8 numShipsInTile = 0;
+			u8 xPos = mapData.cursor.selectXPos;
+			u8 yPos = mapData.cursor.selectYPos;
+			numShipsInTile = countEnemyShips(xPos, yPos, shipsInTile);
+			
+			mapData.state = BATTLE_PRE_SELECT_A_SHIP;
+			mapData.selectAShip.state = WAITING_SELECT_A_SHIP_MENU;
+			updateSelectAShip(shipsInTile);
+			mapData.selectAShip.shipCount = numShipsInTile;
+			mapData.selectAShip.currentSelection = 0;
+			mapData.selectAShip.currentTopOption = 0;
+			hideWidget(&mapData.actionMenu.widgetState, &mapData.actionMenu.actionTimer, &mapData.actionMenu.actionTarget, ACTION_MENU_MOVE_FRAMES);
+			revealWidget(&mapData.selectAShip.widgetState, &mapData.selectAShip.actionTimer, &mapData.selectAShip.actionTarget, SELECT_A_SHIP_MOVE_FRAMES);
 		}
 		//if the back option is selected
 		else{
@@ -1168,6 +1351,80 @@ void shipSelectedState(){
 	processCamera();
 }
 
+void battlePreSelectAShipState(){
+	//record which ships are in the menu
+	u8 shipsInTile[256];
+	u8 numShipsInTile = 0;
+	u8 xPos = mapData.cursor.selectXPos;
+	u8 yPos = mapData.cursor.selectYPos;
+	numShipsInTile = countShips(xPos, yPos, shipsInTile);
+	mapData.selectAShip.shipCount = numShipsInTile;
+	
+	if(inputs.pressed & KEY_B){
+		//b canceles the select menu
+		mapData.state = SHIP_SELECTED;
+		mapData.selectedShip.index = mapData.leftBattle.shipIndex;
+		hideWidget(&mapData.selectAShip.widgetState, &mapData.selectAShip.actionTimer, &mapData.selectAShip.actionTarget, SELECT_A_SHIP_MOVE_FRAMES);
+	}
+	
+	if(inputs.pressed & KEY_A){
+		mapData.state = BATTLE_PRE_MOVE;
+		hideWidget(&mapData.selectAShip.widgetState, &mapData.selectAShip.actionTimer, &mapData.selectAShip.actionTarget, SELECT_A_SHIP_MOVE_FRAMES);
+		mapData.rightBattle.state = BATTLE_ON;
+		mapData.rightBattle.shipIndex = shipsInTile[mapData.selectAShip.currentSelection];
+	}
+	
+	if((inputs.current & KEY_DOWN) && (mapData.selectAShip.state == WAITING_SELECT_A_SHIP_MENU)){
+		if((mapData.selectAShip.downHeldCounter == 0) || ((mapData.selectAShip.downHeldCounter >= 20) && ((mapData.selectAShip.downHeldCounter % 4) == 0))){
+			if(mapData.selectAShip.currentSelection == (mapData.selectAShip.shipCount - 1)){
+				mapData.selectAShip.currentSelection = 0;
+				mapData.selectAShip.currentTopOption = 0;
+			}
+			else{
+				mapData.selectAShip.currentSelection++;
+			}
+			if(mapData.selectAShip.downHeldCounter != 0){
+				mapData.selectAShip.downHeldCounter = 20;
+			}
+		}
+		mapData.selectAShip.downHeldCounter++;
+	}
+	else{
+		mapData.selectAShip.downHeldCounter = 0;
+	}
+	
+	if((inputs.current & KEY_UP) && (mapData.selectAShip.state == WAITING_SELECT_A_SHIP_MENU)){
+		if((mapData.selectAShip.upHeldCounter == 0) || ((mapData.selectAShip.upHeldCounter >= 20) && ((mapData.selectAShip.upHeldCounter % 4) == 0))){
+			if(mapData.selectAShip.currentSelection == 0){
+				mapData.selectAShip.currentSelection = (mapData.selectAShip.shipCount - 1);
+				if(mapData.selectAShip.shipCount >= 8){
+					mapData.selectAShip.currentTopOption = (mapData.selectAShip.shipCount - 8);
+				}
+			}
+			else{
+				mapData.selectAShip.currentSelection--;
+			}
+			if(mapData.selectAShip.upHeldCounter != 0){
+				mapData.selectAShip.upHeldCounter = 20;
+			}
+		}
+		mapData.selectAShip.upHeldCounter++;
+	}
+	else{
+		mapData.selectAShip.upHeldCounter = 0;
+	}
+	
+	mapData.selectedShip.index = shipsInTile[mapData.selectAShip.currentSelection];
+	
+	updateSelectAShip(shipsInTile);
+	//queue the character data for menus
+	characterData[1].buffer = characterBuffer1;
+	characterData[1].size = 2048;
+	characterData[1].position = &tile_mem_obj[0][OBJ_SELECT_A_SHIP_GFX + 88];
+	
+	//handle any changes to the camera that occured this frame
+	processCamera();
+}
 void openTileSelectedState(){
 
 	if(inputs.pressed & KEY_B){
@@ -1626,7 +1883,7 @@ void processCamera(){
 	drawActionMenu(objectBuffer);
 	
 	//draw the battle displays
-	drawBattleMenus(objectBuffer);
+	drawBattleMenus(objectBuffer, characterBuffer2, characterBuffer3);
 	
 	//queue the tilemap for layer 1 to be sent
 	tilemapData[0].size = 512;
@@ -1647,6 +1904,14 @@ void processCamera(){
 	characterData[0].buffer = characterBuffer0;
 	characterData[0].size = 640;
 	characterData[0].position = &tile_mem_obj[0];
+	
+	characterData[2].buffer = characterBuffer2;
+	characterData[2].size = 448;
+	characterData[2].position = &tile_mem_obj[1][OBJ_BATTLE_DISPLAY1_GFX_START - 512 + 64];
+	
+	characterData[3].buffer = characterBuffer3;
+	characterData[3].size = 448;
+	characterData[3].position = &tile_mem_obj[1][OBJ_BATTLE_DISPLAY2_GFX_START - 512 + 64];
 	
 	//queue the OAM data for all of the sprites
 	OAMData.position = (void *)oam_mem;
@@ -2381,6 +2646,23 @@ u8 countShips(u8 xPos, u8 yPos, u8 *shipsInTile){
 	}
 	return numShipsFound;
 }
+
+u8 countEnemyShips(u8 xPos, u8 yPos, u8 *shipsInTile){
+	u8 numShipsFound = 0;
+	//clear the ship in tile list
+	memset32(shipsInTile, 0, sizeof(shipsInTile) >> 2);
+	//check every ship and make a list of ships ready to move on this team which ones are in this tile
+	for(u32 shipIndex = 0; shipIndex < MAX_SHIPS; shipIndex++){
+		if((mapData.ships[shipIndex].state != WRONG_TEAM_VISIBLE) && (mapData.ships[shipIndex].state != WRONG_TEAM_HIDDEN)){
+			continue;
+		}
+		if((mapData.ships[shipIndex].xPos == xPos) && (mapData.ships[shipIndex].yPos == yPos)){
+			shipsInTile[numShipsFound] = shipIndex;
+			numShipsFound++;
+		}
+	}
+	return numShipsFound;
+}
 void moveWidget(cu8 *xMoveTable, u8 maxFrames, u8 *frame, s16 *xPos1, s16 *xPos2, enum WidgetState *state, u8 *useSecond, u8 width){
 	//determine the position of the widget
 	if(*state == WIDGET_STILL_LEFT){
@@ -2683,6 +2965,7 @@ void initMap(){
 	for(u32 i = 0; i < MAX_SHIPS; i++){
         mapData.ships[i].state = NOT_PARTICIPATING;
     }
+	
 
 	u8 index = 0;
 	InitialShipFormationData teamFormationPosition;
@@ -2768,7 +3051,16 @@ void initMap(){
 				index++;
 			}
 		}
-	}
+	}			
+				//JUST FOR TESTING
+				mapData.ships[0].type = 1;
+				mapData.ships[0].state = READY_VISIBLE;
+				mapData.ships[0].team = 0;
+				mapData.ships[0].health = 100;
+				mapData.ships[0].xPos = 192;
+				mapData.ships[0].yPos = 128;
+				mapData.ships[0].xVel = 2;
+				mapData.ships[0].yVel = 0;
 }
 
 static InitialShipFormationData GetSubGridData(Team team) {
@@ -2830,4 +3122,39 @@ void rotateMatrix(const ShipType matrix[TEAM_MATRIX_SIZE][TEAM_MATRIX_SIZE], Shi
             }
         }
     }
+}
+
+u8 getHealthSlices(u8 health){
+	u8 healthSlices = 0;
+	if(health < 10){
+		healthSlices = 1;
+	}
+	else if(health < 20){
+		healthSlices = 2;
+	}
+	else if(health < 30){
+		healthSlices = 3;
+	}
+	else if(health < 40){
+		healthSlices = 4;
+	}
+	else if(health < 50){
+		healthSlices = 5;
+	}
+	else if(health < 60){
+		healthSlices = 6;
+	}
+	else if(health < 70){
+		healthSlices = 7;
+	}
+	else if(health < 80){
+		healthSlices = 8;
+	}
+	else if(health < 90){
+		healthSlices = 9;
+	}
+	else if(health <= 100){
+		healthSlices = 10;
+	}
+	return healthSlices;
 }

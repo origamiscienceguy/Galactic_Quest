@@ -87,9 +87,11 @@
 
 #define OBJ_BATTLE_DISPLAY1_SPRITES_START (OBJ_ACTION_MENU_SPRITES_START + OBJ_ACTION_MENU_SPRITES_NUM)
 #define OBJ_BATTLE_DISPLAY1_GFX_START (OBJ_ACTION_MENU_GFX_START + OBJ_ACTION_MENU_GFX_SIZE)
+#define OBJ_BATTLE_DISPLAY1_AFF_MAT 1
 #define OBJ_BATTLE_DISPLAY2_SPRITES_START (OBJ_BATTLE_DISPLAY1_SPRITES_START + OBJ_BATTLE_DISPLAY_SPRITES_NUM)
 #define OBJ_BATTLE_DISPLAY2_GFX_START (OBJ_BATTLE_DISPLAY1_GFX_START + OBJ_BATTLE_DISPLAY_GFX_SIZE)
-#define OBJ_BATTLE_DISPLAY_GFX_SIZE 96
+#define OBJ_BATTLE_DISPLAY2_AFF_MAT 2
+#define OBJ_BATTLE_DISPLAY_GFX_SIZE 120
 #define OBJ_BATTLE_DISPLAY_SPRITES_NUM 12
 #define BATTLE_DISPLAY_MOVE_FRAMES 3
 #define BATTLE_DISPLAY_HEIGHT 32
@@ -117,8 +119,9 @@ enum ShipState{
 };
 
 enum MapState{
-	TURN_START, OPEN_MAP, SELECT_A_SHIP, SHIP_SELECTED, SHIP_MOVEMENT_SELECT, SHIP_MOVING, BATTLE, TURN_END, TURN_END_MOVEMENT, TURN_REPLAY, OPEN_TILE_SELECTED,
-	BATTLE_SELECT_A_SHIP, AFTER_BATTLE_BEFORE_MOVE, INACTIVE_SHIP_SELECTED, RANGE_CHECK
+	TURN_START, OPEN_MAP, SELECT_A_SHIP, SHIP_SELECTED, SHIP_MOVEMENT_SELECT, SHIP_MOVING, BATTLE_PRE_MOVE, BATTLE_POST_MOVE, 
+	TURN_END, TURN_END_MOVEMENT, TURN_REPLAY, OPEN_TILE_SELECTED, BATTLE_POST_SELECT_A_SHIP,
+	BATTLE_PRE_SELECT_A_SHIP, AFTER_BATTLE_BEFORE_MOVE, INACTIVE_SHIP_SELECTED, RANGE_CHECK
 };
 
 enum TeamState{
@@ -352,11 +355,14 @@ extern const unsigned short left_battle_dispaly_leftTiles[512];
 extern const unsigned short left_battle_dispaly_rightTiles[512];
 extern const unsigned short right_battle_dispaly_leftTiles[512];
 extern const unsigned short right_battle_dispaly_rightTiles[512];
+extern const unsigned short health_barTiles[96];
 
 extern const u8 selectAShipYPos[];
 extern const u8 selectAShipXPos[];
 extern const u8 actionMenuXPos[];
 extern const u8 actionMenuYPos[];
+extern const u8 leftBattleAngle[];
+extern const u8 leftBattleYPos[];
 
 extern const u8 minimapPositions[];
 
@@ -398,13 +404,14 @@ void drawCursor(OBJ_ATTR *);
 void drawHighlight(u8 *);
 void drawMinimap(OBJ_ATTR *, u8 *);
 void updateMinimap(u8 *);
-void drawBattleMenus(OBJ_ATTR *);
+void drawBattleMenus(OBJ_ATTR *, u8 *, u8 *);
 void nextPlayer();
 void nextTurn();
 void turnStartState();
 void openMapState();
 void selectAShipState();
 void shipSelectedState();
+void battlePreSelectAShipState();
 void openTileSelectedState();
 void shipMovementSelectState();
 void rangeCheckState();
@@ -429,11 +436,13 @@ void revealWidget(u8 *, u8 *, u8 *, u8);
 void hideWidget(u8 *, u8 *, u8 *, u8);
 void cursorBoundsCheck();
 u8 countShips(u8, u8, u8 *);
+u8 countEnemyShips(u8, u8, u8 *);
 void drawSelectAShipMenu(OBJ_ATTR *);
 void moveWidget(cu8 *, u8, u8 *, s16 *, s16 *, enum WidgetState *, u8 *, u8);
 void updateSelectAShip(u8 *);
 void updateActionMenu();
 void determineActionMenu();
+u8 getHealthSlices(u8);
 
 //map state initialization functions
 void initMap();
