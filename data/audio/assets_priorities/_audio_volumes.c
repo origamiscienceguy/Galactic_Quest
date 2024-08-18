@@ -1,7 +1,7 @@
 #include "audio_engine_settings.h"
 #include "tonc.h"
 
-cu8 *_sndAssetDefaultVol[26] = {
+cu8 _sndAssetDefaultVol[26] = {
 	255,			// _musMainMenu
 	255,			// _musOpening
 	255,			// _musThemeA_Battle

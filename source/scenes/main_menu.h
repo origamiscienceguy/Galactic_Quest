@@ -416,12 +416,6 @@ void loadMenuGraphics(MenuPage *menuPage);
 bool sfxIsPlaying(int sfxIndex);
 int calculateEffectiveVolume(int soundAssetVol, int userVol);
 u8 calculateFinalVolume(u8 assetVolume, int userVolume, int masterVolume);
-void playBGM(u8 bgmIndex);
-void playSFX(u8 assetIndex, int sfxSlot);
-void stopAllSoundExcept(const u8* exception);
-void stopAllSound();
-void stopSFX(u8 soundIndex);
-void updateSoundVolumes(bool leavingOptionsMenu);
 
 //external functions
 #endif
