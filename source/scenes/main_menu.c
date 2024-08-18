@@ -2184,8 +2184,27 @@ void playSFX(u8 sfxID, int sfxGroupIndex) {
         sfxVolume = options.sfxVolume;
     }
     
+	masterVolume = (u8)optionsMenuItems[OPTID_MASTER_VOL].data.intVal;
+	sfxVolume = (u8)optionsMenuItems[OPTID_SFX_VOL].data.intVal;
+
+    // Calculate the final volume and set it for the SFX
+	for (u8 sfxGroupIndex = 0; sfxGroupIndex < AUDGROUP_MAX; sfxGroupIndex++) {
+		u8 finalVolume = calculateFinalVolume(getAssetDefaultVolume(sfxID), sfxVolume, masterVolume);
+		setAssetVolume(currentSFXIndex[sfxGroupIndex], finalVolume);
+	}
 	// hacky af but it works lol
-	updateSoundVolumes(false);
+	//justLikeUpdateAllVolumesMan();
+}
+
+void justLikeUpdateAllVolumesMan(){
+	u8 masterVolume = (u8)optionsMenuItems[OPTID_MASTER_VOL].data.intVal;
+	u8 sfxVolume = (u8)optionsMenuItems[OPTID_SFX_VOL].data.intVal;
+
+    // Calculate the final volume and set it for the SFX
+	for (u8 sfxGroupIndex = 0; sfxGroupIndex < AUDGROUP_MAX; sfxGroupIndex++) {
+		u8 finalVolume = calculateFinalVolume(getAssetDefaultVolume(currentSFXIndex[sfxGroupIndex]), sfxVolume, masterVolume);
+		setAssetVolume(currentSFXIndex[sfxGroupIndex], finalVolume);
+	}
 }
 
 void stopAllSoundExcept(const u8* exception) {
