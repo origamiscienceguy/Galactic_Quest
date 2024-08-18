@@ -153,7 +153,6 @@ void gameplayNormal(){
 		break;
 	case PROMPT_NEXT_PLAYER:
 		nextPlayer();
-		processCamera();
 		break;
 	case TURN_END_MOVEMENT:
 		turnEndMovementState();
@@ -1622,27 +1621,20 @@ void turnEndState(){
 		while((mapData.ships[shipIndex].state != READY_VISIBLE) && (mapData.ships[shipIndex].state != READY_HIDDEN)){
 			//if we have looped around to the original ship, all ships have finished movement.
 			if(mapData.ships[shipIndex].teamLink == mapData.teams[mapData.teamTurn].firstShip){
-				/*
-				REG_DISPCNT = DCNT_MODE0; //black screen
-				REG_BG0CNT = BG_4BPP | BG_SBB(STARRY_IMAGE_TILEMAP) | BG_CBB(STARRY_IMAGE_CHARDATA) | BG_PRIO(3) | BG_REG_64x64; //starry background layer
-				REG_BG1CNT = BG_4BPP | BG_SBB(TITLE_CARD_TILEMAP) | BG_CBB(TITLE_CARD_CHARDATA) | BG_PRIO(2) | BG_REG_32x32; //title screen layer
-				REG_BG2CNT = BG_4BPP | BG_SBB(MENU_WINDOW_TILEMAP) | BG_CBB(MENU_CHARDATA) | BG_PRIO(1) | BG_REG_32x32; //menu page ui layer
-				REG_BLDCNT = BLD_TOP(BLD_BG2 | BLD_BACKDROP | BLD_OBJ) | BLD_WHITE;
-				REG_BLDY = BLDY(0);*/
-				// Turn off all layers and effects except for BG0
 				REG_DISPCNT = DCNT_MODE0 | DCNT_BG0; // Enable only BG0
 
-				// Configure BG0 as needed
-				REG_BG0CNT = BG_4BPP | BG_SBB(BG_PLAYER_PROMPT_TILEMAP) | BG_CBB(BG_PLAYER_PROMPT_CHARDATA) | BG_PRIO(3) | BG_REG_64x64;
+                // Configure BG0 as needed
+                //REG_BG0CNT = BG_4BPP | BG_SBB(BG_PLAYER_PROMPT_TILEMAP) | BG_CBB(BG_PLAYER_PROMPT_CHARDATA) | BG_PRIO(3) | BG_REG_64x64;
+                REG_BG0CNT = BG_4BPP | BG_SBB(31) | BG_CBB(1) | BG_PRIO(0) | BG_REG_32x32;              
+                //queue the graphics data to be sent
 
-				// Disable other backgrounds
-				REG_BG1CNT = 0;
-				REG_BG2CNT = 0;
-				REG_BG3CNT = 0;
-
-				// Disable blending effects
-				REG_BLDCNT = 0;
-				REG_BLDY = 0;
+                characterData[0].size = sizeof(red_teamTiles) >> 2;
+                characterData[0].buffer = (void *)red_teamTiles;
+                characterData[0].position = tile_mem[1];
+                
+                tilemapData[0].buffer = (void *)red_teamTiles;
+                tilemapData[0].size = sizeof(red_teamTiles) >> 2;
+                tilemapData[0].position = &tile_mem_obj[31];
 
 				// fukkit
 				setAssetVolume(currentBGMIndex[0].assetIndex, 0);
@@ -1650,7 +1642,6 @@ void turnEndState(){
 				mapData.state = PROMPT_NEXT_PLAYER;
 				sceneActionTimer = 0;
 				sceneActionTarget = 0;
-				processCamera();
 				return;
 			}
 			shipIndex = mapData.ships[shipIndex].teamLink;

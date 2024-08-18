@@ -358,14 +358,10 @@ extern const unsigned short left_battle_dispaly_rightTiles[512];
 extern const unsigned short right_battle_dispaly_leftTiles[512];
 extern const unsigned short right_battle_dispaly_rightTiles[512];
 extern const unsigned short health_barTiles[96];
-extern const unsigned short blue_teamTiles[9600];
-extern const unsigned short red_teamTiles[9600];
-extern const unsigned short yellow_teamTiles[9600];
-extern const unsigned short green_teamTiles[9600];
-extern const unsigned short blue_teamPal[16];
-extern const unsigned short red_teamPal[16];
-extern const unsigned short yellow_teamPal[16];
-extern const unsigned short green_teamPal[16];
+extern const unsigned short blue_teamTiles[864];
+extern const unsigned short red_teamTiles[864];
+extern const unsigned short yellow_teamTiles[864];
+extern const unsigned short green_teamTiles[864];
 
 extern SoundChannel currentBGMIndex[2];
 extern SoundChannel currentSFXIndex[5];
