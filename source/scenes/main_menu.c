@@ -2350,7 +2350,7 @@ void saveGame(const MapData *mapData, u8 saveSlot) {
     u32 address = getSaveSlotAddress(saveSlot);
     const u8 *ptr = (const u8*) mapData;
     for (size_t i = 0; i < sizeof(MapData); ++i) {
-        SRAM_WriteByte(address + i, ptr[i]);
+        writeSRAMByte(address + i, ptr[i]);
     }
 }
 
@@ -2358,7 +2358,7 @@ void saveOptions(const Options *options) {
     u32 address = getOptionsAddress();
     const u8 *ptr = (const u8*) options;
     for (size_t i = 0; i < sizeof(Options); ++i) {
-        SRAM_WriteByte(address + i, ptr[i]);
+        writeSRAMByte(address + i, ptr[i]);
     }
 }
 
