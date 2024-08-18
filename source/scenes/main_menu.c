@@ -36,6 +36,9 @@ void mainMenuInitialize(){
 	REG_BLDCNT = BLD_TOP(BLD_BG2 | BLD_BACKDROP | BLD_OBJ) | BLD_WHITE;
 	REG_BLDY = BLDY(0);
 
+	loadOptions(&options);
+	clearEntireSRAM(&options); // also checks if it was the first time ever booting up the game before actually doing so
+
 	updateObjBuffer();
 
 	resetMainMenuWindowVariables();
@@ -124,12 +127,6 @@ void mainMenuInitialize(){
 }
 
 void mainMenuNormal(){
-	//temporary debug input
-	if(inputs.pressed & KEY_START){
-		// Start the match
-		matchBegin();
-	}
-
 	switch(mDat.state){
 	case FLASH_WHITE:
 		if(mDat.actionTimer == mDat.actionTarget){
@@ -2129,6 +2126,8 @@ int menuExecContinue(){
 	mDat.windowActionTimer = 0;
 	mDat.windowActionTarget = 100;
 
+	initMapData(&mapData);
+	initMap();
 
 	
 	u8 saveSlot = clamp(options.lastPlayedSaveSlot, 0, 3);
@@ -2166,6 +2165,8 @@ int menuExecLoadGame(){
 	mDat.windowActionTarget = 100;
 
 
+	initMapData(&mapData);
+	initMap();
 	
 	u8 saveSlot = clamp(mDat.menuCursorPos, 0, 3);
 	loadGame(&mapData, saveSlot);
@@ -2484,4 +2485,29 @@ void writeSRAMByte(u32 address, u8 value) {
 
 u8 readSRAMByte(u32 address) {
     return *(volatile u8*)(address);
+}
+
+
+// also checks if it was the first time ever booting up the game before actually doing so
+void clearEntireSRAM(Options *options) {
+	int srmSize = sizeof(MapData) + sizeof(&options);
+    if (options->firstTimeBoot) {
+        // Clear the entire SRAM
+        for (size_t i = 0; i < srmSize; ++i) {
+            writeSRAMByte(SRAM_BASE + i, 0); // Write zero to every byte in SRAM
+        }
+
+        // Mark first-time boot as completed
+        options->firstTimeBoot = true;
+
+
+		initMapData(&mapData);
+		initMap();
+		options->lastPlayedSaveSlot = 0;
+		saveGame(&mapData, 0);
+		saveGame(&mapData, 1);
+		saveGame(&mapData, 2);
+		
+        saveOptions(options); // Save the updated options to SRAM
+    }
 }
