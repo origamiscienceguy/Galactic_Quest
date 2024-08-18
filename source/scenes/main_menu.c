@@ -2256,11 +2256,11 @@ void toggleBGMBattleLayer() {
 			break;
 		case SND_PLAYSTATE_PEACE_ONLY:
 			currentBGMIndex[0].playingState = SND_PLAYSTATE_BOTH_ACTIVE;
-			if(!isSoundPlaying(currentBGMIndex[0].soundIndex, battleAssetIndex)){
+			if(!isSoundPlaying(currentBGMIndex[1].soundIndex, battleAssetIndex)){
 				battleAssetIndex = playNewSound(currentBGMIndex[1].soundIndex);
 				setAssetVolume(battleAssetIndex, 0);
-				syncAsset(battleAssetIndex, peaceAssetIndex);
 			}
+			syncAsset(battleAssetIndex, peaceAssetIndex);
 			u8 battleFinalVolume = calculateFinalVolume(currentBGMIndex[1].defaultVolume, options.bgmVolume, options.masterVolume);
 			volumeSlideAsset(battleAssetIndex, 0x4, battleFinalVolume);
 			break;
