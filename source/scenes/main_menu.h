@@ -199,7 +199,7 @@ enum MainMenuWindowState {
 };
 
 enum MenuPageIndex{
-	MPI_MAIN_MENU, MPI_PLAY_GAME, MPI_SOUND_TEST, MPI_EXTRAS, MPI_CREDITS, MPI_OPTIONS, MPI_MAX
+	MPI_MAIN_MENU, MPI_PLAY_GAME, MPI_SOUND_TEST, MPI_EXTRAS, MPI_CREDITS, MPI_OPTIONS, MPI_NEW_GAME, MPI_LOAD_GAME, MPI_MAX
 };
 
 enum MenuWindowConfirmDirection {
@@ -351,9 +351,9 @@ extern const unsigned short main_menu_starfieldPal[16];
 extern cu16 titleFlyOutYLUT[11];
 extern const unsigned short tsMenuUITiles[320];
 extern const unsigned short tsMenuUIPal[16];
-extern const unsigned short menu_action_focusedTiles[8320];
-extern const unsigned short menu_actionTiles[8320];
-extern const unsigned short page_name_ui_64x16Tiles[3072];
+extern const unsigned short menu_action_focusedTiles[10400];
+extern const unsigned short menu_actionTiles[10400];
+extern const unsigned short page_name_ui_64x16Tiles[4096];
 extern const unsigned short menu_button_prompt_32x16Tiles[512];
 extern const unsigned short menu_button_prompt_32x16Pal[16];
 extern const unsigned short menu_slider_prompt_8x16Tiles[32];
@@ -663,8 +663,8 @@ void saveOptions(const Options *options);
 void initMapData(MapData *mapData);
 void initOptions(Options *options);
 
-
-
+void writeSRAMByte(u32 address, u8 value);
+u8 readSRAMByte(u32 address);
 
 
 #endif
