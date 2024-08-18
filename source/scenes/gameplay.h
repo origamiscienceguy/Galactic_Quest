@@ -367,6 +367,16 @@ extern const unsigned short red_teamPal[16];
 extern const unsigned short yellow_teamPal[16];
 extern const unsigned short green_teamPal[16];
 
+extern SoundChannel currentBGMIndex[2];
+extern SoundChannel currentSFXIndex[5];
+
+enum AUDGROUP_IDS{
+    AUDGROUP_MENUSFX,
+    AUDGROUP_SOUNDT_SFX,
+    AUDGROUP_SOUNDT_BGM,
+	AUDGROUP_MAX
+};
+
 extern const u8 selectAShipYPos[];
 extern const u8 selectAShipXPos[];
 extern const u8 actionMenuXPos[];
