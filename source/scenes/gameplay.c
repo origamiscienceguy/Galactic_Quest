@@ -253,7 +253,7 @@ IWRAM_CODE void createShipTilemap(u16 *tilemapBuffer){
 	
 	//if we are in certain states, always draw the selectedShip on top
 	if((mapData.state == SELECT_A_SHIP) || (mapData.state == SHIP_SELECTED) || (mapData.state == RANGE_CHECK) || 
-	(mapData.state == RANGE_CHECK) || (INACTIVE_SHIP_SELECTED)){
+	(mapData.state == AFTER_BATTLE_BEFORE_MOVE) || (mapData.state = INACTIVE_SHIP_SELECTED)){
 		u8 shipIndex = mapData.selectedShip.index;
 		u8 shipDirection; //0: right, 1: up, 2: left, 3: down
 		u32 palette = mapData.ships[shipIndex].team;
