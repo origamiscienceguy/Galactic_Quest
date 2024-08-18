@@ -651,17 +651,17 @@ extern MapData mapData;
 
 
 // SRAM Functions
-u32 GetSaveSlotAddress(u8 saveSlot);
-u32 GetOptionsAddress(void);
+u32 getSaveSlotAddress(u8 saveSlot);
+u32 getOptionsAddress(void);
 
-void LoadGame(MapData *mapData, u8 saveSlot);
-void LoadOptions(Options *options);
+void loadGame(MapData *mapData, u8 saveSlot);
+void loadOptions(Options *options);
 
-void SaveGame(const MapData *mapData, u8 saveSlot);
-void SaveOptions(const Options *options);
+void saveGame(const MapData *mapData, u8 saveSlot);
+void saveOptions(const Options *options);
 
-void InitializeMapData(MapData *mapData);
-void InitializeOptions(Options *options);
+void initMapData(MapData *mapData);
+void initOptions(Options *options);
 
 
 
