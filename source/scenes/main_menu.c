@@ -1585,10 +1585,10 @@ void performPageTransfer(int datIntVal){
 
 	if (mDat.currMenuPage == MPI_SOUND_TEST){
 		// Kill all sound except for currentSFXIndex[0] (should be _sfxMenuConfirm)
-		stopAllSoundExcept(&currentSFXIndex[0]);
+		stopAllSoundExcept(&currentSFXIndex[AUDGROUP_MENUSFX]);
 	}else if (!isSoundPlaying(_musMainMenu, currentBGMIndex[0])){
 		// Kill all sound except for currentSFXIndex[0] (should be _sfxMenuCancel)
-		stopAllSoundExcept(&currentSFXIndex[0]);
+		stopAllSoundExcept(&currentSFXIndex[AUDGROUP_MENUSFX]);
 
 		// Play the Main Menu BGM again if it isn't currently playing when we leave
 		playBGM(BGM_MAINMENU);

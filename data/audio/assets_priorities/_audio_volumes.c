@@ -13,7 +13,7 @@ cu8 _sndAssetDefaultVol[26] = {
 	189,			// _musThemeD_Battle
 	189,			// _musThemeD_Peace
 	189,			// _musTitle
-	100,				// _sfxCursorMove
+	100,			// _sfxCursorMove
 	255,			// _sfxMenuCancel
 	255,			// _sfxMenuConfirmA
 	255,			// _sfxMenuConfirmB
