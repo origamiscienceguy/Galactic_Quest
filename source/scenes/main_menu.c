@@ -2317,3 +2317,81 @@ void resetMainMenuWindowVariables() {
 	mDat.updateUITileDraw = false;
 	mDat.starryBG.snappedThisFrame = false;
 }
+
+
+
+// Compute SRAM address for a given saveSlot
+u32 GetSaveSlotAddress(u8 saveSlot) {
+    return SRAM_BASE + (saveSlot * SRAM_BLOCK_SIZE);
+}
+
+// Compute SRAM address for the options
+u32 GetOptionsAddress(void) {
+    return SRAM_BASE + (SAVE_SLOT_COUNT * SRAM_BLOCK_SIZE);
+}
+
+void LoadGame(MapData *mapData, u8 saveSlot) {
+    u32 address = GetSaveSlotAddress(saveSlot);
+    u8 *ptr = (u8*) mapData;
+    for (size_t i = 0; i < sizeof(MapData); ++i) {
+        ptr[i] = SRAM_ReadByte(address + i);
+    }
+}
+
+void LoadOptions(Options *options) {
+    u32 address = GetOptionsAddress();
+    u8 *ptr = (u8*) options;
+    for (size_t i = 0; i < sizeof(Options); ++i) {
+        ptr[i] = SRAM_ReadByte(address + i);
+    }
+}
+
+void SaveGame(const MapData *mapData, u8 saveSlot) {
+    u32 address = GetSaveSlotAddress(saveSlot);
+    const u8 *ptr = (const u8*) mapData;
+    for (size_t i = 0; i < sizeof(MapData); ++i) {
+        SRAM_WriteByte(address + i, ptr[i]);
+    }
+}
+
+void SaveOptions(const Options *options) {
+    u32 address = GetOptionsAddress();
+    const u8 *ptr = (const u8*) options;
+    for (size_t i = 0; i < sizeof(Options); ++i) {
+        SRAM_WriteByte(address + i, ptr[i]);
+    }
+}
+
+
+void InitializeMapData(MapData *mapData) {
+    memset(mapData, 0, sizeof(MapData)); // Set all bytes to zero
+}
+
+
+void InitializeOptions(Options *options) {
+    memset(options, 0, sizeof(Options)); // Set all bytes to zero
+}
+
+
+
+
+
+
+/*
+MapData mapData;
+Options options;
+u8 saveSlot = 1; // Example save slot
+
+InitializeMapData(&mapData);
+InitializeOptions(&options);
+
+// To save the game data and options
+SaveGame(&mapData, saveSlot);
+SaveOptions(&options);
+
+// To load the game data and options
+LoadGame(&mapData, saveSlot);
+LoadOptions(&options);
+
+
+*/

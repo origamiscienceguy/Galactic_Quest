@@ -6,6 +6,13 @@
 #include "audio_engine_external.h"
 
 //constants
+
+#define SRAM_BLOCK_SIZE sizeof(MapData) // Size of a single save block
+#define SRAM_OPTIONS_SIZE sizeof(Options) // Size of the Options data
+#define SRAM_BASE 0x0E000000 // Base address of SRAM (example address)
+
+#define SAVE_SLOT_COUNT 3 // Number of save slots
+
 #define STARRY_IMAGE_CHARDATA 0
 #define STARRY_IMAGE_TILEMAP 28
 #define STARRY_IMAGE_PAL_START 0
@@ -445,5 +452,221 @@ int calculateEffectiveVolume(int soundAssetVol, int userVol);
 u8 calculateFinalVolume(u8 assetVolume, int userVolume, int masterVolume);
 void justLikeUpdateAllVolumesMan();
 
+
+
+
+
+
+
+
+
+
+
+
+//enums
+typedef enum ShipType{
+	NONE = -1, SCOUT, FIGHTER, BOMBER, DESTROYER, CRUISER, BATTLESHIP, CARRIER,
+} ShipType;
+
+enum ShipState{
+	READY_VISIBLE, READY_HIDDEN, FINISHED_VISIBLE, FINISHED_HIDDEN, WRONG_TEAM_VISIBLE, WRONG_TEAM_HIDDEN, SELECTED, DOCKED, DESTROYED, NOT_PARTICIPATING
+};
+
+enum MapState{
+	TURN_START, OPEN_MAP, SELECT_A_SHIP, SHIP_SELECTED, SHIP_MOVEMENT_SELECT, SHIP_MOVING, BATTLE, TURN_END, TURN_END_MOVEMENT, TURN_REPLAY, OPEN_TILE_SELECTED,
+	BATTLE_SELECT_A_SHIP, AFTER_BATTLE_BEFORE_MOVE, INACTIVE_SHIP_SELECTED, RANGE_CHECK
+};
+
+enum TeamState{
+	TEAM_ABSENT, TEAM_ACTIVE, TEAM_DEFEATED
+};
+
+typedef enum Team{
+	RED_TEAM, BLUE_TEAM, GREEN_TEAM, YELLOW_TEAM
+} Team;
+
+enum CameraState{
+	CAM_STILL, CAM_PANNING, CAM_TRACKING, 
+};
+
+enum CursorState{
+	CUR_HIDDEN, CUR_STILL, CUR_MOVE_ONCE_1, CUR_MOVE_ONCE_2, CUR_MOVE_ONCE_3, CUR_MOVE_ONCE_WAIT, CUR_MOVE_SLOW_1, CUR_MOVE_SLOW_2, CUR_MOVE_FAST
+};
+
+enum CursorDirection{
+	CUR_NO_DIRECTION, CUR_RIGHT, CUR_UP, CUR_LEFT, CUR_DOWN, CUR_UP_RIGHT, CUR_UP_LEFT, CUR_DOWN_RIGHT, CUR_DOWN_LEFT
+};
+
+enum HighlightState{
+	NO_HIGHLIGHT, MOVEMENT_RANGE_HIGHLIGHT, VISIBILITY_HIGHLIGHT, POTENTIAL_ENCOUNTERS_HIGHLIGHT
+};
+
+enum WidgetState{
+	WIDGET_HIDDEN_LEFT, WIDGET_HIDDEN_RIGHT, WIDGET_STILL_LEFT, WIDGET_STILL_RIGHT, 
+	WIDGET_MOVING_LEFT, WIDGET_MOVING_RIGHT, WIDGET_HIDING_LEFT, WIDGET_HIDING_RIGHT,
+	WIDGET_EMERGING_LEFT, WIDGET_EMERGING_RIGHT
+};
+
+enum GridState{
+	NO_GRID, GRID_ON
+};
+
+enum SelectAShipMenuState{
+	NO_SELECT_A_SHIP_MENU, WAITING_SELECT_A_SHIP_MENU, SELECTING_SELECT_A_SHIP_MENU 
+};
+
+enum ActionMenuState{
+	NO_ACTION_MENU, WAITING_ACTION_MENU, SELECTING_ACTION_MENU
+};
+
+enum ActionMenuOptions{
+	MOVE_OPTION, SHOOT_OPTION, END_TURN_OPTION, SEE_RANGE_OPTION, BACK_OPTION
+};
+
+//structs
+typedef struct ShipData{
+	enum ShipType type; //the type of ship this one is
+	enum ShipState state; //the state of this ship
+	enum Team team; //which team this ship belongs to
+	u8 health; //the health of this ship, 100 is max, 0 is dead
+	u8 xPos; //the x position of this ship on the map
+	u8 yPos; //the y position of this ship on the map
+	s8 xVel; //the x velocity of this ship
+	s8 yVel; //the y velocity of this ship
+	u8 teamLink; //the index of the next ship of the same team, forming a linked list.
+	u8 sameTileLink; //the index of the next ship in the same tile as this one, forming a linked list. If this points to itself, there are no others
+	u8 padding[6];
+}ShipData;
+
+typedef struct SelectedShip{
+	u8 index; //the index of the currently selected ship
+	u8 angle; //the angle the ship graphic is facing, right is 0 and 256, cw
+	s16 xPos; //the current pixel position of the center of the selected ship
+	s16 yPos; //the current pixel position of the center of the selected ship
+	s16 xInitial; //the initial position of the selected ship before movement
+	s16 yInitial; //the initial position of the selected ship before movement
+	s16 xTarget; //the position the selected ship is moving towards
+	s16 yTarget; //the position the selected ship is moving towards
+	u8 animationTimer; //the timer of the selected ships animation
+	u8 actionTimer; //the timer of the selected ships movement
+	u8 actionTarget; //how long this movement should take
+}SelectedShip;
+
+typedef struct TeamData{
+	enum TeamState state; //the state of this team in this particular battle
+	u8 firstShip; //the index of the first ship in every team a new turn will begin with this ship highlighted
+	u8 numStartingShips; //the number of ships each team began the battle with
+	u8 numAliveShips; //the number of ships each team has that is currently alive
+}TeamData;
+
+typedef struct CameraData{
+	enum CameraState state; //what the camera is currently doing
+	u8 actionTimer; //how long the camera has been performing an action
+	u8 actionTarget; //how long the camera is supposed to be performing an action
+	s16 xPos; //the current x pixel position of the top left pixel on screen. 16.48 fixed point
+	s16 yPos; //the current y pixel position of the top left pixel on screen. 16.48 fixed point
+	s16 xStartingPos; //the initial x position of the camera for this movement
+	s16 yStartingPos; //the initial y position of the camera for this movement
+	s16 xTargetPos; //the x position the camera is currently seeking towards
+	s16 yTargetPos; //the y position the camera is currently seeking towards
+}CameraData;
+
+typedef struct CursorData{
+	s16 xPos; //the pixel position of the cursor in the x axis
+	s16 yPos; //the pixel position of the cursor in the y axis
+	u8 selectXPos; //the map position that the cursor will select
+	u8 selectYPos; //the map position that the cursor will select
+	enum CursorState state; //the state of the cursor
+	enum CursorDirection direction; //the direction of the cursor
+	u8 counter; //how long the button to move the cursor has been held down
+}CursorData;
+
+typedef struct HighlightData{
+	enum HighlightState state;
+	enum GridState gridState;
+}HighlightData;
+
+typedef struct MinimapData{
+	enum WidgetState widgetState;
+	u8 actionTimer;
+	u8 actionTarget;
+	u8 updateRequest;
+}MinimapData;
+
+typedef struct SelectAShipMenu{
+	enum SelectAShipMenuState state;
+	enum WidgetState widgetState;
+	u8 currentSelection;
+	u8 currentTopOption;
+	u8 actionTarget;
+	u8 actionTimer;
+	u8 shipCount;
+	u8 downHeldCounter;
+	u8 upHeldCounter;
+}SelectAShipMenu;
+
+typedef struct ActionMenu{
+	enum ActionMenuState state;
+	enum WidgetState widgetState;
+	u8 actionTarget;
+	u8 actionTimer;
+	u8 currentSelection;
+	u8 moveOption;
+	u8 checkRangeOption;
+	u8 shootOption;
+	u8 endTurnOption;
+	u8 numOptions;
+}ActionMenu;
+
+#define MAX_SHIPS 256
+#define NUM_TEAMS 4
+
+typedef struct MapData{
+	enum MapState state; //what is the stage of the game are we in
+	enum Team teamTurn; //who's turn is it
+	u8 turnNum; //how many turns have elapsed
+	u8 xSize; //the number of tiles large the map is in the x direction
+	u8 ySize; //number of tiles in the y direction
+	u8 numShips; //the number of ships on the map.
+	u8 actionTimer; //how many frames have elapsed in a state action
+	u8 actionTarget; //how many frames a state action should take
+	ShipData ships[MAX_SHIPS]; //the array of information about every ship in this battle
+	TeamData teams[NUM_TEAMS]; //the array of information about each team in the battle
+	CameraData camera; //the struct containing data about the camera
+	SelectedShip selectedShip; //the struct containing data about the currently selected ship
+	CursorData cursor; //the struct containing data about the cursor
+	HighlightData highlight; //the data about the highlight layer
+	MinimapData minimap; //the data about the minimap layer
+	SelectAShipMenu selectAShip; //the data about the select-a-ship menu
+	ActionMenu actionMenu; //the data about the action meny
+	u8 saveSlot;
+}MapData;
+
 //external functions
+extern MapData mapData;
+
+
+
+
+
+
+// SRAM Functions
+u32 GetSaveSlotAddress(u8 saveSlot);
+u32 GetOptionsAddress(void);
+
+void LoadGame(MapData *mapData, u8 saveSlot);
+void LoadOptions(Options *options);
+
+void SaveGame(const MapData *mapData, u8 saveSlot);
+void SaveOptions(const Options *options);
+
+void InitializeMapData(MapData *mapData);
+void InitializeOptions(Options *options);
+
+
+
+
+
 #endif
+
+

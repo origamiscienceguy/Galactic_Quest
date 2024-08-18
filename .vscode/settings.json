@@ -2,6 +2,8 @@
     "files.associations": {
         "audio_engine_settings.h": "c",
         "main_menu.h": "c",
-        "tonc.h": "c"
+        "tonc.h": "c",
+        "audio_engine_external.h": "c",
+        "scenes.h": "c"
     }
 }
