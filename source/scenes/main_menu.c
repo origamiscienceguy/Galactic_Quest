@@ -19,8 +19,6 @@ Scene mainMenuScene = {
 };
 
 int dataRange[] = {0, 100};
-static u8 currentBGMIndex[2] = {0xFF, 0xFF};
-static u8 currentSFXIndex[5] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 int moveY = 0, moveX = 0; // Player directional input
 MenuPageItem* optionsMenuItems;
 
@@ -590,7 +588,7 @@ void initMainMenu(){
 	//loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8);
 
 	resetMainMenuWindowVariables();
-	updateOptions();
+	updateOptionsFromSRAM();
 
 	// Draw the Menu Page UI Text now
 	drawMenuPageUIText();
@@ -782,7 +780,7 @@ void updateMainMenu(){
 								break;
 						}
 					} else if (inputs.pressed & KEY_L){
-						endAllSound();
+						toggleBGMBattleLayer();
 					}
 				}
 
@@ -920,11 +918,11 @@ void updateMainMenu(){
 					default:
 						break;
 					case ME_SLIDER:
-						updateSoundVolumes(false);
 						if (!(thisMenuItem->data.intVal == 0 && moveX < 0) && !(thisMenuItem->data.intVal == MAX_VOLUME && moveX > 0))
 							playSFX(_sfxMenuMove, AUDGROUP_MENUSFX);
 						thisMenuItem->data.intVal = clamp(thisMenuItem->data.intVal + moveX, 0, MAX_VOLUME + 1);
 						mDat.updateSpriteDraw = true;
+						updateSoundVolumes(false);
 						break;
 				}
 			}
@@ -1458,38 +1456,10 @@ void menuInputConfirmEnabled(){
 							case MID_SOUND_TEST_BGM:
 								int index = thisMenuItem->data.intVal;
 								playBGM(index);
-								/*
-								if (index >= 0 && index < SOUND_TEST_BGM_COUNT) {
-									// Retrieve the group or single track
-									const int* group = bgmGroups[index];
-									
-									// Check if it's a group or a single track
-									if (group[1] == BGM_SINGLE) {
-										// Single track, just play it
-										currentBGMIndex[0] = playNewSound(group[0]);
-										currentBGMIndex[1] = 0xFF;
-									} else {
-										// Group, play each item in the group
-										for (int i = 0; i < 2; ++i) {
-											if (group[i] != BGM_SINGLE) {
-												if (i == 0) {
-													currentBGMIndex[0] = playNewSound(group[i]);
-												} else {
-													currentBGMIndex[i] = playNewSound(group[i]);
-												}
-											}
-										}
-									}
-								}*/
 								break;
 							case MID_SOUND_TEST_SFX:
 								int sfxID = thisMenuItem->data.intVal + SFX_START;
-
-								// Play _sfxShipMove only on SFX channel 2; all other SFX should play on SFX channel 1
-								// The only SFX that should stop _sfxShipMove is itself, or _sfxShipIdle
-
 								playSFX(sfxID, AUDGROUP_SOUNDT_SFX);
-								
 								break;
 						}
 						break;
@@ -1580,10 +1550,10 @@ void performPageTransfer(int datIntVal){
 
 	if (mDat.currMenuPage == MPI_SOUND_TEST){
 		// Kill all sound except for currentSFXIndex[0] (should be _sfxMenuConfirm)
-		stopAllSoundExcept(&currentSFXIndex[AUDGROUP_MENUSFX]);
-	}else if (!isSoundPlaying(_musMainMenu, currentBGMIndex[0])){
+		stopAllSoundExcept(&currentSFXIndex[AUDGROUP_MENUSFX].assetIndex);
+	}else if (!isSoundPlaying(_musMainMenu, currentBGMIndex[0].assetIndex)){
 		// Kill all sound except for currentSFXIndex[0] (should be _sfxMenuCancel)
-		stopAllSoundExcept(&currentSFXIndex[AUDGROUP_MENUSFX]);
+		stopAllSoundExcept(&currentSFXIndex[AUDGROUP_MENUSFX].assetIndex);
 
 		// Play the Main Menu BGM again if it isn't currently playing when we leave
 		playBGM(BGM_MAINMENU);
@@ -1823,7 +1793,7 @@ void hideSpriteRange(int firstSprite, int lastSprite){
 bool sfxIsPlaying(int sfxGroupIndex) {
 	for (int i = 0; i < audioGroupSizes[sfxGroupIndex]; i++) {
 		int sfxIDToHuntFor = audioGroups[sfxGroupIndex][i];
-		if (isSoundPlaying(sfxIDToHuntFor, currentSFXIndex[sfxGroupIndex]))
+		if (isSoundPlaying(sfxIDToHuntFor, currentSFXIndex[sfxGroupIndex].assetIndex))
 			return true;
 	}
 	return false;
@@ -2156,7 +2126,7 @@ int menuExecLoadGame(){
 
 int menuExecOptionsApplyChanges(){
 	playSFX(_sfxMenuConfirmB, AUDGROUP_MENUSFX);
-	updateOptions();
+	//updateOptionsFromSRAM();
 	mDat.windowState = MMWS_APPLIED_OPTIONS;
 	mDat.windowActionTimer = 0;
 	mDat.windowActionTarget = 50;
@@ -2168,15 +2138,21 @@ int menuExecOptionsApplyChanges(){
 	options.bgmVolume = (u8)menuPages[MPI_OPTIONS].items[OPTID_BGM_VOL].data.intVal;
 	options.sfxVolume = (u8)menuPages[MPI_OPTIONS].items[OPTID_SFX_VOL].data.intVal;
 	options.gridOn = (u8)menuPages[MPI_OPTIONS].items[OPTID_GRID_ENABLED].data.boolVal;
-
-	updateSoundVolumes(false);
+	
+	saveOptions(&options);
+	updateSoundVolumes(true);
 	return 0;
 }
 
 // Finalizes whatever options are currently set in the Options Menu
-void updateOptions(){	
-	MenuPageItem *mp_items = menuPages[MPI_OPTIONS].items;
-	options.gridOn = mp_items[OPTID_GRID_ENABLED].data.boolVal;
+void updateOptionsFromSRAM(){
+	
+    optionsMenuItems = menuPages[MPI_OPTIONS].items;
+	menuPages[MPI_OPTIONS].items[OPTID_MASTER_VOL].data.intVal = options.masterVolume;
+	menuPages[MPI_OPTIONS].items[OPTID_BGM_VOL].data.intVal = options.bgmVolume;
+	menuPages[MPI_OPTIONS].items[OPTID_SFX_VOL].data.intVal = options.sfxVolume;
+	menuPages[MPI_OPTIONS].items[OPTID_GRID_ENABLED].data.boolVal = options.gridOn;
+	
 }
 
 void matchBegin(){
@@ -2211,17 +2187,21 @@ u8 calculateFinalVolume(u8 assetVolume, int userVolume, int masterVolume) {
 
 void endCurrentBGM(){
     // Check if any BGM is playing in either slot, and then end it
-    if (currentBGMIndex[0] < 0xFF) {
-        endSound(currentBGMIndex[0]);
+    if (currentBGMIndex[0].assetIndex < 0xFF) {
+        endSound(currentBGMIndex[0].assetIndex);
     }
 
-    if (currentBGMIndex[1] < 0xFF) {
-        endSound(currentBGMIndex[1]);
+    if (currentBGMIndex[1].assetIndex < 0xFF) {
+        endSound(currentBGMIndex[1].assetIndex);
     }
 
     // Reset the indices to indicate no BGM is playing
-    currentBGMIndex[0] = 0xFF;
-    currentBGMIndex[1] = 0xFF;
+    currentBGMIndex[0].assetIndex = 0xFF;
+	currentBGMIndex[0].soundIndex = 0xFF;
+    currentBGMIndex[0].playingState = SND_PLAYSTATE_STOPPED;
+	currentBGMIndex[1].assetIndex = 0xFF;
+	currentBGMIndex[1].soundIndex = 0xFF;
+	currentBGMIndex[1].playingState = SND_PLAYSTATE_STOPPED;
 }
 
 void playBGM(u8 bgmIndex) {
@@ -2230,32 +2210,73 @@ void playBGM(u8 bgmIndex) {
 	int primaryTrack = bgmGroups[bgmIndex][0];
     int secondaryTrack = bgmGroups[bgmIndex][1];
     
-	currentBGMIndex[0] = playNewSound(primaryTrack);
-    
+	currentBGMIndex[0].assetIndex = playNewSound(primaryTrack);
+    currentBGMIndex[0].defaultVolume = getAssetDefaultVolume(primaryTrack);
+	currentBGMIndex[0].soundIndex = primaryTrack;
+	currentBGMIndex[0].playingState = SND_PLAYSTATE_PEACE_ONLY;
+
     if (secondaryTrack != BGM_SINGLE) {
         // Code to handle the secondary track if it exists
-        currentBGMIndex[1] = playNewSound(secondaryTrack);
+        currentBGMIndex[1].assetIndex = playNewSound(secondaryTrack);
+		currentBGMIndex[1].defaultVolume = getAssetDefaultVolume(secondaryTrack);
+		currentBGMIndex[1].soundIndex = secondaryTrack;
+
+		currentBGMIndex[0].playingState = SND_PLAYSTATE_BOTH_ACTIVE;
+		currentBGMIndex[1].playingState = SND_PLAYSTATE_BOTH_ACTIVE;
+		
+		setAssetVolume(currentBGMIndex[1].assetIndex, 0);
+		syncAsset(currentBGMIndex[1].assetIndex, currentBGMIndex[0].assetIndex);
     } else
-		currentBGMIndex[1] = 0xFF;
+		currentBGMIndex[1].assetIndex = 0xFF;
 	
 	// Update the volume for both BGM
 	u8 finalVolume;
 
-	if (currentBGMIndex[0] < 0xFF) {
-		finalVolume = calculateFinalVolume(getAssetDefaultVolume(primaryTrack), options.bgmVolume, options.masterVolume);
-		setAssetVolume(currentBGMIndex[0], finalVolume);
+	if (currentBGMIndex[0].assetIndex < 0xFF) {
+		finalVolume = calculateFinalVolume(currentBGMIndex[0].defaultVolume, options.bgmVolume, options.masterVolume);
+		setAssetVolume(currentBGMIndex[0].assetIndex, finalVolume);
 	}
 	
-	if (currentBGMIndex[1] < 0xFF) {
-		finalVolume = calculateFinalVolume(getAssetDefaultVolume(secondaryTrack), options.bgmVolume, options.masterVolume);
-		setAssetVolume(currentBGMIndex[1], finalVolume);
+	if (currentBGMIndex[1].assetIndex < 0xFF) {
+		finalVolume = calculateFinalVolume(currentBGMIndex[1].defaultVolume, options.bgmVolume, options.masterVolume);
+		setAssetVolume(currentBGMIndex[1].assetIndex, finalVolume);
+	}
+}
+
+void toggleBGMBattleLayer() {
+	u8 peaceAssetIndex = currentBGMIndex[0].assetIndex;
+	u8 battleAssetIndex = currentBGMIndex[1].assetIndex;
+	u8 battleDefaultVolume = currentBGMIndex[1].defaultVolume;
+
+	if (battleAssetIndex == 0xFF || currentBGMIndex[1].soundIndex == 0xFF)
+		return;
+
+	switch(currentBGMIndex[0].playingState){
+		default:
+			break;
+		case SND_PLAYSTATE_PEACE_ONLY:
+			currentBGMIndex[0].playingState = SND_PLAYSTATE_BOTH_ACTIVE;
+			if(!isSoundPlaying(currentBGMIndex[1].soundIndex, battleAssetIndex)){
+				battleAssetIndex = playNewSound(currentBGMIndex[1].soundIndex);
+				setAssetVolume(battleAssetIndex, 0);
+			}
+			syncAsset(battleAssetIndex, peaceAssetIndex);
+			u8 battleFinalVolume = calculateFinalVolume(currentBGMIndex[1].defaultVolume, options.bgmVolume, options.masterVolume);
+			volumeSlideAsset(battleAssetIndex, 0x4, battleFinalVolume);
+			break;
+		case SND_PLAYSTATE_BOTH_ACTIVE:
+			currentBGMIndex[0].playingState = SND_PLAYSTATE_PEACE_ONLY;
+			volumeSlideAsset(battleAssetIndex, 0x4, 0);
+			break;
 	}
 }
 
 void playSFX(u8 sfxID, int sfxGroupIndex) {
 	stopSFX(sfxGroupIndex);
-    currentSFXIndex[sfxGroupIndex] = playNewSound(sfxID);
-    
+    currentSFXIndex[sfxGroupIndex].assetIndex = playNewSound(sfxID);
+    currentSFXIndex[sfxGroupIndex].defaultVolume = getAssetDefaultVolume(sfxID);
+	currentSFXIndex[sfxGroupIndex].soundIndex = sfxID;
+
     u8 masterVolume, sfxVolume;
 
     if (mDat.currMenuPage == MPI_OPTIONS) {
@@ -2274,38 +2295,25 @@ void playSFX(u8 sfxID, int sfxGroupIndex) {
 
     // Calculate the final volume and set it for the SFX
 	for (u8 sfxGroupIndex = 0; sfxGroupIndex < AUDGROUP_MAX; sfxGroupIndex++) {
-		u8 finalVolume = calculateFinalVolume(getAssetDefaultVolume(sfxID), sfxVolume, masterVolume);
-		setAssetVolume(currentSFXIndex[sfxGroupIndex], finalVolume);
-	}
-	// hacky af but it works lol
-	//justLikeUpdateAllVolumesMan();
-}
-
-void justLikeUpdateAllVolumesMan(){
-	u8 masterVolume = (u8)optionsMenuItems[OPTID_MASTER_VOL].data.intVal;
-	u8 sfxVolume = (u8)optionsMenuItems[OPTID_SFX_VOL].data.intVal;
-
-    // Calculate the final volume and set it for the SFX
-	for (u8 sfxGroupIndex = 0; sfxGroupIndex < AUDGROUP_MAX; sfxGroupIndex++) {
-		u8 finalVolume = calculateFinalVolume(getAssetDefaultVolume(currentSFXIndex[sfxGroupIndex]), sfxVolume, masterVolume);
-		setAssetVolume(currentSFXIndex[sfxGroupIndex], finalVolume);
+		u8 finalVolume = calculateFinalVolume(currentSFXIndex[sfxGroupIndex].defaultVolume, sfxVolume, masterVolume);
+		setAssetVolume(currentSFXIndex[sfxGroupIndex].assetIndex, finalVolume);
 	}
 }
 
 void stopAllSoundExcept(const u8* exception) {
     // Stop all SFX except the one in the exception
     for (int i = 0; i < 5; i++) {
-        if (&currentSFXIndex[i] != exception && currentSFXIndex[i] < 0xFF) {
-            endSound(currentSFXIndex[i]);
-            currentSFXIndex[i] = 0xFF;  // Reset the index to indicate the SFX has stopped
+        if ((const u8*)&currentSFXIndex[i] != exception && currentSFXIndex[i].assetIndex < 0xFF) {
+            endSound(currentSFXIndex[i].assetIndex);
+            currentSFXIndex[i].assetIndex = 0xFF;  // Reset the index to indicate the SFX has stopped
         }
     }
 
     // Stop all BGM except the one in the exception
     for (int i = 0; i < 2; i++) {
-        if (&currentBGMIndex[i] != exception && currentBGMIndex[i] < 0xFF) {
-            endSound(currentBGMIndex[i]);
-            currentBGMIndex[i] = 0xFF;  // Reset the index to indicate the BGM has stopped
+        if ((const u8*)&currentBGMIndex[i] != exception && currentBGMIndex[i].assetIndex < 0xFF) {
+            endSound(currentBGMIndex[i].assetIndex);
+            currentBGMIndex[i].assetIndex = 0xFF;  // Reset the index to indicate the BGM has stopped
         }
     }
 }
@@ -2313,24 +2321,25 @@ void stopAllSoundExcept(const u8* exception) {
 void stopAllSound() {
 	endAllSound();
 	for (u8 i = 0; i < sizeof(currentSFXIndex); i++){
-		currentSFXIndex[i] = 0xFF;
+		currentSFXIndex[i].assetIndex = 0xFF;
 	}
-	currentBGMIndex[0] = 0xFF;
-	currentBGMIndex[1] = 0xFF;
+	currentBGMIndex[0].assetIndex = 0xFF;
+	currentBGMIndex[1].assetIndex = 0xFF;
 }
 
 void stopSFX(u8 sfxGroupIndex){
 	if (sfxIsPlaying(sfxGroupIndex)){
-		endSound(currentSFXIndex[sfxGroupIndex]);
-		currentSFXIndex[sfxGroupIndex] = 0xFF;
+		endSound(currentSFXIndex[sfxGroupIndex].assetIndex);
+		currentSFXIndex[sfxGroupIndex].assetIndex = 0xFF;
+		currentSFXIndex[sfxGroupIndex].soundIndex = 0xFF;
 	}
 }
 
 
-void updateSoundVolumes(bool leavingOptionsMenu) {
+void updateSoundVolumes(bool useOptionsStructValues) {
     u8 masterVolume, bgmVolume, sfxVolume;
 
-    if (mDat.currMenuPage == MPI_OPTIONS && !leavingOptionsMenu) {
+    if (mDat.currMenuPage == MPI_OPTIONS && !useOptionsStructValues) {
         // Read volumes directly from the options menu items
         MenuPageItem *optionsMenuItems = menuPages[MPI_OPTIONS].items;
         masterVolume = (u8)optionsMenuItems[OPTID_MASTER_VOL].data.intVal;
@@ -2345,17 +2354,17 @@ void updateSoundVolumes(bool leavingOptionsMenu) {
 
     // Update BGM volumes
     for (int i = 0; i < 2; i++) {
-        if (currentBGMIndex[i] < 0xFF) {
-            u8 finalVolume = calculateFinalVolume(getAssetDefaultVolume(currentBGMIndex[i]), bgmVolume, masterVolume);
-            setAssetVolume(currentBGMIndex[i], finalVolume);
+        if (currentBGMIndex[i].assetIndex < 0xFF) {
+            u8 finalVolume = calculateFinalVolume(currentBGMIndex[i].defaultVolume, bgmVolume, masterVolume);
+            setAssetVolume(currentBGMIndex[i].assetIndex, finalVolume);
         }
     }
 
     // Update SFX volumes
     for (int i = 0; i < 5; i++) {
-        if (currentSFXIndex[i] < 0xFF) {
-            u8 finalVolume = calculateFinalVolume(getAssetDefaultVolume(currentSFXIndex[i]), sfxVolume, masterVolume);
-            setAssetVolume(currentSFXIndex[i], finalVolume);
+        if (currentSFXIndex[i].assetIndex < 0xFF) {
+            u8 finalVolume = calculateFinalVolume(currentSFXIndex[i].defaultVolume, sfxVolume, masterVolume);
+            setAssetVolume(currentSFXIndex[i].assetIndex, finalVolume);
         }
     }
 }
@@ -2490,5 +2499,7 @@ void clearEntireSRAM(Options *options) {
 		saveGame(&mapData, 1);
 		saveGame(&mapData, 2);
         saveOptions(options); // Save the updated options to SRAM
+
+		loadOptions(options); // Set the options struct to our initialized values
     }
 }
