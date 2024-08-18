@@ -104,7 +104,7 @@ enum ShipState{
 
 enum MapState{
 	TURN_START, OPEN_MAP, SELECT_A_SHIP, SHIP_SELECTED, SHIP_MOVEMENT_SELECT, SHIP_MOVING, BATTLE, TURN_END, TURN_END_MOVEMENT, TURN_REPLAY, OPEN_TILE_SELECTED,
-	BATTLE_SELECT_A_SHIP, AFTER_BATTLE_BEFORE_MOVE, INACTIVE_SHIP_SELECTED, 
+	BATTLE_SELECT_A_SHIP, AFTER_BATTLE_BEFORE_MOVE, INACTIVE_SHIP_SELECTED, RANGE_CHECK
 };
 
 enum TeamState{
@@ -341,6 +341,7 @@ void selectAShipState();
 void shipSelectedState();
 void openTileSelectedState();
 void shipMovementSelectState();
+void rangeCheckState();
 void shipMovingState();
 void turnEndState();
 void turnEndMovementState();

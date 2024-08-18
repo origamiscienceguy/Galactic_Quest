@@ -137,6 +137,9 @@ void gameplayNormal(){
 	case OPEN_TILE_SELECTED:
 		openTileSelectedState();
 		break;
+	case RANGE_CHECK:
+		rangeCheckState();
+		break;
 	default:
 		break;
 	}
@@ -963,7 +966,15 @@ void shipSelectedState(){
 			//pan to that location
 			cameraPanInit((xTarget << 4) - 112, (yTarget << 4) - 72, CYCLE_PAN_SPEED);
 			
-			mapData.state = SHIP_MOVEMENT_SELECT;
+			if(mapData.actionMenu.moveOption){
+				mapData.ships[shipIndex].state = SELECTED;
+				mapData.state = SHIP_MOVEMENT_SELECT;
+			}
+			else{
+				mapData.state = RANGE_CHECK;
+			}
+			hideWidget(&mapData.actionMenu.widgetState, &mapData.actionMenu.actionTimer, &mapData.actionMenu.actionTarget, ACTION_MENU_MOVE_FRAMES);
+			mapData.actionMenu.state = NO_ACTION_MENU;
 		}
 		//if the shoot option is selected
 		else if((mapData.actionMenu.currentSelection == 1) && (mapData.actionMenu.shootOption)){
@@ -1124,6 +1135,49 @@ void shipMovementSelectState(){
 	processCamera();
 }
 
+void rangeCheckState(){
+	//draw the highlighted region of movement for the selected ship
+	mapData.highlight.state = MOVEMENT_RANGE_HIGHLIGHT;
+	u8 shipIndex = mapData.selectedShip.index;
+	
+	s16 xTarget = mapData.ships[shipIndex].xPos + mapData.ships[shipIndex].xVel;
+	s16 yTarget = mapData.ships[shipIndex].yPos + mapData.ships[shipIndex].yVel;
+	
+	//L and R cycle backwards or forwards through the active ships for this team, and center the camera on the next ship in the cycle
+	if((inputs.pressed & KEY_L) || (inputs.pressed & KEY_R)){ 
+		mapData.cursor.selectXPos = mapData.ships[mapData.selectedShip.index].xPos;
+		mapData.cursor.selectYPos = mapData.ships[mapData.selectedShip.index].yPos;
+		checkCycleButtons();
+	}
+	
+	//b canceles the movement of this ship
+	if(inputs.pressed & KEY_B){
+		mapData.state = OPEN_MAP;
+		mapData.highlight.state = NO_HIGHLIGHT;
+		mapData.cursor.selectXPos = mapData.ships[mapData.selectedShip.index].xPos;
+		mapData.cursor.selectYPos = mapData.ships[mapData.selectedShip.index].yPos;
+		mapData.cursor.xPos = (mapData.ships[mapData.selectedShip.index].xPos << 4) - 8;
+		mapData.cursor.yPos = (mapData.ships[mapData.selectedShip.index].yPos << 4) - 8; 
+	}
+	
+	//arrows will move the cursor within the movement range
+	u8 cursorLastXPos = mapData.cursor.selectXPos;
+	u8 cursorLastYPos = mapData.cursor.selectYPos;
+	moveCursor();
+	
+	//cancel the cursor movement if it leaves the ship's movement range.
+	if((ABS(mapData.cursor.selectXPos - xTarget) + ABS(mapData.cursor.selectYPos - yTarget)) > SHIP_ACC){
+		mapData.cursor.selectXPos = cursorLastXPos;
+		mapData.cursor.selectYPos = cursorLastYPos;
+		mapData.cursor.xPos = (cursorLastXPos << 4) - 8;
+		mapData.cursor.yPos = (cursorLastYPos << 4) - 8;
+		mapData.cursor.state = CUR_STILL;
+		mapData.cursor.counter = 0;
+	}
+	
+	//handle any changes to the camera that occured this frame
+	processCamera();
+}
 void shipMovingState(){
 	//if the ship movement is not done yet
 	if(mapData.actionTimer == 0){
@@ -1943,7 +1997,6 @@ void moveCursor(){
 
 void selectShip(u8 shipIndex){
 		mapData.selectedShip.index = shipIndex;
-		mapData.ships[shipIndex].state = SELECTED;
 		mapData.state = SHIP_SELECTED;
 		mapData.actionMenu.state = WAITING_ACTION_MENU;
 		revealWidget(&mapData.actionMenu.widgetState, &mapData.actionMenu.actionTimer, &mapData.actionMenu.actionTarget, ACTION_MENU_MOVE_FRAMES);
@@ -1978,16 +2031,26 @@ void selectShip(u8 shipIndex){
 		hideWidget(&mapData.minimap.widgetState, &mapData.minimap.actionTimer, &mapData.minimap.actionTarget, MINIMAP_MOVE_FRAMES);
 		
 		//set the correct options in the action menu
-		if(otherTeamInTile){
-			mapData.actionMenu.shootOption = 1;
+		if((mapData.ships[shipIndex].team == mapData.teamTurn) && 
+		((mapData.ships[shipIndex].state == READY_VISIBLE) || (mapData.ships[shipIndex].state == READY_HIDDEN))){
+			if(otherTeamInTile){
+				mapData.actionMenu.shootOption = 1;
+			}
+			else{
+				mapData.actionMenu.shootOption = 0;
+			}
+			mapData.actionMenu.moveOption = 1;
+			mapData.actionMenu.endTurnOption = 0;
+			mapData.actionMenu.checkRangeOption = 0;
+			mapData.actionMenu.currentSelection = 0;
 		}
 		else{
 			mapData.actionMenu.shootOption = 0;
+			mapData.actionMenu.moveOption = 0;
+			mapData.actionMenu.endTurnOption = 0;
+			mapData.actionMenu.checkRangeOption = 1;
+			mapData.actionMenu.currentSelection = 0;
 		}
-		mapData.actionMenu.moveOption = 1;
-		mapData.actionMenu.endTurnOption = 0;
-		mapData.actionMenu.checkRangeOption = 0;
-		mapData.actionMenu.currentSelection = 0;
 }
 
 u8 arctan2(s16 deltaX, s16 deltaY){
