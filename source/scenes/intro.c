@@ -36,16 +36,10 @@ void introInitialize(){
 	introData.actionTarget = 16;
 	
 	currentScene.state = NORMAL;
-	
-	currentBGM = playNewSound(_musOpening);
 
-	//set default options
-	options.gridOn = DEFAULT_GRID_FLAG;
-	options.masterVolume = DEFAULT_MASTER_VOLUME;
-	options.bgmVolume = DEFAULT_BGM_VOLUME;
-	options.sfxVolume = DEFAULT_SFX_VOLUME;
-
-	updateSoundVolumes(false);
+	options.firstTimeBoot = true;
+	loadOptions(&options);
+	clearEntireSRAM(&options); // also checks if it was the first time ever booting up the game before actually doing so
 }
 
 void introNormal(){
@@ -55,8 +49,13 @@ void introNormal(){
 			introData.state = GBAJAM_HOLD;
 			introData.actionTimer = 0;
 			introData.actionTarget = GBAJAM_WAIT_FRAMES;
-		}
-		else{
+		} else if (introData.actionTimer == 1){
+			// Seems to be too slow on the same frame as loading SRAM?
+			currentBGM = playNewSound(_musOpening);
+			updateSoundVolumes(false);
+			IOBuffer0[0] = 16 - introData.actionTimer;
+			introData.actionTimer++;
+		} else{
 			IOBuffer0[0] = 16 - introData.actionTimer;
 			introData.actionTimer++;
 		}
