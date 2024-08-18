@@ -617,6 +617,9 @@ void updateMinimap(u8 *characterBuffer){
 		else if(existingColor == (1 + mapData.teamTurn)){
 			color = (1 + mapData.teamTurn);
 		}
+		else if(existingColor == (1 + mapData.ships[shipIndex].team)){
+			color = 1 + mapData.ships[shipIndex].team;
+		}
 		else if(existingColor != (1 + mapData.ships[shipIndex].team)){
 			color = 10;
 		}
@@ -2152,6 +2155,7 @@ u8 arctan2(s16 deltaX, s16 deltaY){
 }
 
 void checkCycleButtons(){
+	makeShipVisible(mapData.selectedShip.index);
 	if(inputs.pressed & KEY_L){
 		//cycle through the linked list until we end up one before where we started
 		u32 currentIndex = mapData.selectedShip.index;
