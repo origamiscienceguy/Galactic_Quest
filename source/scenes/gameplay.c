@@ -863,11 +863,19 @@ void drawBattleMenus(OBJ_ATTR *spriteBuffer){
 			spriteBuffer[spriteSlot].attr0 = ATTR0_HIDE;
 		}
 	}
+	//draw the left menu
+	else{
+		
+	}
 	//if the right menu is hidden, don't draw it
 	if(rightState == BATTLE_OFF){
 		for(u32 spriteSlot = OBJ_BATTLE_DISPLAY2_SPRITES_START; spriteSlot < OBJ_BATTLE_DISPLAY2_SPRITES_START + OBJ_BATTLE_DISPLAY_SPRITES_NUM; spriteSlot++){
 			spriteBuffer[spriteSlot].attr0 = ATTR0_HIDE;
 		}
+	}
+	//draw the right menu
+	else{
+	
 	}
 	
 }
