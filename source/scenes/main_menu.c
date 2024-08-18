@@ -780,7 +780,7 @@ void updateMainMenu(){
 								break;
 						}
 					} else if (inputs.pressed & KEY_L){
-						endAllSound();
+						toggleBGMBattleLayer();
 					}
 				}
 
@@ -2197,7 +2197,11 @@ void endCurrentBGM(){
 
     // Reset the indices to indicate no BGM is playing
     currentBGMIndex[0].assetIndex = 0xFF;
-    currentBGMIndex[1].assetIndex = 0xFF;
+	currentBGMIndex[0].soundIndex = 0xFF;
+    currentBGMIndex[0].playingState = SND_PLAYSTATE_STOPPED;
+	currentBGMIndex[1].assetIndex = 0xFF;
+	currentBGMIndex[1].soundIndex = 0xFF;
+	currentBGMIndex[1].playingState = SND_PLAYSTATE_STOPPED;
 }
 
 void playBGM(u8 bgmIndex) {
@@ -2208,11 +2212,20 @@ void playBGM(u8 bgmIndex) {
     
 	currentBGMIndex[0].assetIndex = playNewSound(primaryTrack);
     currentBGMIndex[0].defaultVolume = getAssetDefaultVolume(primaryTrack);
+	currentBGMIndex[0].soundIndex = primaryTrack;
+	currentBGMIndex[0].playingState = SND_PLAYSTATE_PEACE_ONLY;
 
     if (secondaryTrack != BGM_SINGLE) {
         // Code to handle the secondary track if it exists
         currentBGMIndex[1].assetIndex = playNewSound(secondaryTrack);
 		currentBGMIndex[1].defaultVolume = getAssetDefaultVolume(secondaryTrack);
+		currentBGMIndex[1].soundIndex = secondaryTrack;
+
+		currentBGMIndex[0].playingState = SND_PLAYSTATE_BOTH_ACTIVE;
+		currentBGMIndex[1].playingState = SND_PLAYSTATE_BOTH_ACTIVE;
+		
+		setAssetVolume(currentBGMIndex[1].assetIndex, 0);
+		syncAsset(currentBGMIndex[1].assetIndex, currentBGMIndex[0].assetIndex);
     } else
 		currentBGMIndex[1].assetIndex = 0xFF;
 	
@@ -2230,10 +2243,40 @@ void playBGM(u8 bgmIndex) {
 	}
 }
 
+void toggleBGMBattleLayer() {
+	u8 peaceAssetIndex = currentBGMIndex[0].assetIndex;
+	u8 battleAssetIndex = currentBGMIndex[1].assetIndex;
+	u8 battleDefaultVolume = currentBGMIndex[1].defaultVolume;
+
+	if (battleAssetIndex == 0xFF || currentBGMIndex[1].soundIndex == 0xFF)
+		return;
+
+	switch(currentBGMIndex[0].playingState){
+		default:
+			break;
+		case SND_PLAYSTATE_PEACE_ONLY:
+			currentBGMIndex[0].playingState = SND_PLAYSTATE_BOTH_ACTIVE;
+			if(!isSoundPlaying(currentBGMIndex[0].soundIndex, battleAssetIndex)){
+				battleAssetIndex = playNewSound(currentBGMIndex[1].soundIndex);
+				setAssetVolume(battleAssetIndex, 0);
+				syncAsset(battleAssetIndex, peaceAssetIndex);
+			}
+			u8 battleFinalVolume = calculateFinalVolume(currentBGMIndex[1].defaultVolume, options.bgmVolume, options.masterVolume);
+			volumeSlideAsset(battleAssetIndex, 0x4, battleFinalVolume);
+			break;
+		case SND_PLAYSTATE_BOTH_ACTIVE:
+			currentBGMIndex[0].playingState = SND_PLAYSTATE_PEACE_ONLY;
+			volumeSlideAsset(battleAssetIndex, 0x4, 0);
+			break;
+	}
+}
+
 void playSFX(u8 sfxID, int sfxGroupIndex) {
 	stopSFX(sfxGroupIndex);
     currentSFXIndex[sfxGroupIndex].assetIndex = playNewSound(sfxID);
     currentSFXIndex[sfxGroupIndex].defaultVolume = getAssetDefaultVolume(sfxID);
+	currentSFXIndex[sfxGroupIndex].soundIndex = sfxID;
+
     u8 masterVolume, sfxVolume;
 
     if (mDat.currMenuPage == MPI_OPTIONS) {
@@ -2288,6 +2331,7 @@ void stopSFX(u8 sfxGroupIndex){
 	if (sfxIsPlaying(sfxGroupIndex)){
 		endSound(currentSFXIndex[sfxGroupIndex].assetIndex);
 		currentSFXIndex[sfxGroupIndex].assetIndex = 0xFF;
+		currentSFXIndex[sfxGroupIndex].soundIndex = 0xFF;
 	}
 }
 

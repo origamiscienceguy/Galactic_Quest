@@ -41,15 +41,15 @@ const int volumeTable[MAX_VOLUME + 1] = {
 
 // Definition of sound channels
 SoundChannel currentBGMIndex[2] = {
-	{.assetIndex = 0xFF, .defaultVolume = 255},
-	{.assetIndex = 0xFF, .defaultVolume = 255}
+	{.assetIndex = 0xFF, .defaultVolume = 255, .soundIndex = 0xFF},
+	{.assetIndex = 0xFF, .defaultVolume = 255, .soundIndex = 0xFF}
 };
 SoundChannel currentSFXIndex[5] = {
-	{.assetIndex = 0xFF, .defaultVolume = 255},
-	{.assetIndex = 0xFF, .defaultVolume = 255},
-	{.assetIndex = 0xFF, .defaultVolume = 255},
-	{.assetIndex = 0xFF, .defaultVolume = 255},
-	{.assetIndex = 0xFF, .defaultVolume = 255}
+	{.assetIndex = 0xFF, .defaultVolume = 255, .soundIndex = 0xFF},
+	{.assetIndex = 0xFF, .defaultVolume = 255, .soundIndex = 0xFF},
+	{.assetIndex = 0xFF, .defaultVolume = 255, .soundIndex = 0xFF},
+	{.assetIndex = 0xFF, .defaultVolume = 255, .soundIndex = 0xFF},
+	{.assetIndex = 0xFF, .defaultVolume = 255, .soundIndex = 0xFF}
 };
 
 // Define the grouped BGM assets
@@ -57,11 +57,11 @@ const int bgmGroups[][2] = {
     {_musOpening, BGM_SINGLE}, 					// Singular Group
     {_musTitle, BGM_SINGLE},					// Singular Group
     {_musMainMenu, BGM_SINGLE},					// Singular Group
-    {_musThemeA_Battle, _musThemeA_Peace},		// Dual Group
-    {_musThemeB, BGM_SINGLE},					// Group with itself
-    {_musThemeB_Battle, BGM_SINGLE},			// Group with itself
-	{_musThemeC_Battle, _musThemeC_Peace},		// Dual Group
-    {_musThemeD_Battle, _musThemeD_Peace}		// Dual Group
+    {_musThemeA_Peace, _musThemeA_Battle},		// Dual Group
+    {_musThemeB, BGM_SINGLE},					// Singular Group
+    {_musThemeB_Battle, BGM_SINGLE},			// Singular Group
+	{_musThemeC_Peace, _musThemeC_Battle},		// Dual Group
+    {_musThemeD_Peace, _musThemeD_Battle}		// Dual Group
 };
 
 int main(){
@@ -126,44 +126,6 @@ void criticalUpdates(){
 	inputs.pressed = inputs.current & ~lastInputs;
 	inputs.held = inputs.current & lastInputs;
 	inputs.released = ~inputs.current & lastInputs;
-	
-	/*if(inputs.pressed & KEY_SELECT){
-		static u8 currentAssetIndex = 0;
-		static u8 currentAsset = 0;
-		extern u16 numSounds;
-		endSound(currentAssetIndex);
-		if((currentAsset + 1) >= numSounds){
-			currentAsset = 0;
-			currentAssetIndex = playNewSound(currentAsset);
-		}
-		else{
-			currentAsset++;
-			currentAssetIndex = playNewSound(currentAsset);
-		}
-	}*/
-	
-	/*if(inputs.pressed & KEY_SELECT){
-		static u8 peaceAssetIndex = 0;
-		static u8 battleAssetIndex = 0;
-		static u8 playingState = 0;
-		if(playingState == 1){
-			playingState = 2;
-			if(!isSoundPlaying(_ThemeC_Peace, battleAssetIndex)){
-				battleAssetIndex = playNewSound(_ThemeC_Peace);
-				setAssetVolume(battleAssetIndex, 0);
-				syncAsset(battleAssetIndex, peaceAssetIndex);
-			}
-			volumeSlideAsset(battleAssetIndex, 0x4, 0xff);
-		}
-		else if(playingState == 2){
-			playingState = 1;
-			volumeSlideAsset(battleAssetIndex, 0x4, 0);
-		}
-		else{
-			playingState = 1;
-			peaceAssetIndex = playNewSound(_ThemeC_Battle);
-		}
-	}*/
 	
 	//process this frame's audio (this will take a majority of a frame.)
 	processAudio();

@@ -41,8 +41,10 @@ typedef struct Options{
 }Options;
 
 typedef struct SoundChannel{
-	u8 assetIndex;
-	u8 defaultVolume;
+	u8 assetIndex;		// The asset being played
+	u8 defaultVolume;	// The default volume of this asset
+	u8 soundIndex;		// The original ID of the sound that's being played
+	u8 playingState;	// The state the BGM is currently in (0 = stopped; 1 = fading out; 2 = muted)
 }SoundChannel;
 
 #define SOUND_TEST_BGM_COUNT (int)(sizeof(bgmGroups) / sizeof(bgmGroups[0]))
@@ -61,6 +63,12 @@ enum BGMList{
 	BGM_THEMEC,
 	BGM_THEMED,
 	BGM_MAX
+};
+
+enum SoundChannelPlayState{
+	SND_PLAYSTATE_STOPPED,
+	SND_PLAYSTATE_PEACE_ONLY,
+	SND_PLAYSTATE_BOTH_ACTIVE
 };
 
 // Precomputed fixed-point volume multipliers for each volume level (0-10)
