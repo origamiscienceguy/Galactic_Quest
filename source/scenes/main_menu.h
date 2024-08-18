@@ -666,6 +666,7 @@ void initOptions(Options *options);
 void writeSRAMByte(u32 address, u8 value);
 u8 readSRAMByte(u32 address);
 
+void clearEntireSRAM(Options *options);
 
 #endif
 
