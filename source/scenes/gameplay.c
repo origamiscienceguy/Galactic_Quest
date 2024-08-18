@@ -96,7 +96,7 @@ void gameplayInitialize(){
 	
 	
 	//temporary function call to set up some ships like a saved scenareo would
-	initMap();
+	//initMap();
 	
 	//set up all of the linked lists of every ship
 	shipListInit();
@@ -498,6 +498,14 @@ void drawMinimap(OBJ_ATTR *spriteBuffer, u8 *characterBuffer){
 		spriteBuffer[OBJ_MINIMAP2_SPRITE].attr0 = ATTR0_HIDE;
 		spriteBuffer[OBJ_MINIMAP_CURSOR_SPRITE].attr0 = ATTR0_HIDE;
 		spriteBuffer[OBJ_MINIMAP_CURSOR_SPRITE + 1].attr0 = ATTR0_HIDE;
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 2].attr0 = ATTR0_HIDE;
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 3].attr0 = ATTR0_HIDE;
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 4].attr0 = ATTR0_HIDE;
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 5].attr0 = ATTR0_HIDE;
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 6].attr0 = ATTR0_HIDE;
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 7].attr0 = ATTR0_HIDE;
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 8].attr0 = ATTR0_HIDE;
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 9].attr0 = ATTR0_HIDE;
 		return;
 	}
 	
@@ -533,9 +541,26 @@ void drawMinimap(OBJ_ATTR *spriteBuffer, u8 *characterBuffer){
 		spriteBuffer[OBJ_MINIMAP2_SPRITE].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_SQUARE |  ATTR0_Y(minimap2YPos);
 		spriteBuffer[OBJ_MINIMAP2_SPRITE].attr1 = ATTR1_SIZE_64 | ATTR1_X(minimap2XPos);
 		spriteBuffer[OBJ_MINIMAP2_SPRITE].attr2 = ATTR2_ID(OBJ_MINIMAP_GFX) | ATTR2_PRIO(0) | ATTR2_PALBANK(4);
+		
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 6].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE |  ATTR0_Y(minimap2YPos - 16);
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 6].attr1 = ATTR1_SIZE_64 | ATTR1_X((minimap2XPos - 8) & 0x1ff);
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 6].attr2 = ATTR2_ID(OBJ_MINIMAP_GFX + 64) | ATTR2_PRIO(0) | ATTR2_PALBANK(currentTeam);
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 7].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_TALL |  ATTR0_Y(minimap2YPos - 15);
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 7].attr1 = ATTR1_SIZE_64 | ATTR1_X((minimap2XPos + 56) & 0x1ff);
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 7].attr2 = ATTR2_ID(OBJ_MINIMAP_GFX + 96) | ATTR2_PRIO(0) | ATTR2_PALBANK(currentTeam);
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 8].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_TALL |  ATTR0_Y(minimap2YPos + 16);
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 8].attr1 = ATTR1_SIZE_64 | ATTR1_X((minimap2XPos - 8) & 0x1ff);
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 8].attr2 = ATTR2_ID(OBJ_MINIMAP_GFX + 128) | ATTR2_PRIO(0) | ATTR2_PALBANK(currentTeam);
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 9].attr0 = ATTR0_REG | ATTR0_4BPP | ATTR0_WIDE |  ATTR0_Y(minimap2YPos + 48);
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 9].attr1 = ATTR1_SIZE_64 | ATTR1_X((minimap2XPos + 24) & 0x1ff);
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 9].attr2 = ATTR2_ID(OBJ_MINIMAP_GFX + 160) | ATTR2_PRIO(0) | ATTR2_PALBANK(currentTeam);
 	}
 	else{
 		spriteBuffer[OBJ_MINIMAP2_SPRITE].attr0 = ATTR0_HIDE;
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 6].attr0 = ATTR0_HIDE;
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 7].attr0 = ATTR0_HIDE;
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 8].attr0 = ATTR0_HIDE;
+		spriteBuffer[OBJ_MINIMAP1_SPRITE + 9].attr0 = ATTR0_HIDE;
 	}
 	
 	u32 xShiftAmount = 0;
@@ -824,6 +849,35 @@ void drawSelectAShipMenu(OBJ_ATTR *spriteBuffer){
 		spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START -3].attr0 = ATTR0_HIDE;
 		spriteBuffer[OBJ_SELECT_A_SHIP_SPRITES_START -2].attr0 = ATTR0_HIDE;
 	}
+}
+
+void drawBattleMenus(OBJ_ATTR *spriteBuffer){
+	u8 leftPalette = mapData.ships[mapData.leftBattle.shipIndex].team;
+	u8 rightPalette = mapData.ships[mapData.rightBattle.shipIndex].team;
+	u8 leftState = mapData.leftBattle.state;
+	u8 rightState = mapData.rightBattle.state;
+	
+	//if the left menu is hidden, don't draw it
+	if(leftState == BATTLE_OFF){
+		for(u32 spriteSlot = OBJ_BATTLE_DISPLAY1_SPRITES_START; spriteSlot < OBJ_BATTLE_DISPLAY1_SPRITES_START + OBJ_BATTLE_DISPLAY_SPRITES_NUM; spriteSlot++){
+			spriteBuffer[spriteSlot].attr0 = ATTR0_HIDE;
+		}
+	}
+	//draw the left menu
+	else{
+		
+	}
+	//if the right menu is hidden, don't draw it
+	if(rightState == BATTLE_OFF){
+		for(u32 spriteSlot = OBJ_BATTLE_DISPLAY2_SPRITES_START; spriteSlot < OBJ_BATTLE_DISPLAY2_SPRITES_START + OBJ_BATTLE_DISPLAY_SPRITES_NUM; spriteSlot++){
+			spriteBuffer[spriteSlot].attr0 = ATTR0_HIDE;
+		}
+	}
+	//draw the right menu
+	else{
+	
+	}
+	
 }
 
 void turnStartState(){

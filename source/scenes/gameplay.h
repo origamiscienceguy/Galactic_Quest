@@ -79,10 +79,20 @@
 #define SELECT_A_SHIP_WIDTH 88
 
 #define OBJ_ACTION_MENU_SPRITES_START (OBJ_SELECT_A_SHIP_SPRITES_START + OBJ_SELECT_A_SHIP_SPRITES_NUM)
-#define OBJ_ACTION_MENU_SPRITES_NUM 12
+#define OBJ_ACTION_MENU_SPRITES_NUM 2
 #define OBJ_ACTION_MENU_GFX_START (OBJ_SELECT_A_SHIP_GFX + OBJ_SELECT_A_SHIP_GFX_SIZE)
+#define OBJ_ACTION_MENU_GFX_SIZE 64
 #define ACTION_MENU_MOVE_FRAMES 4
 #define ACTION_MENU_WIDTH 64
+
+#define OBJ_BATTLE_DISPLAY1_SPRITES_START (OBJ_ACTION_MENU_SPRITES_START + OBJ_ACTION_MENU_SPRITES_NUM)
+#define OBJ_BATTLE_DISPLAY1_GFX_START (OBJ_ACTION_MENU_GFX_START + OBJ_ACTION_MENU_GFX_SIZE)
+#define OBJ_BATTLE_DISPLAY2_SPRITES_START (OBJ_BATTLE_DISPLAY1_SPRITES_START + OBJ_BATTLE_DISPLAY_SPRITES_NUM)
+#define OBJ_BATTLE_DISPLAY2_GFX_START (OBJ_BATTLE_DISPLAY1_GFX_START + OBJ_BATTLE_DISPLAY_GFX_SIZE)
+#define OBJ_BATTLE_DISPLAY_GFX_SIZE
+#define OBJ_BATTLE_DISPLAY_SPRITES_NUM 12
+#define BATTLE_DISPLAY_MOVE_FRAMES 3
+#define BATTLE_DISPLAY_HEIGHT 32
 
 
 #define CYCLE_PAN_SPEED 20
@@ -155,6 +165,10 @@ enum ActionMenuState{
 
 enum ActionMenuOptions{
 	MOVE_OPTION, SHOOT_OPTION, END_TURN_OPTION, SEE_RANGE_OPTION, BACK_OPTION
+};
+
+enum BattleMenuState{
+	BATTLE_ON, BATTLE_OFF
 };
 
 //structs
@@ -252,6 +266,13 @@ typedef struct ActionMenu{
 	u8 numOptions;
 }ActionMenu;
 
+typedef struct BattleDisplay{
+	enum BattleMenuState state;
+	u8 actionTarget;
+	u8 actionTimer;
+	u8 shipIndex;
+}BattleDisplay;
+
 typedef struct MapData{
 	enum MapState state; //what is the stage of the game are we in
 	enum Team teamTurn; //who's turn is it
@@ -270,6 +291,8 @@ typedef struct MapData{
 	MinimapData minimap; //the data about the minimap layer
 	SelectAShipMenu selectAShip; //the data about the select-a-ship menu
 	ActionMenu actionMenu; //the data about the action meny
+	BattleDisplay leftBattle;
+	BattleDisplay rightBattle;
 	u8 saveSlot;
 }MapData;
 
@@ -371,6 +394,7 @@ void drawCursor(OBJ_ATTR *);
 void drawHighlight(u8 *);
 void drawMinimap(OBJ_ATTR *, u8 *);
 void updateMinimap(u8 *);
+void drawBattleMenus(OBJ_ATTR *);
 void nextPlayer();
 void nextTurn();
 void turnStartState();
