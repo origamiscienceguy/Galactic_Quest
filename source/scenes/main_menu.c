@@ -21,6 +21,7 @@ int dataRange[] = {0, 100};
 static u8 currentBGMIndex[2] = {0xFF, 0xFF};
 static u8 currentSFXIndex[5] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 int moveY = 0, moveX = 0; // Player directional input
+MenuPageItem* optionsMenuItems;
 
 // Initialize the Menu Pages
 static MenuPage* menuPage;
@@ -33,6 +34,10 @@ void mainMenuInitialize(){
 	REG_BG2CNT = BG_4BPP | BG_SBB(MENU_WINDOW_TILEMAP) | BG_CBB(MENU_CHARDATA) | BG_PRIO(1) | BG_REG_32x32; //menu page ui layer
 	REG_BLDCNT = BLD_TOP(BLD_BG2 | BLD_BACKDROP | BLD_OBJ) | BLD_WHITE;
 	REG_BLDY = BLDY(0);
+
+	updateObjBuffer();
+
+	resetMainMenuWindowVariables();
 	mDat.starryBG.xPos = 512 - 16;
 	REG_BG0HOFS = mDat.starryBG.xPos;
 	mDat.starryBG.yPos = TITLE_CAM_PAN_BOTTOM;
@@ -110,7 +115,7 @@ void mainMenuInitialize(){
 	mDat.starryBG.scrollTargetPos = TITLE_CAM_PAN_TOP; // Target position (scaled)
 
 	// Set whatever current values are to the real options struct
-	MenuPageItem* optionsMenuItems = menuPages[MPI_OPTIONS].items;
+	optionsMenuItems = menuPages[MPI_OPTIONS].items;
 }
 
 void mainMenuNormal(){
@@ -201,7 +206,7 @@ void mainMenuNormal(){
 			mDat.state = TITLE_REVEAL;
 			mDat.actionTarget = 46;
 			mDat.actionTimer = 0;
-
+			
 			// Send the Title BG tilemap
 			tilemapData[1].position = &se_mem[TITLE_CARD_TILEMAP];
 			tilemapData[1].buffer = (void *)sprTitleLogoMap;
@@ -533,7 +538,7 @@ void mainMenuNormal(){
 			// End the current BGM
 			endCurrentBGM();
 
-			playSFX(_sfxMenuConfirmC, 0);
+			playSFX(_sfxMenuConfirmC, AUDGROUP_MENUSFX);
 
 			//starryBGYPosInit = mDat.starryBG.yPos * FIXED_POINT_SCALE; // Start position (scaled)
 			//starryBGYPosTarget = -4504 * FIXED_POINT_SCALE; // Target position (scaled)
@@ -585,50 +590,11 @@ void initMainMenu(){
 	//example usage to load the portion of the image starting 6 tile rows down, and 8 tile rows deep.
 	//loadGFX(MENU_CHARDATA, MENU_TEXT_GFX_START, menu_actionTiles, MENU_TEXT_TILE_WIDTH * 6, MENU_TEXT_TILE_WIDTH * 8);
 
+	resetMainMenuWindowVariables();
 	updateOptions();
-	mDat.currMenuPage = 0;
-	menuPage = &menuPages[mDat.currMenuPage];
 
-	mDat.menuCursorPos = 0;
-	mDat.windowConfirmDirection = MWCD_NEUTRAL;
-
-	mDat.windowCurrTileXPos = 22;
-	mDat.windowCurrTileYPos = 10;
-	mDat.winSliceWidth = 10;
-	mDat.winSliceHeight = 1;
-	mDat.windowTargetTileX = 10;
-	mDat.windowTargetTileY = 6;
-	mDat.windowTargetWidth = 10;
-	mDat.windowTargetHeight = 10;
-	mDat.windowState = MMWS_INITIAL_ZIPPING;
-
-	mDat.windowActionTimer = 0;
-	mDat.windowActionTarget = 0;
-	mDat.windowFinalizing = false;
-	mDat.hideMenuCursor = false;
-
-	mDat.evaLerpStart = 0;
-	mDat.evaLerpEnd = 0;
-	mDat.evbLerpStart = 0;
-	mDat.evbLerpEnd = 0;
-
-	mDat.menuBG.xPos = 0;
-	mDat.menuBG.yPos = 0;
-
-	mDat.zipSpeed = 3;
-	mDat.wrappedAround = true;
-
-	mDat.showPageWindowBG = false;
-	
-	mDat.secondaryNineSliceYOff = 2;
-	
 	// Draw the Menu Page UI Text now
 	drawMenuPageUIText();
-
-	mDat.updateSpriteDraw = false;
-	mDat.updateBGTileDraw = false;
-	mDat.updateUITileDraw = false;
-	mDat.starryBG.snappedThisFrame = false;
 }
 
 void updateMainMenu(){
@@ -745,7 +711,7 @@ void updateMainMenu(){
 			// Navigate the menu; wrap around if we hit an edge
 			if (menuPage != &menuPages[MPI_CREDITS]){
 				if (moveY != 0){
-					playSFX(_sfxMenuMove, 0);
+					playSFX(_sfxMenuMove, AUDGROUP_MENUSFX);
 					if((mDat.menuCursorPos + moveY) < 0){
 						mDat.menuCursorPos = menuPage->itemCount - 1;
 					}
@@ -763,7 +729,7 @@ void updateMainMenu(){
 						default:
 							break;
 						case ME_TOGGLE:
-							playSFX(_sfxMenuConfirmA, 0);
+							playSFX(_sfxMenuConfirmA, AUDGROUP_MENUSFX);
 							thisMenuItem->data.boolVal = !thisMenuItem->data.boolVal;
 							mDat.updateSpriteDraw = true;
 							break;
@@ -787,7 +753,7 @@ void updateMainMenu(){
 									mDat.updateSpriteDraw = true;
 									break;
 							}
-							playSFX(_sfxMenuMove, 0);
+							playSFX(_sfxMenuMove, AUDGROUP_MENUSFX);
 							break;
 					}
 				}
@@ -848,9 +814,9 @@ void updateMainMenu(){
 						
 						// If this is a Page Transfer, load the new menu page now
 						MenuElementData* dat;
-						FunctionPtr datFunctPtr;
+						//FunctionPtr datFunctPtr;
 						int datIntVal = 0;
-						int* datIntArr;
+						//int* datIntArr;
 
 						switch(mDat.windowConfirmDirection){
 							default:
@@ -860,16 +826,16 @@ void updateMainMenu(){
 								switch(menuPage->items[mDat.menuCursorPos].dataType){
 									default:
 									case MPIDT_FUNC_PTR:
-										datFunctPtr = dat->functionPtr;
+										//datFunctPtr = dat->functionPtr;
 										break;
 									case MPIDT_INT:
 										datIntVal = dat->intVal;
 										break;
 									case MPIDT_INT_ARRAY:
-										datIntArr = dat->intArray;
+										//datIntArr = dat->intArray;
 										break;
 									case MPIDT_BOOL:
-										datIntArr = dat->intArray;
+										//datIntArr = dat->intArray;
 										break;
 								}
 
@@ -928,7 +894,7 @@ void updateMainMenu(){
 				}
 			} else {
 				if (mDat.windowCurrTileXPos < -mDat.winSliceWidth - 1){
-					playSFX(_sfxScreenPan, 0);		
+					playSFX(_sfxScreenPan, AUDGROUP_MENUSFX);		
 					mDat.state = MAIN_MENU_FLY_OUT;
 					mDat.windowState = MMWS_DONE;
 					mDat.actionTimer = 0;
@@ -957,7 +923,7 @@ void updateMainMenu(){
 					case ME_SLIDER:
 						updateSoundVolumes(false);
 						if (!(thisMenuItem->data.intVal == 0 && moveX < 0) && !(thisMenuItem->data.intVal == MAX_VOLUME && moveX > 0))
-							playSFX(_sfxMenuMove, 0);
+							playSFX(_sfxMenuMove, AUDGROUP_MENUSFX);
 						thisMenuItem->data.intVal = clamp(thisMenuItem->data.intVal + moveX, 0, MAX_VOLUME + 1);
 						mDat.updateSpriteDraw = true;
 						break;
@@ -1455,7 +1421,7 @@ void menuInputConfirmEnabled(){
 						}
 						break;
 					case ME_PAGE_TRANSFER:
-						playSFX(_sfxMenuConfirmA, 0);
+						playSFX(_sfxMenuConfirmA, AUDGROUP_MENUSFX);
 						mDat.windowConfirmDirection = MWCD_FORWARD;
 						mDat.windowState = MMWS_CLOSING;
 						mDat.updateSpriteDraw = true;
@@ -1475,14 +1441,14 @@ void menuInputConfirmEnabled(){
 						hideSpriteRange(MENU_SLIDER_PROMPT_SPRITE1, FONT_PERCENT_SPRITE_LAST);
 						break;
 					case ME_SLIDER:
-						playSFX(_sfxMenuConfirmA, 0);
+						playSFX(_sfxMenuConfirmA, AUDGROUP_MENUSFX);
 						mDat.windowState = MMWS_TWEAKING_DATA;
 						mDat.updateSpriteDraw = true;
 						break;
 					case ME_SHIFT:
 						break;
 					case ME_TOGGLE:
-						playSFX(_sfxMenuConfirmA, 0);
+						playSFX(_sfxMenuConfirmA, AUDGROUP_MENUSFX);
 						thisMenuItem->data.boolVal = !thisMenuItem->data.boolVal;
 						mDat.updateSpriteDraw = true;
 						break;
@@ -1524,14 +1490,8 @@ void menuInputConfirmEnabled(){
 								// Play _sfxShipMove only on SFX channel 2; all other SFX should play on SFX channel 1
 								// The only SFX that should stop _sfxShipMove is itself, or _sfxShipIdle
 
-								if (sfxID - 1 == _sfxShipMove) {
-									stopSFX(2);
-									playSFX(_sfxShipIdle, 1);
-								} if (sfxID == _sfxShipMove)
-									playSFX(_sfxShipMove, 2);
-								else {
-									playSFX(sfxID, 1);
-								}
+								playSFX(sfxID, AUDGROUP_SOUNDT_SFX);
+								
 								break;
 						}
 						break;
@@ -1548,7 +1508,7 @@ void menuInputConfirmEnabled(){
 					case ME_PAGE_TRANSFER:
 						break;
 					case ME_SLIDER:
-						playSFX(_sfxMenuConfirmA, 0);
+						playSFX(_sfxMenuConfirmA, AUDGROUP_MENUSFX);
 						// Hide the slider prompt
 						hideSpriteRange(MENU_SLIDER_PROMPT_SPRITE1, MENU_SLIDER_PROMPT_SPRITE2);
 						mDat.windowState = MMWS_READY;
@@ -1572,7 +1532,7 @@ void menuInputCancelEnabled(){
 			default:
 				break;
 			case MMWS_READY:
-				playSFX(_sfxMenuCancel, 0);
+				playSFX(_sfxMenuCancel, AUDGROUP_MENUSFX);
 				mDat.windowConfirmDirection = MWCD_BACKWARD;
 				mDat.windowState = MMWS_CLOSING;
 				
@@ -1591,7 +1551,7 @@ void menuInputCancelEnabled(){
 
 				if (mDat.currMenuPage == MPI_OPTIONS) {
 					// We just backed out of the Options menu: Reset all current options values to the real options struct's values
-					MenuPageItem* optionsMenuItems = menuPages[MPI_OPTIONS].items;
+					optionsMenuItems = menuPages[MPI_OPTIONS].items;
 					optionsMenuItems[OPTID_MASTER_VOL].data.intVal = (int)options.masterVolume;
 					optionsMenuItems[OPTID_BGM_VOL].data.intVal = (int)options.bgmVolume;
 					optionsMenuItems[OPTID_SFX_VOL].data.intVal = (int)options.sfxVolume;
@@ -1600,7 +1560,7 @@ void menuInputCancelEnabled(){
 				}
 				break;
 			case MMWS_TWEAKING_DATA:
-				playSFX(_sfxMenuMove, 0);
+				playSFX(_sfxMenuMove, AUDGROUP_MENUSFX);
 				// Hide the slider prompt
 				hideSpriteRange(MENU_SLIDER_PROMPT_SPRITE1, MENU_SLIDER_PROMPT_SPRITE2);
 				mDat.windowState = MMWS_READY;
@@ -1862,15 +1822,16 @@ void hideSpriteRange(int firstSprite, int lastSprite){
 	}
 }
 
-bool sfxIsPlaying(int sfxChannel) {
-	if (currentSFXIndex[sfxChannel] == 0xFF)
-		return false;
-	for (u8 i = SFX_START; i < SFX_START + SOUND_TEST_SFX_COUNT; i++) {
-		if (isSoundPlaying(i, currentSFXIndex[sfxChannel]))
+bool sfxIsPlaying(int sfxGroupIndex) {
+	for (int i = 0; i < audioGroupSizes[sfxGroupIndex]; i++) {
+		int sfxIDToHuntFor = audioGroups[sfxGroupIndex][i];
+		if (isSoundPlaying(sfxIDToHuntFor, currentSFXIndex[sfxGroupIndex]))
 			return true;
 	}
 	return false;
 }
+
+
 
 void skipToMenu(){
 	//mainMenuData.actionTarget = 0;
@@ -2080,7 +2041,7 @@ void initMenuPages(MenuPage menuPages[]) {
 
 int menuExecNewGame(){
 	stopAllSound();
-	playSFX(_sfxMenuConfirmC, 0);
+	playSFX(_sfxMenuConfirmC, AUDGROUP_MENUSFX);
 	
 	mDat.windowState = MMWS_FINALIZING;
 	mDat.windowConfirmDirection = MWCD_FORWARD;
@@ -2106,14 +2067,14 @@ int menuExecLoadGame(){
 }
 
 int menuExecOptionsApplyChanges(){
-	playSFX(_sfxMenuConfirmB, 0);
+	playSFX(_sfxMenuConfirmB, AUDGROUP_MENUSFX);
 	updateOptions();
 	mDat.windowState = MMWS_APPLIED_OPTIONS;
 	mDat.windowActionTimer = 0;
 	mDat.windowActionTarget = 50;
 
 	// Set whatever current values are to the real options struct
-    MenuPageItem* optionsMenuItems = menuPages[MPI_OPTIONS].items;
+    optionsMenuItems = menuPages[MPI_OPTIONS].items;
 	options.masterVolume = (u8)&menuPages[MPI_OPTIONS].items[OPTID_MASTER_VOL].data.intVal;
 	options.bgmVolume = (u8)&menuPages[MPI_OPTIONS].items[OPTID_BGM_VOL].data.intVal;
 	options.sfxVolume = (u8)&menuPages[MPI_OPTIONS].items[OPTID_SFX_VOL].data.intVal;
@@ -2189,22 +2150,28 @@ void playBGM(u8 bgmIndex) {
 		currentBGMIndex[1] = 0xFF;
 	
 	// Update the volume for both BGM
-	u8 finalVolume = calculateFinalVolume(getAssetDefaultVolume(primaryTrack), options.bgmVolume, options.masterVolume);
-	setAssetVolume(currentBGMIndex[0], finalVolume);
+	u8 finalVolume;
 
-	finalVolume = calculateFinalVolume(getAssetDefaultVolume(secondaryTrack), options.bgmVolume, options.masterVolume);
-	setAssetVolume(currentBGMIndex[1], finalVolume);
+	if (currentBGMIndex[0] < 0xFF) {
+		finalVolume = calculateFinalVolume(getAssetDefaultVolume(primaryTrack), options.bgmVolume, options.masterVolume);
+		setAssetVolume(currentBGMIndex[0], finalVolume);
+	}
+	
+	if (currentBGMIndex[1] < 0xFF) {
+		finalVolume = calculateFinalVolume(getAssetDefaultVolume(secondaryTrack), options.bgmVolume, options.masterVolume);
+		setAssetVolume(currentBGMIndex[1], finalVolume);
+	}
 }
 
-void playSFX(u8 sfxID, int sfxChannelIndex) {
-	stopSFX(sfxChannelIndex);
-    currentSFXIndex[sfxChannelIndex] = playNewSound(sfxID);
+void playSFX(u8 sfxID, int sfxGroupIndex) {
+	stopSFX(sfxGroupIndex);
+    currentSFXIndex[sfxGroupIndex] = playNewSound(sfxID);
     
     u8 masterVolume, sfxVolume;
 
     if (mDat.currMenuPage == MPI_OPTIONS) {
         // Read volumes directly from the options menu items
-        MenuPageItem* optionsMenuItems = menuPages[MPI_OPTIONS].items;
+        optionsMenuItems = menuPages[MPI_OPTIONS].items;
         masterVolume = (u8)optionsMenuItems[OPTID_MASTER_VOL].data.intVal;
         sfxVolume = (u8)optionsMenuItems[OPTID_SFX_VOL].data.intVal;
     } else {
@@ -2215,7 +2182,7 @@ void playSFX(u8 sfxID, int sfxChannelIndex) {
     
     // Calculate the final volume and set it for the SFX
     u8 finalVolume = calculateFinalVolume(getAssetDefaultVolume(sfxID), sfxVolume, masterVolume);
-    setAssetVolume(currentSFXIndex[sfxChannelIndex], finalVolume);
+    setAssetVolume(currentSFXIndex[sfxGroupIndex], finalVolume);
 }
 
 void stopAllSoundExcept(const u8* exception) {
@@ -2245,17 +2212,17 @@ void stopAllSound() {
 	currentBGMIndex[1] = 0xFF;
 }
 
-void stopSFX(u8 channelIndex){
-	if (sfxIsPlaying(channelIndex)){
-		endSound(currentSFXIndex[channelIndex]);
-		currentSFXIndex[channelIndex] = 0xFF;
+void stopSFX(u8 sfxGroupIndex){
+	if (sfxIsPlaying(sfxGroupIndex)){
+		endSound(currentSFXIndex[sfxGroupIndex]);
+		currentSFXIndex[sfxGroupIndex] = 0xFF;
 	}
 }
 
 
 void updateSoundVolumes(bool leavingOptionsMenu) {
     u8 masterVolume, bgmVolume, sfxVolume;
-    
+
     if (mDat.currMenuPage == MPI_OPTIONS && !leavingOptionsMenu) {
         // Read volumes directly from the options menu items
         MenuPageItem *optionsMenuItems = menuPages[MPI_OPTIONS].items;
@@ -2284,4 +2251,47 @@ void updateSoundVolumes(bool leavingOptionsMenu) {
             setAssetVolume(currentSFXIndex[i], finalVolume);
         }
     }
+}
+
+void resetMainMenuWindowVariables() {
+	mDat.currMenuPage = 0;
+	menuPage = &menuPages[mDat.currMenuPage];
+
+	mDat.menuCursorPos = 0;
+	mDat.windowConfirmDirection = MWCD_NEUTRAL;
+
+	mDat.windowCurrTileXPos = 22;
+	mDat.windowCurrTileYPos = 10;
+	mDat.winSliceWidth = 10;
+	mDat.winSliceHeight = 1;
+	mDat.windowTargetTileX = 10;
+	mDat.windowTargetTileY = 6;
+	mDat.windowTargetWidth = 10;
+	mDat.windowTargetHeight = 10;
+	mDat.windowState = MMWS_INITIAL_ZIPPING;
+
+	mDat.windowActionTimer = 0;
+	mDat.windowActionTarget = 0;
+	mDat.windowFinalizing = false;
+	mDat.hideMenuCursor = false;
+
+	mDat.evaLerpStart = 0;
+	mDat.evaLerpEnd = 0;
+	mDat.evbLerpStart = 0;
+	mDat.evbLerpEnd = 0;
+
+	mDat.menuBG.xPos = 0;
+	mDat.menuBG.yPos = 0;
+
+	mDat.zipSpeed = 3;
+	mDat.wrappedAround = true;
+
+	mDat.showPageWindowBG = false;
+	
+	mDat.secondaryNineSliceYOff = 2;
+
+	mDat.updateSpriteDraw = false;
+	mDat.updateBGTileDraw = false;
+	mDat.updateUITileDraw = false;
+	mDat.starryBG.snappedThisFrame = false;
 }
