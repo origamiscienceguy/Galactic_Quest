@@ -9,6 +9,10 @@
 #define MAX_SHIPS 256
 #define MAX_MAP_SIZE 256
 #define NUM_TEAMS 4
+#define TEAM_MATRIX_SIZE 8
+#define CENTER_X (MAX_MAP_SIZE >> 1)			// 128
+#define CENTER_Y (MAX_MAP_SIZE >> 1)			// 128
+#define SUBGRID_HALF (TEAM_MATRIX_SIZE >> 1)	// 4
 
 #define BG_SHIPS_CHARDATA 0
 #define BG_GRID_HIGHLIGHT_CHARDATA 0
@@ -94,9 +98,9 @@
 #define MINIMAP_WIDTH 64
 
 //enums
-enum ShipType{
-	SCOUT, FIGHTER, BOMBER, DESTROYER, CRUISER, BATTLESHIP, CARRIER,
-};
+typedef enum ShipType{
+	NONE = -1, SCOUT, FIGHTER, BOMBER, DESTROYER, CRUISER, BATTLESHIP, CARRIER,
+} ShipType;
 
 enum ShipState{
 	READY_VISIBLE, READY_HIDDEN, FINISHED_VISIBLE, FINISHED_HIDDEN, WRONG_TEAM_VISIBLE, WRONG_TEAM_HIDDEN, SELECTED, DOCKED, DESTROYED, NOT_PARTICIPATING
@@ -111,9 +115,9 @@ enum TeamState{
 	TEAM_ABSENT, TEAM_ACTIVE, TEAM_DEFEATED
 };
 
-enum Team{
+typedef enum Team{
 	RED_TEAM, BLUE_TEAM, GREEN_TEAM, YELLOW_TEAM
-};
+} Team;
 
 enum CameraState{
 	CAM_STILL, CAM_PANNING, CAM_TRACKING, 
@@ -268,6 +272,13 @@ typedef struct MapData{
 	ActionMenu actionMenu; //the data about the action meny
 }MapData;
 
+typedef struct {
+    int x;
+    int y;
+	int xVel;
+	int yVel;
+} InitialShipFormationData;
+
 //globals
 extern const u32 inverseTimeSquared[];
 extern const u16 inverseTime[];
@@ -316,6 +327,28 @@ extern const u8 actionMenuXPos[];
 extern const u8 actionMenuYPos[];
 
 extern const u8 minimapPositions[];
+
+const ShipType upperLayer[TEAM_MATRIX_SIZE][TEAM_MATRIX_SIZE] = {
+	{ NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE },
+	{ NONE, NONE, NONE, NONE, CRUISER, FIGHTER, NONE, NONE },
+	{ NONE, NONE, NONE, NONE, NONE, FIGHTER, NONE, NONE },
+	{ NONE, NONE, NONE, NONE, CRUISER, FIGHTER, NONE, NONE },
+	{ NONE, NONE, NONE, NONE, CRUISER, FIGHTER, NONE, NONE },
+	{ NONE, NONE, NONE, NONE, NONE, FIGHTER, NONE, NONE },
+	{ NONE, NONE, NONE, NONE, CRUISER, FIGHTER, NONE, NONE },
+	{ NONE, NONE, NONE, NONE, NONE, NONE, NONE, NONE }
+};
+
+const ShipType lowerLayer[TEAM_MATRIX_SIZE][TEAM_MATRIX_SIZE] = {
+	{ NONE, NONE, NONE, BOMBER, BOMBER, SCOUT, NONE, NONE },
+	{ NONE, NONE, BOMBER, BOMBER, DESTROYER, FIGHTER, SCOUT, NONE },
+	{ NONE, NONE, CRUISER, BATTLESHIP, CRUISER, DESTROYER, SCOUT, NONE },
+	{ NONE, NONE, BATTLESHIP, BATTLESHIP, DESTROYER, CRUISER, SCOUT, NONE },
+	{ NONE, NONE, BATTLESHIP, BATTLESHIP, DESTROYER, CRUISER, SCOUT, NONE },
+	{ NONE, NONE, CRUISER, BATTLESHIP, CRUISER, DESTROYER, SCOUT, NONE },
+	{ NONE, NONE, BOMBER, BOMBER, DESTROYER, FIGHTER, SCOUT, NONE },
+	{ NONE, NONE, NONE, BOMBER, FIGHTER, SCOUT, NONE, NONE }
+};
 
 //local functions
 void gameplayInitialize();
@@ -369,8 +402,10 @@ void updateSelectAShip(u8 *);
 void updateActionMenu();
 void determineActionMenu();
 
-//temp function
+//map state initialization functions
 void initMap();
+void rotateMatrix(const ShipType matrix[TEAM_MATRIX_SIZE][TEAM_MATRIX_SIZE], ShipType rotatedMatrix[TEAM_MATRIX_SIZE][TEAM_MATRIX_SIZE], int angle);
+static InitialShipFormationData GetSubGridData(Team team);
 
 //external functions
 

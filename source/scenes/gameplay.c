@@ -253,7 +253,7 @@ IWRAM_CODE void createShipTilemap(u16 *tilemapBuffer){
 	
 	//if we are in certain states, always draw the selectedShip on top
 	if((mapData.state == SELECT_A_SHIP) || (mapData.state == SHIP_SELECTED) || (mapData.state == RANGE_CHECK) || 
-	(mapData.state == AFTER_BATTLE_BEFORE_MOVE) || (mapData.state = INACTIVE_SHIP_SELECTED)){
+	(mapData.state == AFTER_BATTLE_BEFORE_MOVE) || (mapData.state == INACTIVE_SHIP_SELECTED)){
 		u8 shipIndex = mapData.selectedShip.index;
 		u8 shipDirection; //0: right, 1: up, 2: left, 3: down
 		u32 palette = mapData.ships[shipIndex].team;
@@ -2568,30 +2568,156 @@ void updateActionMenu(){
 	}
 }
 
-//a temprary function to initialize a test map.
 void initMap(){
+    // Disable every single ship before we start setting their positions
+	for(u32 i = 0; i < MAX_SHIPS; i++){
+        mapData.ships[i].state = NOT_PARTICIPATING;
+    }
+
 	u8 index = 0;
-	
-	for(u32 team = 0; team < NUM_TEAMS; team++){
-		u32 xPos = 32;
-		u32 yPos = 32 + team * 4;
-		for(u32 i = 1; i < 11; i++){
-			for(u32 j = 0; j < i; j++){
-				mapData.ships[index].type = (j % 7);
+	InitialShipFormationData teamFormationPosition;
+	teamFormationPosition.x = 0;
+	teamFormationPosition.y = 0;
+	teamFormationPosition.xVel = 2;
+	teamFormationPosition.yVel = 0;
+    ShipType rotatedMatrix[TEAM_MATRIX_SIZE][TEAM_MATRIX_SIZE];
+
+	for(u8 team = 0; team < NUM_TEAMS; team++){
+		teamFormationPosition = GetSubGridData(team);
+		u8 gx = teamFormationPosition.x;
+		u8 gy = teamFormationPosition.y;
+		u8 gXVel = teamFormationPosition.xVel;
+		u8 gYVel = teamFormationPosition.yVel;
+
+		index = (MAX_SHIPS >> 2) * team;
+
+		// First, rotate and set the lower layer
+		switch(team){
+			case RED_TEAM:
+				rotateMatrix(lowerLayer, rotatedMatrix, 270);
+				break;
+			case BLUE_TEAM:
+				rotateMatrix(lowerLayer, rotatedMatrix, 180);
+				break;
+			case GREEN_TEAM:
+				rotateMatrix(lowerLayer, rotatedMatrix, 90);
+				break;
+			case YELLOW_TEAM:
+				rotateMatrix(lowerLayer, rotatedMatrix, 0);
+				break;
+		}	
+		for(u8 y = 0; y < TEAM_MATRIX_SIZE; y++){
+			for(u8 x = 0; x < TEAM_MATRIX_SIZE; x++){
+				// Ignore empty grid space
+				if (rotatedMatrix[y][x] == NONE)
+					continue;
+
+				// Set this ship's positioning according to the table + which team they're on
+				mapData.ships[index].type = (int)rotatedMatrix[y][x];
 				mapData.ships[index].state = READY_VISIBLE;
 				mapData.ships[index].team = team;
-				mapData.ships[index].health = index;
-				mapData.ships[index].xPos = xPos + i;
-				mapData.ships[index].yPos = yPos;
-				mapData.ships[index].xVel = 1;
-				mapData.ships[index].yVel = 1;
+				mapData.ships[index].health = 100;
+				mapData.ships[index].xPos = gx + x;
+				mapData.ships[index].yPos = gy + y;
+				mapData.ships[index].xVel = gXVel;
+				mapData.ships[index].yVel = gYVel;
+				index++;
+			}
+		}
+
+		// Now, do the upper layer
+		switch(team){
+			case RED_TEAM:
+				rotateMatrix(upperLayer, rotatedMatrix, 270);
+				break;
+			case BLUE_TEAM:
+				rotateMatrix(upperLayer, rotatedMatrix, 180);
+				break;
+			case GREEN_TEAM:
+				rotateMatrix(upperLayer, rotatedMatrix, 90);
+				break;
+			case YELLOW_TEAM:
+				rotateMatrix(upperLayer, rotatedMatrix, 0);
+				break;
+		}	
+		for(u8 y = 0; y < TEAM_MATRIX_SIZE; y++){
+			for(u8 x = 0; x < TEAM_MATRIX_SIZE; x++){
+				// Ignore empty grid space
+				if (rotatedMatrix[y][x] == NONE)
+					continue;
+
+				// Set this ship's positioning according to the table + which team they're on
+				mapData.ships[index].type = (int)rotatedMatrix[y][x];
+				mapData.ships[index].state = READY_VISIBLE;
+				mapData.ships[index].team = team;
+				mapData.ships[index].health = 100;
+				mapData.ships[index].xPos = gx + x;
+				mapData.ships[index].yPos = gy + y;
+				mapData.ships[index].xVel = gXVel;
+				mapData.ships[index].yVel = gYVel;
 				index++;
 			}
 		}
 	}
-	
-	
-	for(u32 i = index; i < MAX_SHIPS; i++){
-		mapData.ships[i].state = NOT_PARTICIPATING;
-	}
+}
+
+static InitialShipFormationData GetSubGridData(Team team) {
+    InitialShipFormationData position;
+    
+    // Initial center calculation
+    position.x = CENTER_X - SUBGRID_HALF;
+    position.y = CENTER_Y - SUBGRID_HALF;
+
+    // Adjust position based on team
+    switch (team) {
+        case RED_TEAM:
+            position.y += 64;  // Move down
+			// Face Up
+			position.xVel = 0;
+			position.yVel = -2;
+            break;
+        case BLUE_TEAM:
+            position.x += 64;  // Move right
+			// Face left
+			position.xVel = -2;
+			position.yVel = 0;
+            break;
+        case GREEN_TEAM:
+            position.y -= 64;  // Move up
+			// Face Down
+			position.xVel = 0;
+			position.yVel = 2;
+            break;
+        case YELLOW_TEAM:
+            position.x -= 64;  // Move left
+			// Face right
+			position.xVel = 2;
+			position.yVel = 0;
+            break;
+    }
+
+    return position;
+}
+
+void rotateMatrix(const ShipType matrix[TEAM_MATRIX_SIZE][TEAM_MATRIX_SIZE], ShipType rotatedMatrix[TEAM_MATRIX_SIZE][TEAM_MATRIX_SIZE], int angle) {
+    int rotations = (angle / 90) & 3; // Normalize angle to 0, 1, 2, or 3 rotations of 90 degrees
+
+    for (int i = 0; i < TEAM_MATRIX_SIZE; i++) {
+        for (int j = 0; j < TEAM_MATRIX_SIZE; j++) {
+            switch (rotations) {
+                case 1: // 90 degrees
+                    rotatedMatrix[j][TEAM_MATRIX_SIZE - 1 - i] = matrix[i][j];
+                    break;
+                case 2: // 180 degrees
+                    rotatedMatrix[TEAM_MATRIX_SIZE - 1 - i][TEAM_MATRIX_SIZE - 1 - j] = matrix[i][j];
+                    break;
+                case 3: // 270 degrees
+                    rotatedMatrix[TEAM_MATRIX_SIZE - 1 - j][i] = matrix[i][j];
+                    break;
+                default: // 0 degrees (no rotation)
+                    rotatedMatrix[i][j] = matrix[i][j];
+                    break;
+            }
+        }
+    }
 }
