@@ -1,7 +1,8 @@
 #include "main_menu.h"
+#include <string.h>
 
 MainMenuData mDat = {
-	.menuElementsWidth = {10,10,11,9,13,11},
+	.menuElementsWidth = {10,10,11,9,13,11,10,10},
 	.blendMode = 0,
 	.eva = 0x81,
 	.evb = 0,
@@ -25,7 +26,7 @@ MenuPageItem* optionsMenuItems;
 
 // Initialize the Menu Pages
 static MenuPage* menuPage;
-static MenuPage menuPages[6];
+static MenuPage menuPages[8];
 
 void mainMenuInitialize(){
 	REG_DISPCNT = DCNT_MODE0; //black screen
@@ -1925,7 +1926,7 @@ int calculatePercentage(int numerator, int denominator) {
 
 
 void initMenuPages(MenuPage menuPages[]) {
-    menuPages[0] = (MenuPage) {
+    menuPages[MPI_MAIN_MENU] = (MenuPage) {
         .items = {
             {"Play Game", ME_PAGE_TRANSFER, .data.intVal = MPI_PLAY_GAME, .dataType = MPIDT_INT, .textGFXIndex = 0},
             {"Options", ME_PAGE_TRANSFER, .data.intVal = MPI_OPTIONS, .dataType = MPIDT_INT, .textGFXIndex = 2},
@@ -1943,11 +1944,11 @@ void initMenuPages(MenuPage menuPages[]) {
         .showBackPrompt = false
     };
 
-    menuPages[1] = (MenuPage) {
+    menuPages[MPI_PLAY_GAME] = (MenuPage) {
         .items = {
-            {"New Game", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecNewGame, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 6},
+            {"New Game", ME_PAGE_TRANSFER, .data.intVal = MPI_NEW_GAME, .dataType = MPIDT_INT, .textGFXIndex = 6},
             {"Continue", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecContinue, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 8},
-            {"Load Game", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecLoadGame, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 10},
+            {"Load Game", ME_PAGE_TRANSFER, .data.intVal = MPI_LOAD_GAME, .dataType = MPIDT_INT, .textGFXIndex = 10},
             {"Back", ME_PAGE_TRANSFER, .data.intVal = MPI_MAIN_MENU, .dataType = MPIDT_INT, .textGFXIndex = 12}
         },
         .itemCount = 4,
@@ -1962,7 +1963,7 @@ void initMenuPages(MenuPage menuPages[]) {
         .showBackPrompt = true
     };
 
-    menuPages[2] = (MenuPage) {
+    menuPages[MPI_SOUND_TEST] = (MenuPage) {
         .items = {
             {"BGM", ME_SOUND_TESTER, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 16, .id = MID_SOUND_TEST_BGM},
             {"SFX", ME_SOUND_TESTER, .data.intVal = 0, .dataType = MPIDT_INT, .textGFXIndex = 18, .id = MID_SOUND_TEST_SFX},
@@ -1981,7 +1982,7 @@ void initMenuPages(MenuPage menuPages[]) {
         .showBackPrompt = true
     };
 
-    menuPages[3] = (MenuPage) {
+    menuPages[MPI_EXTRAS] = (MenuPage) {
         .items = {
             {"Sound Test", ME_PAGE_TRANSFER, .data.intVal = MPI_SOUND_TEST, .dataType = MPIDT_INT, .textGFXIndex = 38},
             {"Credits", ME_PAGE_TRANSFER, .data.intVal = MPI_CREDITS, .dataType = MPIDT_INT, .textGFXIndex = 40},
@@ -1999,7 +2000,7 @@ void initMenuPages(MenuPage menuPages[]) {
         .showBackPrompt = true
     };
 
-    menuPages[4] = (MenuPage) {
+    menuPages[MPI_CREDITS] = (MenuPage) {
         .items = {
             {"- Programming -", ME_CREDITS_DISPLAY, .textGFXIndex = 26},
             {"origamiscienceguy", ME_CREDITS_DISPLAY, .textGFXIndex = 32},
@@ -2020,7 +2021,7 @@ void initMenuPages(MenuPage menuPages[]) {
         .showBackPrompt = true
     };
 
-    menuPages[5] = (MenuPage) {
+    menuPages[MPI_OPTIONS] = (MenuPage) {
         .items = {
             {"Master Volume", ME_SLIDER, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 14, .data.intVal = DEFAULT_MASTER_VOLUME, .id = MID_OPT_MAST_VOL},
             {"BGM", ME_SLIDER, .dataType = MPIDT_INT_ARRAY, .textGFXIndex = 16, .data.intVal = DEFAULT_BGM_VOLUME, .id = MID_OPT_BGM_VOL},
@@ -2036,6 +2037,44 @@ void initMenuPages(MenuPage menuPages[]) {
         .tileHeight = 14,
         .pxOffX = 4,
         .backPage = (int)MPI_MAIN_MENU,
+        .showConfirmPrompt = true,
+        .showBackPrompt = true
+    };
+
+    menuPages[MPI_NEW_GAME] = (MenuPage) {
+        .items = {
+            {"Slot 1", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecNewGame, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 44},
+            {"Slot 2", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecNewGame, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 46},
+            {"Slot 3", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecNewGame, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 48},
+            {"Back", ME_PAGE_TRANSFER, .data.intVal = MPI_PLAY_GAME, .dataType = MPIDT_INT, .textGFXIndex = 12}
+        },
+        .itemCount = 4,
+        .pageName = "PLAY GAME",
+        .tileX = 10,
+        .tileY = 6,
+        .tileWidth = 10,
+        .tileHeight = 12,
+        .pxOffX = 0,
+        .backPage = (int)MPI_PLAY_GAME,
+        .showConfirmPrompt = true,
+        .showBackPrompt = true
+    };
+
+    menuPages[MPI_LOAD_GAME] = (MenuPage) {
+        .items = {
+            {"Slot 1", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecLoadGame, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 44},
+            {"Slot 2", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecLoadGame, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 46},
+            {"Slot 3", ME_SCRIPT_RUNNER, .data.functionPtr = menuExecLoadGame, .dataType = MPIDT_FUNC_PTR, .textGFXIndex = 48},
+            {"Back", ME_PAGE_TRANSFER, .data.intVal = MPI_PLAY_GAME, .dataType = MPIDT_INT, .textGFXIndex = 12}
+        },
+        .itemCount = 4,
+        .pageName = "PLAY GAME",
+        .tileX = 10,
+        .tileY = 6,
+        .tileWidth = 10,
+        .tileHeight = 12,
+        .pxOffX = 0,
+        .backPage = (int)MPI_PLAY_GAME,
         .showConfirmPrompt = true,
         .showBackPrompt = true
     };
@@ -2058,14 +2097,81 @@ int menuExecNewGame(){
 
 	mDat.windowActionTimer = 0;
 	mDat.windowActionTarget = 100;
+
+
+	
+	u8 saveSlot = clamp(mDat.menuCursorPos, 0, 3);
+
+	initMapData(&mapData);
+	initMap();
+	//initOptions(&options);
+	options.lastPlayedSaveSlot = saveSlot;
+
+
+
 	return 0;
 }
 
 int menuExecContinue(){
+	stopAllSound();
+	playSFX(_sfxMenuConfirmC, AUDGROUP_MENUSFX);
+	
+	mDat.windowState = MMWS_FINALIZING;
+	mDat.windowConfirmDirection = MWCD_FORWARD;
+	mDat.updateSpriteDraw = true;
+	
+	// Once it's relevant (during MMWS_CLOSING state), lerp toward making the text completely visible
+	mDat.evaLerpStart = 16;
+	mDat.evaLerpEnd = 0;
+	mDat.evbLerpStart = 0;
+	mDat.evbLerpEnd = 16;
+
+	mDat.windowActionTimer = 0;
+	mDat.windowActionTarget = 100;
+
+
+	
+	u8 saveSlot = clamp(options.lastPlayedSaveSlot, 0, 3);
+	loadGame(&mapData, saveSlot);
+	//loadOptions(&options);
+	options.lastPlayedSaveSlot = saveSlot;
 	return 0;
 }
 
 int menuExecLoadGame(){
+
+	/*
+	
+
+	// To save the game data and options
+	saveGame(&mapData, saveSlot);
+	saveOptions(&options);
+
+
+*/
+	stopAllSound();
+	playSFX(_sfxMenuConfirmC, AUDGROUP_MENUSFX);
+	
+	mDat.windowState = MMWS_FINALIZING;
+	mDat.windowConfirmDirection = MWCD_FORWARD;
+	mDat.updateSpriteDraw = true;
+	
+	// Once it's relevant (during MMWS_CLOSING state), lerp toward making the text completely visible
+	mDat.evaLerpStart = 16;
+	mDat.evaLerpEnd = 0;
+	mDat.evbLerpStart = 0;
+	mDat.evbLerpEnd = 16;
+
+	mDat.windowActionTimer = 0;
+	mDat.windowActionTarget = 100;
+
+
+	
+	u8 saveSlot = clamp(mDat.menuCursorPos, 0, 3);
+	loadGame(&mapData, saveSlot);
+	//loadOptions(&options);
+	options.lastPlayedSaveSlot = saveSlot;
+
 	return 0;
 }
 
@@ -2316,4 +2422,66 @@ void resetMainMenuWindowVariables() {
 	mDat.updateBGTileDraw = false;
 	mDat.updateUITileDraw = false;
 	mDat.starryBG.snappedThisFrame = false;
+}
+
+
+
+// Compute SRAM address for a given saveSlot
+u32 getSaveSlotAddress(u8 saveSlot) {
+    return SRAM_BASE + (saveSlot * SRAM_BLOCK_SIZE);
+}
+
+// Compute SRAM address for the options
+u32 getOptionsAddress(void) {
+    return SRAM_BASE + (SAVE_SLOT_COUNT * SRAM_BLOCK_SIZE);
+}
+
+void loadGame(MapData *mapData, u8 saveSlot) {
+    u32 address = getSaveSlotAddress(saveSlot);
+    u8 *ptr = (u8*) mapData;
+    for (size_t i = 0; i < sizeof(MapData); ++i) {
+        ptr[i] = readSRAMByte(address + i);
+    }
+}
+
+void loadOptions(Options *options) {
+    u32 address = getOptionsAddress();
+    u8 *ptr = (u8*) options;
+    for (size_t i = 0; i < sizeof(Options); ++i) {
+        ptr[i] = readSRAMByte(address + i);
+    }
+}
+
+void saveGame(const MapData *mapData, u8 saveSlot) {
+    u32 address = getSaveSlotAddress(saveSlot);
+    const u8 *ptr = (const u8*) mapData;
+    for (size_t i = 0; i < sizeof(MapData); ++i) {
+        writeSRAMByte(address + i, ptr[i]);
+    }
+}
+
+void saveOptions(const Options *options) {
+    u32 address = getOptionsAddress();
+    const u8 *ptr = (const u8*) options;
+    for (size_t i = 0; i < sizeof(Options); ++i) {
+        writeSRAMByte(address + i, ptr[i]);
+    }
+}
+
+
+void initMapData(MapData *mapData) {
+    memset(mapData, 0, sizeof(MapData)); // Set all bytes to zero
+}
+
+
+void initOptions(Options *options) {
+    memset(options, 0, sizeof(Options)); // Set all bytes to zero
+}
+
+void writeSRAMByte(u32 address, u8 value) {
+    *(volatile u8*)(address) = value;
+}
+
+u8 readSRAMByte(u32 address) {
+    return *(volatile u8*)(address);
 }

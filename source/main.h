@@ -33,6 +33,7 @@ typedef struct Options{
 	u8 masterVolume;
 	u8 bgmVolume;
 	u8 sfxVolume;
+	u8 lastPlayedSaveSlot;
 }Options;
 
 // Precomputed fixed-point volume multipliers for each volume level (0-10)
