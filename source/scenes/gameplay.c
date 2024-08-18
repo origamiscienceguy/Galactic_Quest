@@ -279,7 +279,7 @@ IWRAM_CODE void createShipTilemap(u16 *tilemapBuffer){
 			}
 		}
 		
-		if(mapData.ships[shipIndex].state == FINISHED_VISIBLE){
+		if((mapData.ships[shipIndex].state == FINISHED_VISIBLE) || (mapData.ships[shipIndex].state == FINISHED_HIDDEN)){
 			palette += 4;
 		}
 		
@@ -994,6 +994,10 @@ void selectAShipState(){
 }
 
 void shipSelectedState(){
+
+	//L and R cycle backwards or forwards through the active ships for this team, and center the camera on the next ship in the cycle
+	checkCycleButtons();
+	
 	if(inputs.pressed & KEY_A){
 		//if a move action is selected
 		if(mapData.actionMenu.currentSelection == 0){
@@ -1029,8 +1033,9 @@ void shipSelectedState(){
 		//if the back option is selected
 		else{
 			mapData.state = OPEN_MAP;
-			mapData.ships[mapData.selectedShip.index].state = READY_VISIBLE; 
+			//mapData.ships[mapData.selectedShip.index].state = READY_VISIBLE; 
 			mapData.highlight.state = NO_HIGHLIGHT;
+			makeShipVisible(mapData.selectedShip.index);
 			mapData.cursor.selectXPos = mapData.ships[mapData.selectedShip.index].xPos;
 			mapData.cursor.selectYPos = mapData.ships[mapData.selectedShip.index].yPos;
 			mapData.cursor.xPos = (mapData.ships[mapData.selectedShip.index].xPos << 4) - 8;
@@ -1049,8 +1054,9 @@ void shipSelectedState(){
 	
 	if(inputs.pressed & KEY_B){
 		mapData.state = OPEN_MAP;
-		mapData.ships[mapData.selectedShip.index].state = READY_VISIBLE; 
+		//mapData.ships[mapData.selectedShip.index].state = READY_VISIBLE; 
 		mapData.highlight.state = NO_HIGHLIGHT;
+		makeShipVisible(mapData.selectedShip.index);
 		mapData.cursor.selectXPos = mapData.ships[mapData.selectedShip.index].xPos;
 		mapData.cursor.selectYPos = mapData.ships[mapData.selectedShip.index].yPos;
 		mapData.cursor.xPos = (mapData.ships[mapData.selectedShip.index].xPos << 4) - 8;
@@ -2068,6 +2074,8 @@ void selectShip(u8 shipIndex){
 		mapData.cursor.state = CUR_STILL;
 		mapData.cursor.selectXPos = mapData.ships[shipIndex].xPos;
 		mapData.cursor.selectYPos = mapData.ships[shipIndex].yPos;
+		mapData.cursor.xPos = (mapData.cursor.selectXPos << 4) - 8;
+		mapData.cursor.yPos = (mapData.cursor.selectYPos << 4) - 8;
 		
 		//pan the camera to this ship
 		mapData.camera.state = CAM_STILL;
